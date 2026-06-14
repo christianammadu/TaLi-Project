@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — D-01 · Market Ledger (warm / human)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── D-01 · "Market Ledger" — warm, human, locally credible.
+     Lineage: Kenya Hara's quiet emptiness + a Nigerian-market warmth.
+     Brand: TaLi keeps its name; identity is paper-warm, ink, single terracotta accent.
+     WhatsApp green / Telegram blue appear ONLY on their CTA buttons. */
+  :root{
+    --paper:#FBF7EF; --paper-2:#F3EADA; --ink:#241F1A; --ink-soft:#6B6258;
+    --accent:#C2562F;            /* terracotta — earth/market, the brand signature */
+    --accent-soft:#E7C9B6; --line:#E3D8C6;
+    --wa:#1FAA53; --tg:#2AABEE;  /* channel colours, used only on CTAs */
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 500px at 80% -10%, #fff6e9 0%, transparent 60%);}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  /* nav */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .mark{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.01em;position:relative}
+  .mark .dot{color:var(--accent)}
+  .mark::after{content:"";position:absolute;left:2px;right:18px;bottom:4px;height:2px;background:var(--accent);opacity:.5}
+  .nav-links{display:flex;gap:26px;align-items:center;font-size:14.5px;color:var(--ink-soft)}
+  .nav-links a{color:inherit;text-decoration:none}
+  .nav-links a:hover{color:var(--ink)}
+  @media(max-width:640px){.nav-links{display:none}}
+  /* hero */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:46px 0 30px}
+  @media(max-width:860px){.hero{grid-template-columns:1fr;gap:30px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:18px}
+  .eyebrow::before{content:"";width:22px;height:1.5px;background:var(--accent)}
+  h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.04;
+    letter-spacing:-.02em;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{font-size:clamp(16px,2.1vw,19px);color:var(--ink-soft);max-width:30ch;margin-top:20px}
+  .lede b{color:var(--ink);font-weight:600}
+  /* CTAs */
+  .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  .btn{display:inline-flex;align-items:center;gap:11px;padding:14px 20px;border-radius:var(--r);
+    font-weight:600;font-size:15.5px;text-decoration:none;color:#fff;transition:transform .12s ease, filter .12s}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+  .btn .ic{width:20px;height:20px;flex:none}
+  .btn-wa{background:var(--wa)} .btn-tg{background:var(--tg)}
+  .btn-note{font-size:13px;color:var(--ink-soft);margin-top:12px}
+  /* hero card: a chat line becoming a ledger line */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;
+    box-shadow:0 30px 60px -38px rgba(60,40,20,.35)}
+  .chat{display:flex;flex-direction:column;gap:10px}
+  .bubble{max-width:78%;padding:11px 14px;border-radius:16px;font-size:14.5px}
+  .from-me{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+  .from-tali{align-self:flex-start;background:var(--paper-2);color:var(--ink);border-bottom-left-radius:5px}
+  .ledger{margin-top:14px;border-top:1px dashed var(--line);padding-top:14px}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 2px;font-size:14px}
+  .ledger-row+.ledger-row{border-top:1px solid var(--line)}
+  .ledger-row .lbl{color:var(--ink-soft)} .num{font-variant-numeric:tabular-nums;font-weight:600}
+  .num.in{color:var(--wa)} .num.out{color:var(--accent)}
+  /* steps */
+  section.steps{padding:44px 0 10px}
+  .steps h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(24px,3.4vw,34px);letter-spacing:-.01em;margin-bottom:6px}
+  .steps .sub{color:var(--ink-soft);margin-bottom:30px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:780px){.grid3{grid-template-columns:1fr}}
+  .step{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px}
+  .step .n{font-family:'Fraunces',serif;font-size:15px;color:var(--accent);font-weight:600}
+  .step h3{font-size:17px;margin:10px 0 7px;font-weight:600}
+  .step p{font-size:14.5px;color:var(--ink-soft)}
+  .step .ex{margin-top:12px;font-size:13px;background:var(--paper-2);border-radius:9px;padding:9px 11px;color:var(--ink)}
+  /* footer band */
+  .band{margin:48px 0 30px;background:var(--ink);color:#F3EADA;border-radius:22px;padding:38px 32px;
+    display:flex;flex-wrap:wrap;gap:22px;align-items:center;justify-content:space-between}
+  .band h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,3vw,30px);max-width:18ch;color:#fff}
+  footer{color:var(--ink-soft);font-size:13px;padding:8px 0 40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .tag{position:fixed;top:10px;left:10px;background:var(--ink);color:#fff;font-size:11px;
+    padding:5px 10px;border-radius:8px;font-family:monospace;opacity:.85;z-index:9}
+</style>
+</head>
+<body>
+  <div class="tag">D-01 · Market Ledger — warm/human</div>
+  <div class="wrap">
+    <nav>
+      <div class="mark">TaLi<span class="dot">.</span></div>
+      <div class="nav-links"><a href="#how">How it works</a><a href="#">Pricing</a><a href="#">Stories</a><a href="#cta">Get started</a></div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <span class="eyebrow">Bookkeeping in your chat</span>
+        <h1>Your books live in the <em>chat</em> you already use.</h1>
+        <p class="lede">Text TaLi like a friend — <b>“Sold 2 bags of rice 5,000”</b>. It records the sale, updates your stock, tracks who owes you, and sends clean statements. On WhatsApp or Telegram.</p>
+        <div class="ctas" id="cta">
+          <a class="btn btn-wa" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.7c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8.9-.3.2-.5 0a6.6 6.6 0 0 1-1.9-1.2 7.3 7.3 0 0 1-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4a.5.5 0 0 0 0-.4l-.7-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1A4.9 4.9 0 0 0 8 11.7a11 11 0 0 0 4.2 3.7c2 .8 2 .6 2.4.5a2.5 2.5 0 0 0 1.6-1.1 2 2 0 0 0 .1-1.1c0-.1-.2-.2-.5-.4z"/></svg>
+            Continue on WhatsApp
+          </a>
+          <a class="btn btn-tg" href="#">
+            <svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.7 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13 1.8 11.5c-1-.3-1-1 .2-1.5L20.6 2.9c.8-.3 1.5.2 1.3 1.4z"/></svg>
+            Continue on Telegram
+          </a>
+        </div>
+        <p class="btn-note">No app to install. Free to start. Works on the phone in your hand.</p>
+      </div>
+
+      <div class="panel" aria-hidden="true">
+        <div class="chat">
+          <div class="bubble from-me">Sold 2 bags of rice 5,000 to Mama Nkechi on credit</div>
+          <div class="bubble from-tali">Got it ✓ Recorded a ₦5,000 sale, took 2 bags off stock, and logged ₦5,000 owed by Mama Nkechi.</div>
+          <div class="bubble from-me">how much did I make today?</div>
+        </div>
+        <div class="ledger">
+          <div class="ledger-row"><span class="lbl">Sales today</span><span class="num in">₦18,500</span></div>
+          <div class="ledger-row"><span class="lbl">Expenses</span><span class="num out">₦6,200</span></div>
+          <div class="ledger-row"><span class="lbl">Owed to you</span><span class="num">₦12,000</span></div>
+          <div class="ledger-row"><span class="lbl">Rice in stock</span><span class="num">14 bags</span></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="steps" id="how">
+      <h2>Three texts. Clean books.</h2>
+      <p class="sub">No forms, no spreadsheets, no accounting words.</p>
+      <div class="grid3">
+        <div class="step"><div class="n">01 — Message it</div><h3>Say it like you'd say it</h3><p>Plain words, pidgin, shorthand — however you'd tell a person.</p><div class="ex">“Bought fuel 2k”</div></div>
+        <div class="step"><div class="n">02 — TaLi understands</div><h3>It sorts the details</h3><p>Amount, type, item, category and date — pulled out and double-checked before saving.</p><div class="ex">expense · fuel · ₦2,000 · today</div></div>
+        <div class="step"><div class="n">03 — Books update</div><h3>Records, stock & reports stay live</h3><p>Ask for today's profit or a monthly statement any time. It's already done.</p><div class="ex">“Send me June statement” → PDF</div></div>
+      </div>
+    </section>
+
+    <div class="band" id="get">
+      <h2>Start in the chat you already have open.</h2>
+      <div class="ctas" style="margin:0">
+        <a class="btn btn-wa" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp</a>
+        <a class="btn btn-tg" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.7 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13 1.8 11.5c-1-.3-1-1 .2-1.5L20.6 2.9c.8-.3 1.5.2 1.3 1.4z"/></svg>Telegram</a>
+      </div>
+    </div>
+    <footer><span>TaLi — bookkeeping that lives in your chat.</span><span>Made for Nigerian small businesses · ₦</span></footer>
+  </div>
+</body>
+</html>

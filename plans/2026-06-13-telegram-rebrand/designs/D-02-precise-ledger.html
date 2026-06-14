@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — D-02 · Precise Ledger (fintech / Swiss grid)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── D-02 · "Precise Ledger" — confident fintech, Swiss information architecture.
+     Lineage: Müller-Brockmann grid + Pentagram data clarity. Numbers are the hero.
+     Brand: TaLi, monospaced figures, one deep-green accent (money/growth — distinct
+     from WhatsApp's green). Hairlines, tight grid, tabular numerals. The "safe/serious" pick. */
+  :root{
+    --bg:#FFFFFF; --ink:#0E1413; --ink-2:#5A6562; --accent:#0B6E4F; --accent-2:#E7F3ED;
+    --line:#E5E8E7; --grid:#F4F6F5;
+    --wa:#1FAA53; --tg:#2AABEE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Space Grotesk',system-ui,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  nav{display:flex;align-items:center;justify-content:space-between;height:68px;border-bottom:1px solid var(--line)}
+  .mark{font-weight:700;font-size:23px;letter-spacing:-.02em}
+  .mark span{color:var(--accent)}
+  .nav-links{display:flex;gap:28px;font-size:14px;color:var(--ink-2)}
+  .nav-links a{color:inherit;text-decoration:none} .nav-links a:hover{color:var(--ink)}
+  @media(max-width:640px){.nav-links{display:none}}
+  /* hero */
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--line)}
+  @media(max-width:880px){.hero{grid-template-columns:1fr}}
+  .hero-l{padding:60px 44px 60px 0} .hero-r{padding:40px 0 40px 44px;border-left:1px solid var(--line)}
+  @media(max-width:880px){.hero-l{padding:48px 0 28px}.hero-r{padding:0 0 44px;border-left:none}}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:22px}
+  h1{font-size:clamp(32px,5vw,52px);font-weight:600;line-height:1.06;letter-spacing:-.03em;text-wrap:balance}
+  .lede{color:var(--ink-2);font-size:17px;max-width:42ch;margin-top:20px}
+  .lede b{color:var(--ink)}
+  .ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border-radius:8px;font-weight:600;
+    font-size:15px;text-decoration:none;color:#fff;transition:transform .12s,filter .12s}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+  .btn .ic{width:18px;height:18px} .btn-wa{background:var(--wa)} .btn-tg{background:var(--tg)}
+  .meta{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-2);letter-spacing:.02em}
+  /* statement card — the hero artefact */
+  .stmt{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+  .stmt-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--grid)}
+  .stmt-h .t{font-size:13px;font-weight:600;letter-spacing:.02em}
+  .stmt-h .d{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-2)}
+  .row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 18px;align-items:baseline}
+  .row+.row{border-top:1px solid var(--line)}
+  .row .k{font-size:14px;color:var(--ink-2)}
+  .row .v{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:15px}
+  .v.pos{color:var(--accent)} .v.neg{color:#B23A2E}
+  .row.total{background:var(--accent-2)} .row.total .k{color:var(--ink);font-weight:600} .row.total .v{color:var(--accent);font-size:18px}
+  .spark{display:flex;align-items:flex-end;gap:4px;height:40px;padding:0 18px 14px}
+  .spark i{flex:1;background:var(--accent);opacity:.85;border-radius:2px 2px 0 0}
+  /* how */
+  section.how{padding:56px 0;border-bottom:1px solid var(--line)}
+  .how-top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:30px}
+  .how-top h2{font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.02em}
+  .how-top p{color:var(--ink-2);font-size:14px;max-width:34ch}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media(max-width:780px){.grid3{grid-template-columns:1fr}}
+  .cell{padding:26px 22px;background:var(--bg)}
+  .cell+.cell{border-left:1px solid var(--line)}
+  @media(max-width:780px){.cell+.cell{border-left:none;border-top:1px solid var(--line)}}
+  .cell .n{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent)}
+  .cell h3{font-size:17px;margin:12px 0 8px;font-weight:600}
+  .cell p{font-size:14px;color:var(--ink-2)}
+  .cell .code{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--grid);
+    border:1px solid var(--line);border-radius:7px;padding:9px 11px}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:46px 0}
+  .cta-row h2{font-size:clamp(20px,2.6vw,26px);font-weight:600;letter-spacing:-.02em;max-width:20ch}
+  footer{border-top:1px solid var(--line);padding:22px 0 46px;display:flex;justify-content:space-between;
+    flex-wrap:wrap;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-2)}
+  .tag{position:fixed;top:10px;left:10px;background:var(--ink);color:#fff;font-size:11px;padding:5px 10px;border-radius:8px;font-family:monospace;opacity:.85;z-index:9}
+</style>
+</head>
+<body>
+  <div class="tag">D-02 · Precise Ledger — fintech/Swiss</div>
+  <div class="wrap">
+    <nav>
+      <div class="mark">TaLi<span>_</span></div>
+      <div class="nav-links"><a href="#how">How it works</a><a href="#">Reports</a><a href="#">Pricing</a><a href="#get">Start</a></div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-l">
+        <div class="kicker">// chat-native bookkeeping</div>
+        <h1>Numbers you can trust, from messages you already send.</h1>
+        <p class="lede">Tell TaLi <b>“Sold rice 5,000”</b> on WhatsApp or Telegram. It parses, validates, and books it — then gives you live statements, cashflow and stock. <b>Every entry is auditable.</b></p>
+        <div class="ctas" id="get">
+          <a class="btn btn-wa" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2z"/></svg>Continue on WhatsApp</a>
+          <a class="btn btn-tg" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.7 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13 1.8 11.5c-1-.3-1-1 .2-1.5L20.6 2.9c.8-.3 1.5.2 1.3 1.4z"/></svg>Continue on Telegram</a>
+        </div>
+        <div class="meta">2 channels · 1 ledger · 0 spreadsheets</div>
+      </div>
+      <div class="hero-r">
+        <div class="stmt">
+          <div class="stmt-h"><span class="t">Statement · June</span><span class="d">auto-generated</span></div>
+          <div class="row"><span class="k">Sales</span><span class="v pos">+ ₦482,000</span></div>
+          <div class="row"><span class="k">Purchases & expenses</span><span class="v neg">− ₦193,400</span></div>
+          <div class="row"><span class="k">Outstanding receivables</span><span class="v">₦64,500</span></div>
+          <div class="row total"><span class="k">Net profit</span><span class="v">₦288,600</span></div>
+          <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%"></i><i style="height:62%"></i><i style="height:85%"></i><i style="height:78%"></i><i style="height:100%"></i></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="how" id="how">
+      <div class="how-top">
+        <h2>From a text to a trusted entry.</h2>
+        <p>Each step is logged — model, confidence and cost — so the books are auditable end-to-end.</p>
+      </div>
+      <div class="grid3">
+        <div class="cell"><div class="n">01 / parse</div><h3>You message it</h3><p>Natural language, shorthand, multiple entries at once.</p><div class="code">"sold 3 bags rice 15k,<br>bought fuel 2k"</div></div>
+        <div class="cell"><div class="n">02 / validate</div><h3>It structures + reviews</h3><p>Amount, type, item, category — checked before commit; flagged entries pause for approval.</p><div class="code">income · sale · ₦15,000<br>expense · fuel · ₦2,000</div></div>
+        <div class="cell"><div class="n">03 / book</div><h3>The ledger updates</h3><p>Live profit, cashflow, debts and stock. Export PDF/Excel any time.</p><div class="code">net_today = ₦13,000<br>stock.rice −= 3</div></div>
+      </div>
+    </section>
+
+    <div class="cta-row">
+      <h2>Open the chat you already have. Start booking.</h2>
+      <div class="ctas" style="margin:0">
+        <a class="btn btn-wa" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp</a>
+        <a class="btn btn-tg" href="#"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.7 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.5 13 1.8 11.5c-1-.3-1-1 .2-1.5L20.6 2.9c.8-.3 1.5.2 1.3 1.4z"/></svg>Telegram</a>
+      </div>
+    </div>
+    <footer><span>TaLi // chat-native bookkeeping</span><span>₦ · Lagos · 2026</span></footer>
+  </div>
+</body>
+</html>
