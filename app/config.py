@@ -42,3 +42,21 @@ class Config:
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     OPENAI_INPUT_COST_PER_MILLION = float(os.getenv("OPENAI_INPUT_COST_PER_MILLION", "0.150"))
     OPENAI_OUTPUT_COST_PER_MILLION = float(os.getenv("OPENAI_OUTPUT_COST_PER_MILLION", "0.600"))
+
+    # --- Multi-provider model routing (WP-01 / G-MODEL-ROUTER) ---
+    # AI/ML API and Featherless are OpenAI-compatible; app/services/model_router.py reaches every
+    # provider through the OpenAI SDK with a swapped base_url, and falls back to OpenAI on
+    # timeout / 429 / quota / connection error. Keys/models are read from env by the router;
+    # mirrored here so the rest of the app can introspect them.
+    AIML_API_KEY = os.getenv("AIML_API_KEY", "")
+    AIML_BASE_URL = os.getenv("AIML_BASE_URL", "https://api.aimlapi.com/v1")
+    FEATHERLESS_API_KEY = os.getenv("FEATHERLESS_API_KEY", "")
+    FEATHERLESS_BASE_URL = os.getenv("FEATHERLESS_BASE_URL", "https://api.featherless.ai/v1")
+    # Per-role model overrides (provider defaults live in model_router.ROLE_ROUTES).
+    FEATHERLESS_INTAKE_MODEL = os.getenv("FEATHERLESS_INTAKE_MODEL", "Qwen/Qwen2.5-72B-Instruct")
+    FEATHERLESS_COMPLIANCE_MODEL = os.getenv("FEATHERLESS_COMPLIANCE_MODEL", "mistralai/Mistral-Small-24B-Instruct-2501")
+    AIML_CFO_MODEL = os.getenv("AIML_CFO_MODEL", "gpt-4o")
+    AIML_ESCALATION_MODEL = os.getenv("AIML_ESCALATION_MODEL", "gpt-4o")
+    # Optional per-process spend ceiling (USD); 0 = unlimited. Enforced by the router so a
+    # demo run can't blow the small AI/ML credit (Round 2 risk).
+    MODEL_ROUTER_SPEND_CEILING_USD = float(os.getenv("MODEL_ROUTER_SPEND_CEILING_USD", "0"))
