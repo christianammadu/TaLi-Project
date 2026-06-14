@@ -46,13 +46,13 @@ INTENT RULES:
 
 3b. "statement" (requesting a DOWNLOADABLE financial document/report/statement to be sent as a file, e.g. "send me a report of my purchases for June", "give me the cashflow from Jan to May", "export my sales for last month as excel"):
    Add "statement" to intents and populate the "statement" object.
-   - report_type: "transactions" for a filtered list of entries (purchases/sales/expenses/income); "cashflow" for inflow-vs-outflow over time.
+   - report_type: "transactions" for a filtered list of entries (purchases/sales/expenses/income); "cashflow" for inflow-vs-outflow over time; "income_statement" for a profit & loss / income statement (revenue − cost of goods − expenses = net profit).
    - tx_type: "expense" for purchases/expenses, "income" for sales/income, else null.
    - action: "purchase","sale","expense","income" when the user names one, else null.
    - category: a category name if stated, else null.
    - period_start / period_end (YYYY-MM-DD): RESOLVE relative/month phrases using today's date. "June" -> first to last day of June this year. "Jan to May" -> Jan 1 to May 31 this year. "last month", "this year", "entire book" (-> leave both null = all time).
    - format: null when the user does NOT name a delivery format (the system will ask them chat-or-PDF); "pdf" if they say pdf/document/file; "xlsx" if they say excel/spreadsheet/sheet; "chat" if they want it as a text/chat message in the conversation; "both" if they ask for pdf AND excel.
-   Trigger words: report, statement, export, download, pdf, excel, spreadsheet, cashflow, cash flow — when the user wants it AS A FILE or with FILTERS/date-ranges. A bare "daily/weekly/monthly report" stays intent 3.
+   Trigger words: report, statement, export, download, pdf, excel, spreadsheet, cashflow, cash flow, income statement, profit and loss, profit & loss, P&L, P and L — when the user wants it AS A FILE or with FILTERS/date-ranges. A bare "daily/weekly/monthly report" stays intent 3.
 
 4. "inventory" (adding, removing, setting stock levels):
    Populate the "inventory" object. Action must be "ADD", "REMOVE", "SET". Normalise "product" name to lowercase. Extract positive "quantity" (resolve words "twenty" -> 20) and "unit".
@@ -78,7 +78,7 @@ Always return a JSON object with this exact structure (set unused keys to null/f
   "debts": [], // array of debt objects
   "report": null, // or report object
   "query": null, // or query object: {{"query_type": "sum|list|balance|count", "type": "income|expense"|null, "category": null, "currency": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null}}
-  "statement": null, // or statement object: {{"report_type": "transactions|cashflow", "tx_type": "income|expense"|null, "action": null, "category": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null, "format": "pdf|xlsx|chat|both"|null}}
+  "statement": null, // or statement object: {{"report_type": "transactions|cashflow|income_statement", "tx_type": "income|expense"|null, "action": null, "category": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null, "format": "pdf|xlsx|chat|both"|null}}
   "snapshot": false // true if snapshot intent is present
 }}
 
@@ -144,6 +144,15 @@ EXAMPLES:
     "needs_review": false,
     "status": "ok",
     "statement": {{"report_type": "cashflow", "tx_type": null, "action": null, "category": null, "period_start": "{today_year}-01-01", "period_end": "{today_year}-05-31", "format": "xlsx"}}
+  }}
+
+- "Send me my income statement / profit and loss for June as a pdf"
+  {{
+    "intents": ["statement"],
+    "confidence": 0.95,
+    "needs_review": false,
+    "status": "ok",
+    "statement": {{"report_type": "income_statement", "tx_type": null, "action": null, "category": null, "period_start": "{today_year}-06-01", "period_end": "{today_year}-06-30", "format": "pdf"}}
   }}
 
 - "How is my business doing?"
