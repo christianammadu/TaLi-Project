@@ -94,7 +94,7 @@ body::before{content:'';position:fixed;inset:-50%;width:200%;height:200%;z-index
 @keyframes fade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .amsg .ic{width:19px;height:19px}
 .amsg.ok{background:var(--brand-soft);border:1px solid rgba(194,86,47,.18);color:var(--brand)}
-.amsg.err{background:rgba(255,107,129,.09);border:1px solid rgba(255,107,129,.2);color:var(--danger)}
+.amsg.err{background:rgba(192,57,43,.09);border:1px solid rgba(192,57,43,.2);color:var(--danger)}
 
 /* fields */
 .field{margin-bottom:20px}
@@ -175,7 +175,7 @@ body::before{content:'';position:fixed;inset:-50%;width:200%;height:200%;z-index
 
 /* error page */
 .center{text-align:center}
-.err-icon{width:80px;height:80px;border-radius:50%;background:rgba(255,107,129,.09);border:1px solid rgba(255,107,129,.18);
+.err-icon{width:80px;height:80px;border-radius:50%;background:rgba(192,57,43,.09);border:1px solid rgba(192,57,43,.18);
   display:inline-grid;place-items:center;margin-bottom:22px;animation:shake .6s ease both}
 .err-icon .ic{width:38px;height:38px;color:var(--danger)}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -204,9 +204,15 @@ body::before{content:'';position:fixed;inset:-50%;width:200%;height:200%;z-index
 .wordmark .dot{color:var(--brand)}
 .wordmark::after{content:"";position:absolute;left:1px;right:14px;bottom:2px;height:2px;
   background:var(--brand);opacity:.5;border-radius:2px}
+.wordmark.lg{font-size:2.1rem}.wordmark.sm{font-size:1.18rem}
 .ledger-rule{height:2px;border:0;border-radius:2px;background:var(--brand);opacity:.5;margin:0}
 /* channel CTA buttons — the ONLY place WhatsApp green / Telegram blue appear */
 .btn-wa{background:var(--wa);color:#fff;border:none}
 .btn-wa:hover{background:var(--wa-strong);color:#fff;box-shadow:0 8px 24px rgba(31,170,83,.32)}
 .btn-tg{background:var(--tg);color:#fff;border:none}
 .btn-tg:hover{background:var(--tg-strong);color:#fff;box-shadow:0 8px 24px rgba(42,171,238,.32)}
+/* channel brand glyphs are filled (the rest of the icon set is stroked) */
+.btn-wa .ic,.btn-tg .ic{fill:currentColor;stroke:none}
+/* stacked channel CTAs on the register "done" step */
+.cta-stack{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.cta-stack .foot-note{margin-top:6px}
