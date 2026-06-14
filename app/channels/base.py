@@ -40,6 +40,30 @@ def split_address(address):
     return None, address
 
 
+def parse_command(text):
+    """Detect an onboarding/link command in inbound text → ``(command, arg)`` (pure, shared).
+
+    Normalizes both channels' conventions:
+      ``/start <token>`` (Telegram) and ``LINK-<token>`` (WhatsApp prefill) → ``("redeem", token)``
+      ``/start`` (bare)            → ``("start", None)``  — onboarding prompt
+      ``/link <channel>``          → ``("link", "<channel>")``  — Path B cross-channel link
+      ``/unlink``                  → ``("unlink", None)``
+    Anything else → ``(None, None)`` (a normal bookkeeping message).
+    """
+    t = (text or "").strip()
+    if t.startswith("LINK-"):
+        return "redeem", t[len("LINK-"):].strip() or None
+    if t.startswith("/"):
+        parts = t[1:].split(maxsplit=1)
+        cmd = parts[0].split("@")[0].lower()        # strip @botname suffix Telegram adds in groups
+        arg = parts[1].strip() if len(parts) > 1 else None
+        if cmd == "start":
+            return ("redeem", arg) if arg else ("start", None)
+        if cmd in ("link", "unlink", "help"):
+            return cmd, (arg.lower() if arg else None)
+    return None, None
+
+
 @dataclass
 class InboundMessage:
     """A platform message normalized to the shape the gateway understands."""

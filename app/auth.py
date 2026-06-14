@@ -590,3 +590,25 @@ def resolve_user_by_address(address):
     if channel is None:                # bare legacy WhatsApp sender id
         return get_user_by_sender(native)
     return resolve_channel_user(channel, native)
+
+
+def open_session(sender_id, user_id):
+    """Open a fresh ACTIVE session for a (namespaced) sender, replacing any prior active one.
+
+    Used after a channel bind and to auto-renew a bound chat (the bind is the trust anchor)."""
+    try:
+        with session_scope() as s:
+            s.execute(
+                update(SessionModel)
+                .where(SessionModel.sender_id == sender_id, SessionModel.is_active.is_(True))
+                .values(is_active=False, status='EXPIRED')
+            )
+            expires_at = datetime.utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
+            s.add(SessionModel(
+                id=uuid7(), sender_id=sender_id, user_id=user_id,
+                expires_at=expires_at, status='ACTIVE', is_active=True,
+            ))
+        return True
+    except Exception as e:
+        print(f"Failed to open session: {e}")
+        return False

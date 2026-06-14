@@ -12,7 +12,7 @@ import mimetypes
 import requests
 from flask import current_app
 
-from app.channels.base import Channel, InboundMessage, WHATSAPP, make_address, split_address
+from app.channels.base import Channel, InboundMessage, WHATSAPP, make_address, split_address, parse_command
 
 GRAPH = "https://graph.facebook.com/v22.0"
 
@@ -56,11 +56,14 @@ class WhatsAppChannel(Channel):
                 return None
             msg = messages[0]
             text = msg["text"]["body"] if msg.get("type") == "text" else ""
+            command, command_arg = parse_command(text)
             return InboundMessage(
                 channel=WHATSAPP,
                 sender=make_address(WHATSAPP, msg["from"]),
                 text=text,
                 message_id=msg.get("id", ""),
+                command=command,
+                command_arg=command_arg,
                 raw=payload,
             )
         except (KeyError, IndexError, TypeError):
