@@ -1,0 +1,2745 @@
+<!-- GENERATED — edit .claude/skills/groundwork/ instead. Synced by sync-from-dev.mjs. -->
+<!doctype html>
+<html lang="en" data-theme="A" data-mode="dark" data-density="comfortable">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>groundwork — plan board</title>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       Ikenga artifact manifest. The shell reads this for pin/icon/fallback;
+       outside Ikenga it's inert JSON. capabilities.engineInvoke gates the
+       (Phase 2) host.startChatSession verb; the board renders + copy-prompts
+       fine without it. The fallback dataTag points at `board-mock-data` so
+       a fresh checkout opens with real-looking content even before
+       `groundwork refresh-board` writes into the `board-data` fence.
+       ────────────────────────────────────────────────────────────────── -->
+  <script type="application/json" id="ikenga-manifest">
+  {
+    "format": "ikenga-artifact", "formatVersion": "0.1",
+    "id": "groundwork-board", "name": "groundwork plan board", "version": "1.0.0",
+    "description": "Mission-Control plan board with Wave-Board toggle. Reads board-data from a fenced JSON block; falls back to mock data if absent.",
+    "license": "Apache-2.0", "icon": { "lucide": "table" },
+    "capabilities": { "engineInvoke": true },
+    "fallback": { "mode": "mock", "dataTag": "board-mock-data", "banner": "No board-data fence — showing mock plan." },
+    "pin":      { "suggested": true, "section": "Planning", "label": "Plan board" },
+    "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+  }
+  </script>
+
+  <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
+  <script type="application/json" id="board-data">
+  <!-- groundwork:auto:start board-data -->
+<!-- last_action: refresh-board · 2026-06-06T16:49:28Z -->
+{
+  "plan": {
+    "title": "TaLi v2 \u2014 Reports, Tiers, Paywall & Scheduling",
+    "profile": "software",
+    "goal": "Full report suite (P&L, category, inventory valuation, debt aging) + Free/Pro/Business tiers, Paystack paywall, rate limiting, scheduled reports \u2014 within PythonAnywhere free-tier limits."
+  },
+  "gates": [
+    {
+      "id": "G-REPORT-SCHEMA",
+      "wp": "WP-01",
+      "label": "Report schema frozen",
+      "status": "pending"
+    },
+    {
+      "id": "G-TIER-SCHEMA",
+      "wp": "WP-06",
+      "label": "Tier/usage schema frozen",
+      "status": "pending"
+    }
+  ],
+  "wps": [
+    {
+      "id": "WP-01",
+      "title": "Report-schema freeze gate",
+      "repo": "bookkeeper",
+      "wave": 0,
+      "deps": [],
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "brief": "Add pnl|category|inventory|debt to StatementModel.report_type; define render(kind,\u2026) kind set + statement_agent dispatch+titles. Files: validators.py, nlp.py, report_renderer.py (stubs), statement_agent.py. DoD: 4 kinds parse; render dispatches each; v1 unaffected."
+    },
+    {
+      "id": "WP-02",
+      "title": "Profit & Loss / income statement",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-01"
+      ],
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "brief": "query_pnl + _render_pnl_{pdf,xlsx} + nlp example. DoD: both formats render; net profit == query_balance net."
+    },
+    {
+      "id": "WP-03",
+      "title": "Category breakdown",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-01"
+      ],
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "brief": "query_category_breakdown + renderer + nlp. DoD: both formats; category totals == query_sum."
+    },
+    {
+      "id": "WP-04",
+      "title": "Inventory valuation",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-01"
+      ],
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "brief": "query_inventory_valuation (running stock \u00d7 last cost, low-stock) + renderer + nlp. DoD: stock matches ledger guard; both formats."
+    },
+    {
+      "id": "WP-05",
+      "title": "Debt / receivables aging",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-01"
+      ],
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "brief": "query_debt_aging (0\u201330/31\u201360/61\u201390/90+) + renderer + nlp. DoD: buckets sum to total outstanding; both formats."
+    },
+    {
+      "id": "WP-06",
+      "title": "Tier & usage schema freeze gate",
+      "repo": "bookkeeper",
+      "wave": 0,
+      "deps": [],
+      "status": "queued",
+      "gate": "G-TIER-SCHEMA",
+      "brief": "users.plan/plan_status/plan_started_at/plan_expires_at + subscriptions, usage_counters, report_schedules via startup DDL + models. Additive only. DoD: DDL applies on scratch DB; models import; plan defaults free."
+    },
+    {
+      "id": "WP-07",
+      "title": "Entitlements module",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": "G-TIER-SCHEMA",
+      "brief": "New entitlements.py: tier\u2192capability matrix + can(user, capability)->(bool,reason). DoD: unit matrix free/pro/business allow/deny."
+    },
+    {
+      "id": "WP-08",
+      "title": "Gating + rate-limit enforcement",
+      "repo": "bookkeeper",
+      "wave": 2,
+      "deps": [
+        "WP-07"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "Enforce can() before report gen; per-user/day usage_counters (reports+nlp); limit message. DoD: gated\u2192upsell; over-cap\u2192limit; resets by date key."
+    },
+    {
+      "id": "WP-09",
+      "title": "Manual upgrade + upsell copy",
+      "repo": "bookkeeper",
+      "wave": 2,
+      "deps": [
+        "WP-07"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "Manual plan upgrade (testable w/o payments) + WhatsApp upsell copy. DoD: upgrade flips entitlements live; upsell renders for denied capability."
+    },
+    {
+      "id": "WP-10",
+      "title": "Paystack payments service",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": "G-TIER-SCHEMA",
+      "brief": "New payments.py: init transaction\u2192link; verify by reference. DECISION-GATED (PA hosting + provider). DoD: test-mode link; verify confirms paid ref."
+    },
+    {
+      "id": "WP-11",
+      "title": "Paystack webhook + activation",
+      "repo": "bookkeeper",
+      "wave": 2,
+      "deps": [
+        "WP-10",
+        "WP-07"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "POST /payments/paystack/webhook HMAC-SHA512 verify; charge.success\u2192activate +30d + confirm; idempotent on reference. DECISION-GATED. DoD: upgrade; replay idempotent; tampered rejected."
+    },
+    {
+      "id": "WP-12",
+      "title": "Subscription lifecycle expiry",
+      "repo": "bookkeeper",
+      "wave": 2,
+      "deps": [
+        "WP-07"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "Expire lapsed plans (plan_expires_at<now\u2192expired, downgrade). PA task script. DoD: lapsed user downgraded; entitlements reflect."
+    },
+    {
+      "id": "WP-13",
+      "title": "Report schedules",
+      "repo": "bookkeeper",
+      "wave": 1,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": "G-TIER-SCHEMA",
+      "brief": "report_schedules rows + create/list over WhatsApp. DoD: create/list a schedule; correct next_run_at."
+    },
+    {
+      "id": "WP-14",
+      "title": "Scheduled-report runner + rollout",
+      "repo": "bookkeeper",
+      "wave": 3,
+      "deps": [
+        "WP-13",
+        "WP-02",
+        "WP-03",
+        "WP-04",
+        "WP-05",
+        "WP-07"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "New scripts/run_scheduled_reports.py: find due\u2192generate via StatementAgent\u2192deliver\u2192advance next_run_at; cadence gated by tier; e2e rollout. DECISION-GATED. DoD: dry-run generates+advances; free users none; fits 1 daily task."
+    }
+  ],
+  "waves": [
+    {
+      "n": 0,
+      "label": "Wave 0 \u00b7 Gates",
+      "sub": "two independent freeze gates"
+    },
+    {
+      "n": 1,
+      "label": "Wave 1 \u00b7 Post-gate fan-out",
+      "sub": "report suite + entitlements/payments/schedules"
+    },
+    {
+      "n": 2,
+      "label": "Wave 2 \u00b7 Gating & payments",
+      "sub": "depend on entitlements / Paystack"
+    },
+    {
+      "n": 3,
+      "label": "Wave 3 \u00b7 Convergence",
+      "sub": "scheduled-report runner"
+    }
+  ],
+  "subplans": [],
+  "decisions": [
+    {
+      "round": 0,
+      "n": 1,
+      "note": "v2 scope locked: suite (2a) before monetization (2b\u20132d)."
+    },
+    {
+      "round": 0,
+      "n": 2,
+      "note": "Two freeze gates: G-REPORT-SCHEMA (WP-01), G-TIER-SCHEMA (WP-06)."
+    },
+    {
+      "round": 0,
+      "n": 3,
+      "note": "OPEN: PA hosting, payment provider, tier pricing, tier count \u2014 gate 2c/2d (see 04)."
+    }
+  ],
+  "coverage": [],
+  "research": {
+    "external_stamped": null,
+    "internal_stamped": null
+  }
+}
+  <!-- groundwork:auto:end board-data -->
+  </script>
+
+  <script type="application/json" id="board-meta">
+  <!-- groundwork:auto:start board-meta -->
+<!-- last_action: refresh-board · 2026-06-06T16:49:28Z -->
+{"title": "TaLi v2 \u2014 Reports, Tiers, Paywall & Scheduling", "profile": "software", "plan_folder": "plans/2026-06-06-v2-tiers-reports", "plan_slug": "2026-06-06-v2-tiers-reports", "goal": "Full report suite (P&L, category, inventory valuation, debt aging) + Free/Pro/Business tiers, Paystack paywall, rate limiting, scheduled reports \u2014 within PythonAnywhere free-tier limits.", "refreshed": "2026-06-06"}
+  <!-- groundwork:auto:end board-meta -->
+  </script>
+
+  <!-- ─── Mock data for standalone/preview rendering before refresh-board runs ─── -->
+  <script type="application/json" id="board-mock-data">
+  {
+    "plan":  { "title": "Studio P1 — orchestration board", "profile": "software", "goal": "Ship com.ikenga.studio Phase 1" },
+    "gates": [
+      { "id": "G-CANVAS",  "wp": "WP-01",  "label": "Canvas extracted",       "status": "pending" },
+      { "id": "G-SCHEMA",  "wp": "WP-02",  "label": "Schema frozen",          "status": "passed"  },
+      { "id": "G-ADAPTER", "wp": "WP-05a", "label": "Adapter trait frozen",   "status": "pending" }
+    ],
+    "wps": [
+      { "id": "WP-01",  "title": "Canvas extraction",        "repo": "contract",     "wave": 0, "deps": [],                                          "status": "in_progress", "gate": "G-CANVAS",  "brief": "Read 09-orchestration.md §WP-01. Lift the pan/zoom Canvas primitive out of shell/home into @ikenga/contract/canvas. DoD: pnpm typecheck green in contract/ + shell/." },
+      { "id": "WP-02",  "title": "Schema (Zod SoT)",         "repo": "ikenga-pkgs",  "wave": 0, "deps": [],                                          "status": "done",        "gate": "G-SCHEMA",  "brief": "Land the Zod schema as packages/apps/studio/shared/schema.ts. Start from plans/studio/drafts/schema.ts. DoD: schema_version z.literal(1); round-trip preserves unknown keys." },
+      { "id": "WP-05a", "title": "RendererAdapter trait",    "repo": "ikenga-pkgs",  "wave": 1, "deps": ["G-SCHEMA"],                                "status": "queued",      "gate": "G-ADAPTER", "brief": "Land renderers/types.ts only — the trait + RenderOptions + RenderContext. DoD: compiles standalone, matches 01-plan §Renderer-adapter contract verbatim." },
+      { "id": "WP-03",  "title": "Project sidecar core",     "repo": "ikenga-pkgs",  "wave": 1, "deps": ["G-SCHEMA"],                                "status": "queued",                           "brief": "Long-lived Bun sidecar: FS watcher, render queue, SQLite, JSON-RPC over stdio. See 09 §WP-03." },
+      { "id": "WP-04",  "title": "Per-folder trust gate",    "repo": "shell",        "wave": 1, "deps": [],                                          "status": "queued",                           "brief": "Tauri command + trust-UI reuse. See 09 §WP-04." },
+      { "id": "WP-09",  "title": "Skill bundle",             "repo": "ikenga-pkgs",  "wave": 1, "deps": ["G-SCHEMA"],                                "status": "queued",                           "brief": "All P1 skills incl. studio-beat-detect. See 09 §WP-09." },
+      { "id": "WP-10",  "title": "Block library (~30)",      "repo": "ikenga-pkgs",  "wave": 1, "deps": ["G-SCHEMA"],                                "status": "queued",                           "brief": "~30 blocks across kinds. See 09 §WP-10." },
+      { "id": "WP-12",  "title": "Shell renderer removal",   "repo": "shell",        "wave": 1, "deps": [],                                          "status": "queued",                           "brief": "Remove the read-only storyboard renderer; lift four reusable patterns as reference. See 09 §WP-12." },
+      { "id": "WP-05",  "title": "HyperFrames adapter",      "repo": "ikenga-pkgs",  "wave": 2, "deps": ["WP-03", "G-ADAPTER"],                      "status": "blocked",                          "brief": "Implement RendererAdapter for HF. See 09 §WP-05." },
+      { "id": "WP-05b", "title": "Excalidraw adapter",       "repo": "ikenga-pkgs",  "wave": 2, "deps": ["WP-03", "G-ADAPTER"],                      "status": "blocked",                          "brief": "Static + animated Excalidraw renderer. See 09 §WP-05b." },
+      { "id": "WP-06",  "title": "MCP server",               "repo": "ikenga-pkgs",  "wave": 2, "deps": ["WP-03"],                                   "status": "blocked",                          "brief": "Long-lived MCP server, thin JSON-RPC client over the sidecar. See 09 §WP-06." },
+      { "id": "WP-07c", "title": "Exporter",                 "repo": "ikenga-pkgs",  "wave": 2, "deps": ["WP-03"],                                   "status": "blocked",                          "brief": "FFmpeg concat module. See 09 §WP-07c." },
+      { "id": "WP-07",  "title": "Studio iframe (5 views)",  "repo": "ikenga-pkgs",  "wave": 3, "deps": ["G-CANVAS", "G-SCHEMA", "mock MCP"],        "status": "blocked",                          "brief": "One Vite bundle, Pattern C. See 09 §WP-07." },
+      { "id": "WP-08",  "title": "Manifest",                 "repo": "ikenga-pkgs",  "wave": 4, "deps": ["G-SCHEMA"],                                "status": "queued",                           "brief": "Author manifest.json per plan. See 09 §WP-08." },
+      { "id": "WP-11",  "title": "Smoke fixture",            "repo": "ikenga-pkgs",  "wave": 4, "deps": ["WP-02", "WP-05"],                          "status": "blocked",                          "brief": "Runnable smoke project at pkgs/test-studio/sample/. See 09 §WP-11." },
+      { "id": "WP-13",  "title": "Verification",             "repo": "ikenga-pkgs",  "wave": 4, "deps": ["all"],                                     "status": "blocked",                          "brief": "Full §13 verification sweep. Orchestrator runs." }
+    ],
+    "waves": [
+      { "n": 0, "label": "Wave 0 · Gates",                "sub": "sequential" },
+      { "n": 1, "label": "Wave 1 · Post-schema fan-out",  "sub": "parallel"   },
+      { "n": 2, "label": "Wave 2 · Post-sidecar",         "sub": "parallel"   },
+      { "n": 3, "label": "Wave 3 · Post-MCP + canvas",    "sub": "iframe"     },
+      { "n": 4, "label": "Wave 4 · Close-out",            "sub": "sequential" }
+    ],
+    "decisions": [
+      { "round": 7, "n": 6, "note": "Aspect ratio + capability matrix + cost fields + beat-map + save contract + passthrough" },
+      { "round": 6, "n": 5, "note": "Excalidraw P1 renderer; Excalimate P2 peer sidecar" },
+      { "round": 5, "n": 2, "note": "Pattern C locked; Monaco→CodeMirror parallel" }
+    ],
+    "coverage": [
+      { "phase": "P1", "designs": 1, "of": 1, "ok": true  },
+      { "phase": "P2", "designs": 1, "of": 5, "ok": false },
+      { "phase": "P3", "designs": 0, "of": 4, "ok": false }
+    ],
+    "research": { "external_stamped": "2026-05-20", "internal_stamped": "2026-05-20" }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Inter:wght@300..600&family=JetBrains+Mono:wght@400..500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       @ikenga/tokens — full surface, inlined.
+       Mirrors /tokens/tokens.css (the canonical engineering package).
+       Inside the Ikenga shell, the AppBridge host-context handshake overrides
+       these at runtime when the user flips theme/mode in chrome.
+       Axes: data-theme="A|B|C" × data-mode="dark|light" × data-density.
+       ═════════════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Spacing (4px base) */
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-5: 20px; --space-6: 24px; --space-8: 32px;
+      /* Radii */
+      --radius-xs: 3px; --radius-sm: 5px; --radius-md: 8px; --radius-lg: 12px;
+      --radius-xl: 16px; --radius-pill: 999px;
+      /* Typography */
+      --font-display: 'Fraunces', ui-serif, Georgia, serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', ui-monospace, SF Mono, Menlo, monospace;
+      --text-h1: 32px; --text-h2: 24px; --text-h3: 18px;
+      --text-body-lg: 16px; --text-body: 14px; --text-body-sm: 13px;
+      --text-caption: 12px; --text-micro: 11px;
+      /* Motion */
+      --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 260ms;
+      --ease-calm: cubic-bezier(0.2, 0.6, 0.2, 1);
+      --ease-decisive: cubic-bezier(0.4, 0, 0.2, 1);
+      color-scheme: dark;
+    }
+
+    /* Density (data-density) */
+    :root[data-density="compact"]     { --row-h: 28px; --row-pad-y: 5px;  --body-size: 13px; --body-lead: 1.4; --gap: 4px;  --tab-h: 32px; --btn-h: 28px; }
+    :root[data-density="comfortable"] { --row-h: 36px; --row-pad-y: 8px;  --body-size: 14px; --body-lead: 1.55; --gap: 8px; --tab-h: 38px; --btn-h: 32px; }
+    :root[data-density="spacious"]    { --row-h: 44px; --row-pad-y: 11px; --body-size: 16px; --body-lead: 1.6; --gap: 12px; --tab-h: 44px; --btn-h: 36px; }
+
+    /* ── Theme A · Dusk Wood (canonical default) ─── */
+    [data-theme="A"][data-mode="dark"], :root[data-theme="A"]:not([data-mode]) {
+      color-scheme: dark;
+      --bg-base: hsl(28, 18%, 4%);    --bg-surface: hsl(28, 14%, 7%);
+      --bg-raised: hsl(28, 11%, 11%); --bg-sunken: hsl(28, 22%, 2.5%);
+      --fg: hsl(36, 28%, 90%); --fg-muted: hsl(32, 11%, 56%); --fg-faint: hsl(28, 9%, 36%);
+      --border: hsl(28, 14%, 15%); --border-soft: hsl(28, 14%, 11%);
+      --primary: hsl(20, 50%, 34%); --primary-fg: hsl(36, 30%, 92%); --primary-soft: hsl(20, 40%, 14%);
+      --achievement: hsl(42, 78%, 54%); --achievement-soft: hsl(42, 48%, 18%);
+      --danger: hsl(8, 68%, 46%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 50%, 16%);
+      --systemic: hsl(170, 28%, 34%); --systemic-soft: hsl(170, 22%, 16%);
+      --rule: hsl(28, 14%, 18%); --chip-carve: hsl(28, 14%, 32%);
+      --shadow-1: 0 1px 2px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.25);
+      --shadow-2: 0 4px 12px -2px rgba(0,0,0,.55);
+      --shadow-3: 0 12px 28px -8px rgba(0,0,0,.6);
+    }
+    [data-theme="A"][data-mode="light"] {
+      color-scheme: light;
+      --bg-base: hsl(36, 22%, 96%);   --bg-surface: hsl(36, 18%, 93%);
+      --bg-raised: hsl(36, 14%, 89%); --bg-sunken: hsl(36, 26%, 98%);
+      --fg: hsl(28, 30%, 14%); --fg-muted: hsl(28, 14%, 38%); --fg-faint: hsl(28, 12%, 56%);
+      --border: hsl(32, 16%, 78%); --border-soft: hsl(32, 16%, 84%);
+      --primary: hsl(20, 50%, 34%); --primary-fg: hsl(36, 26%, 98%); --primary-soft: hsl(20, 50%, 90%);
+      --achievement: hsl(42, 78%, 42%); --achievement-soft: hsl(42, 60%, 90%);
+      --danger: hsl(8, 68%, 42%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 60%, 92%);
+      --systemic: hsl(170, 36%, 32%); --systemic-soft: hsl(170, 30%, 90%);
+      --rule: hsl(36, 14%, 84%); --chip-carve: hsl(28, 14%, 62%);
+      --shadow-1: 0 1px 2px rgba(28,18,8,.08);
+      --shadow-2: 0 4px 12px -2px rgba(28,18,8,.10);
+      --shadow-3: 0 12px 28px -8px rgba(28,18,8,.14);
+    }
+    /* ── Theme B · Kola Daylight (light canonical) ─── */
+    [data-theme="B"][data-mode="light"], :root[data-theme="B"]:not([data-mode]) {
+      color-scheme: light;
+      --bg-base: hsl(36, 28%, 96%);   --bg-surface: hsl(36, 22%, 94%);
+      --bg-raised: hsl(36, 18%, 90%); --bg-sunken: hsl(36, 32%, 98%);
+      --fg: hsl(28, 30%, 12%); --fg-muted: hsl(28, 14%, 38%); --fg-faint: hsl(28, 12%, 56%);
+      --border: hsl(32, 18%, 80%); --border-soft: hsl(32, 18%, 86%);
+      --primary: hsl(42, 82%, 46%); --primary-fg: hsl(28, 30%, 8%); --primary-soft: hsl(42, 60%, 88%);
+      --achievement: hsl(14, 72%, 46%); --achievement-soft: hsl(14, 60%, 90%);
+      --danger: hsl(8, 68%, 42%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 60%, 92%);
+      --systemic: hsl(170, 36%, 32%); --systemic-soft: hsl(170, 30%, 90%);
+      --rule: hsl(36, 14%, 84%); --chip-carve: hsl(28, 14%, 62%);
+      --shadow-1: 0 1px 2px rgba(28,18,8,.08);
+      --shadow-2: 0 4px 12px -2px rgba(28,18,8,.10);
+      --shadow-3: 0 12px 28px -8px rgba(28,18,8,.14);
+    }
+    [data-theme="B"][data-mode="dark"] {
+      color-scheme: dark;
+      --bg-base: hsl(36, 12%, 8%);    --bg-surface: hsl(36, 10%, 12%);
+      --bg-raised: hsl(36, 8%, 16%);  --bg-sunken: hsl(36, 16%, 6%);
+      --fg: hsl(40, 28%, 92%); --fg-muted: hsl(36, 10%, 62%); --fg-faint: hsl(36, 8%, 42%);
+      --border: hsl(36, 12%, 22%); --border-soft: hsl(36, 12%, 18%);
+      --primary: hsl(42, 84%, 60%); --primary-fg: hsl(36, 30%, 8%); --primary-soft: hsl(42, 60%, 18%);
+      --achievement: hsl(14, 76%, 56%); --achievement-soft: hsl(14, 50%, 18%);
+      --danger: hsl(8, 70%, 52%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 50%, 18%);
+      --systemic: hsl(170, 32%, 46%); --systemic-soft: hsl(170, 25%, 18%);
+      --rule: hsl(36, 12%, 22%); --chip-carve: hsl(36, 12%, 38%);
+      --shadow-1: 0 1px 2px rgba(0,0,0,.55);
+      --shadow-2: 0 4px 12px -2px rgba(0,0,0,.55);
+      --shadow-3: 0 12px 28px -8px rgba(0,0,0,.6);
+    }
+    /* ── Theme C · Bronze Shrine (dark canonical) ─── */
+    [data-theme="C"][data-mode="dark"], :root[data-theme="C"]:not([data-mode]) {
+      color-scheme: dark;
+      --bg-base: hsl(180, 14%, 7%);   --bg-surface: hsl(180, 12%, 11%);
+      --bg-raised: hsl(180, 10%, 15%);--bg-sunken: hsl(180, 18%, 5%);
+      --fg: hsl(40, 18%, 90%); --fg-muted: hsl(180, 8%, 60%); --fg-faint: hsl(180, 8%, 42%);
+      --border: hsl(180, 12%, 22%); --border-soft: hsl(180, 12%, 18%);
+      --primary: hsl(170, 35%, 50%); --primary-fg: hsl(180, 18%, 6%); --primary-soft: hsl(170, 30%, 18%);
+      --achievement: hsl(40, 58%, 64%); --achievement-soft: hsl(40, 30%, 18%);
+      --danger: hsl(8, 70%, 50%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 50%, 18%);
+      --systemic: hsl(220, 22%, 56%); --systemic-soft: hsl(220, 14%, 18%);
+      --rule: hsl(180, 12%, 22%); --chip-carve: hsl(180, 12%, 38%);
+      --shadow-1: 0 1px 2px rgba(0,0,0,.6);
+      --shadow-2: 0 4px 12px -2px rgba(0,0,0,.6);
+      --shadow-3: 0 12px 28px -8px rgba(0,0,0,.65);
+    }
+    [data-theme="C"][data-mode="light"] {
+      color-scheme: light;
+      --bg-base: hsl(180, 10%, 95%);  --bg-surface: hsl(180, 8%, 92%);
+      --bg-raised: hsl(180, 6%, 88%); --bg-sunken: hsl(180, 12%, 97%);
+      --fg: hsl(200, 22%, 14%); --fg-muted: hsl(200, 10%, 38%); --fg-faint: hsl(200, 8%, 58%);
+      --border: hsl(180, 12%, 80%); --border-soft: hsl(180, 12%, 86%);
+      --primary: hsl(170, 42%, 34%); --primary-fg: hsl(180, 12%, 97%); --primary-soft: hsl(170, 30%, 88%);
+      --achievement: hsl(40, 64%, 38%); --achievement-soft: hsl(40, 50%, 90%);
+      --danger: hsl(8, 70%, 42%); --danger-fg: hsl(0, 0%, 98%); --danger-soft: hsl(8, 60%, 92%);
+      --systemic: hsl(220, 24%, 40%); --systemic-soft: hsl(220, 22%, 90%);
+      --rule: hsl(180, 12%, 80%); --chip-carve: hsl(200, 8%, 58%);
+      --shadow-1: 0 1px 2px rgba(20,28,32,.08);
+      --shadow-2: 0 4px 12px -2px rgba(20,28,32,.10);
+      --shadow-3: 0 12px 28px -8px rgba(20,28,32,.14);
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       Components — adapted from design/shell/concepts/04-pkgs/_pkg.css.
+       These class names are the canonical Ikenga vocabulary (eyebrow,
+       card, list-row, tag-deal/tag-warn/tag-tint, kpi).
+       ════════════════════════════════════════════════════════════════════ */
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg-base); }
+    body {
+      font-family: var(--font-body); font-size: var(--body-size, var(--text-body)); line-height: var(--body-lead, 1.55);
+      color: var(--fg); -webkit-font-smoothing: antialiased;
+      transition: background var(--motion-slow, 260ms) var(--ease-calm), color var(--motion-slow, 260ms) var(--ease-calm);
+    }
+    button { font-family: inherit; }
+
+    .mono { font-family: var(--font-mono); }
+    .display { font-family: var(--font-display); font-weight: 500; letter-spacing: -.012em; }
+
+    /* Mono uppercase eyebrows — the signature Ikenga label */
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      font-family: var(--font-mono); font-size: var(--text-micro);
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--fg-faint);
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+    /* Section-tag: dimmer eyebrow for column headers / detail-card labels */
+    .section-tag, .detail-card-label {
+      font-family: var(--font-mono); font-size: 10.5px;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--fg-faint);
+    }
+
+    /* Tag chips — the .tag-deal / .tag-warn / .tag-tint vocabulary */
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: var(--font-mono); font-size: 9.5px;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 2px 6px; border-radius: var(--radius-xs);
+      background: var(--bg-sunken); color: var(--fg-muted); border: 1px solid var(--border-soft);
+      white-space: nowrap;
+    }
+    .tag-deal { color: var(--achievement); border-color: var(--achievement-soft); background: var(--achievement-soft); }
+    .tag-warn { color: var(--danger);      border-color: var(--danger-soft);      background: var(--danger-soft); }
+    .tag-tint { color: var(--primary);     border-color: var(--primary-soft);     background: var(--primary-soft); }
+    .tag-system { color: var(--systemic);  border-color: var(--systemic-soft);    background: var(--systemic-soft); }
+
+    /* Status dots */
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot.done        { background: var(--achievement); }
+    .dot.in_progress { background: var(--primary); animation: pulse 1.6s var(--ease-calm) infinite; }
+    .dot.queued      { background: var(--fg-faint); }
+    .dot.blocked     { background: var(--danger); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+    /* Buttons (.btn / .btn.is-primary) */
+    .btn {
+      height: var(--btn-h, 32px); padding: 0 var(--space-3);
+      background: var(--bg-base); border: 1px solid var(--border-soft);
+      color: var(--fg); border-radius: var(--radius-sm); cursor: pointer;
+      font-size: var(--text-body-sm); font-weight: 500;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: border-color var(--motion-fast) var(--ease-calm), background var(--motion-fast) var(--ease-calm);
+    }
+    .btn:hover { border-color: var(--primary); }
+    .btn.is-primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+    .btn.is-primary:hover { filter: brightness(1.08); }
+    .btn-sm { height: 22px; padding: 0 8px; font-size: var(--text-micro); }
+
+    /* Segmented controls — for theme/mode/density toggles in the controls bar */
+    .seg {
+      display: inline-flex; background: var(--bg-base);
+      border: 1px solid var(--border-soft); border-radius: var(--radius-md);
+      padding: 2px; gap: 2px;
+    }
+    .seg button {
+      font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius-sm);
+      border: 0; background: transparent; color: var(--fg-muted); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .seg button:hover { color: var(--fg); }
+    .seg button.is-on { background: var(--bg-raised); color: var(--fg); box-shadow: var(--shadow-1); }
+    .seg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Page chrome — the page-head IS the entire chrome (no separate sticky controls bar).
+       Round-8 layout pass (G-15 sibling polish): the entire page-head scrolls away
+       with the page. The table thead pins as the new top-of-viewport once the user
+       scrolls past the hero. Sidebar sticks separately. Net header drop ~510 → ~210px. */
+    .page-head {
+      padding: var(--space-5) var(--space-6) var(--space-4);
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--bg-surface);
+    }
+    /* Scroll area — wraps page-head + board-grid so they scroll as one. */
+    .scroll-area { flex: 1; overflow: auto; min-height: 0; display: flex; flex-direction: column; }
+    .page-head-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-5); margin-bottom: var(--space-3);
+    }
+    .page-head-titles { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+    .page-head-titles .eyebrow { margin-bottom: -2px; }
+    /* h1 shrunk from --text-h1 to a clamped scale — dashboards don't earn marketing-page type. */
+    .plan-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -.012em; color: var(--fg); margin: 0; line-height: 1.18; }
+    .plan-title em { font-style: italic; color: var(--primary); }
+    .plan-goal { font-size: var(--text-body); color: var(--fg-muted); margin: 6px 0 0; max-width: 70ch; }
+
+    /* Top-right cluster: layout toggle · host badge · done-count */
+    .page-head-actions {
+      display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .page-head-counts {
+      font-family: var(--font-mono); font-size: var(--text-micro);
+      color: var(--fg-muted); letter-spacing: .04em;
+    }
+    .page-head-counts strong { color: var(--achievement); font-weight: 600; }
+
+    /* Compact seg variant — used in the page-head top-right cluster */
+    .seg-sm button {
+      font-size: var(--text-micro); padding: 3px 8px;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .seg-sm button svg { opacity: .7; }
+    .seg-sm button.is-on svg { opacity: 1; color: var(--primary); }
+
+    /* Kickoff card (WP-20) — the single most prominent action on the board.
+       Sits between page-head-top and the gates banner; full-width primary
+       surface with a play glyph, headline, and secondary hint. Click seeds
+       the orchestrator session (in-shell) or copies the brief (standalone). */
+    .kickoff {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin: var(--space-4) 0 0;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      color: var(--fg);
+      cursor: pointer; text-align: left;
+      font-family: inherit;
+      transition: filter var(--motion-fast) var(--ease-calm), border-color var(--motion-fast) var(--ease-calm);
+    }
+    .kickoff:hover { filter: brightness(1.06); border-color: var(--achievement); }
+    .kickoff:focus-visible { outline: 2px solid var(--achievement); outline-offset: 2px; }
+    .kickoff-glyph {
+      flex: 0 0 auto;
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-pill);
+      background: var(--primary); color: var(--primary-fg);
+      box-shadow: var(--shadow-1);
+    }
+    .kickoff-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .kickoff-eyebrow {
+      font-family: var(--font-mono); font-size: var(--text-micro);
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--achievement);
+    }
+    .kickoff-title {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: var(--text-h3); letter-spacing: -.005em; color: var(--fg);
+      line-height: 1.2;
+    }
+    .kickoff-hint {
+      font-size: var(--text-body-sm); color: var(--fg-muted);
+      line-height: 1.4;
+    }
+    .kickoff-mode {
+      flex: 0 0 auto;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius-xs);
+      background: var(--bg-base); color: var(--fg-muted); border: 1px solid var(--border-soft);
+    }
+    /* Compact Kickoff (Round 8) — collapses to a slim button once orchestrate has
+       fired at least once (meta.orchestrated_at populated). One click re-fires. */
+    .kickoff-compact {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin: var(--space-3) 0 0;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      color: var(--fg);
+      cursor: pointer; font-family: inherit;
+      font-size: var(--text-body-sm);
+      transition: filter var(--motion-fast) var(--ease-calm);
+    }
+    .kickoff-compact:hover { filter: brightness(1.06); }
+    .kickoff-compact .kickoff-compact-glyph { color: var(--primary); }
+    .kickoff-compact .kickoff-compact-when { color: var(--fg-faint); font-family: var(--font-mono); font-size: var(--text-micro); margin-left: 4px; }
+
+    /* Gate banner */
+    .gates {
+      display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+      padding: var(--space-3) 0 0;
+    }
+    /* Collapsed gates summary chip (Round 8) — click to expand the full list. */
+    .gates-summary {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: var(--space-3);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-raised); color: var(--fg-muted);
+      border: 1px solid var(--border-soft);
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background var(--motion-fast) var(--ease-calm), color var(--motion-fast) var(--ease-calm);
+    }
+    .gates-summary:hover { background: var(--bg-surface); color: var(--fg); }
+    .gates-summary-caret { font-size: 9px; opacity: .7; }
+    .gates-summary strong { color: var(--achievement); font-weight: 600; }
+    .gate {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius-xs);
+      border: 1px solid var(--border); background: var(--bg-base); color: var(--fg-muted);
+    }
+    .gate.passed {
+      background: var(--achievement-soft); border-color: var(--achievement); color: var(--achievement);
+    }
+    .gate svg { width: 11px; height: 11px; }
+
+    /* Filter chips */
+    .filters { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+    .filter-chip {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .06em; text-transform: lowercase;
+      padding: 4px 8px; border-radius: var(--radius-sm);
+      background: transparent; color: var(--fg-muted); border: 0; cursor: pointer;
+    }
+    .filter-chip:hover { color: var(--fg); }
+    .filter-chip.is-on { background: var(--bg-raised); color: var(--fg); }
+    .filter-chip-count { font-size: 9px; color: var(--fg-faint); margin-left: 4px; }
+
+    /* Layout grid (Mission Control) */
+    /* Round-8: dropped the forced height:100% — the App-level .scroll-area is the
+       single scroller and the grid should size to its natural content height. */
+    .board-grid { display: grid; grid-template-columns: 1fr 280px; min-height: 0; }
+
+    /* Table list (Mission Control) */
+    .wp-table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); }
+    .wp-table thead th {
+      text-align: left; font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint);
+      padding: var(--space-3) var(--space-3); border-bottom: 1px solid var(--border-soft);
+      background: var(--bg-sunken); position: sticky; top: 0; z-index: 5; font-weight: normal;
+    }
+    .wp-table tbody td {
+      padding: var(--row-pad-y, 8px) var(--space-3);
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--fg); vertical-align: middle;
+    }
+    .wp-table tbody tr { cursor: pointer; transition: background var(--motion-fast) var(--ease-calm); }
+    .wp-table tbody tr:hover { background: var(--bg-raised); }
+    .wp-table tbody tr.is-selected { background: var(--primary-soft); }
+    .wp-table tbody tr.is-selected td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
+    .wp-cell-id { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-muted); white-space: nowrap; }
+    .wp-cell-id .gate-mark { color: var(--achievement); margin-left: 4px; font-size: 9px; }
+    .wp-cell-deps { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wp-cell-wave { font-family: var(--font-mono); color: var(--fg-muted); text-align: center; }
+    .wp-status-cell { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg); }
+    .wp-actions { display: inline-flex; gap: 4px; }
+
+    /* Right rail — shared by Mission Control + Kanban via <PaneRail>.
+       Round-8: the rail cell stretches to full grid height; an inner
+       .rail-sticky wrapper does the pinning. Sticky directly on a grid item
+       (with align-self:start) flakes on WebKitGTK — the inner-wrapper pattern
+       is the cross-browser-reliable sticky-sidebar idiom. */
+    .rail {
+      border-left: 1px solid var(--border-soft);
+      background: var(--bg-surface);
+    }
+    .rail-sticky {
+      position: sticky; top: 0;
+      max-height: 100vh; max-height: 100dvh;
+      overflow: auto;
+      padding: var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-4);
+    }
+    .detail-card {
+      background: var(--bg-base); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md); padding: var(--space-3);
+    }
+    .detail-card-label { margin-bottom: var(--space-2); display: block; }
+
+    /* WP detail card — populated when a WP is selected, placeholder otherwise.
+       Sits at the top of the rail; the cross-cutting cards (decisions /
+       coverage / research) sit below it. */
+    .detail-card-selected { border-color: var(--primary); }
+    .detail-card-empty    { opacity: .65; }
+    .detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+    .detail-clear {
+      background: transparent; border: 0; cursor: pointer;
+      color: var(--fg-faint); font-size: 18px; line-height: 1;
+      padding: 0 4px; border-radius: var(--radius-xs);
+      transition: color var(--motion-fast) var(--ease-calm), background var(--motion-fast) var(--ease-calm);
+    }
+    .detail-clear:hover { color: var(--fg); background: var(--bg-raised); }
+    .detail-empty-text { color: var(--fg-muted); font-size: var(--text-body-sm); margin: var(--space-2) 0 0; line-height: 1.55; }
+    .detail-id-line {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin-bottom: var(--space-2); flex-wrap: wrap;
+    }
+    .detail-id { font-size: var(--text-body); color: var(--fg); font-weight: 500; }
+    .detail-wave { font-size: var(--text-micro); color: var(--fg-faint); letter-spacing: .06em; }
+    .detail-title {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: var(--text-h3); letter-spacing: -.005em;
+      color: var(--fg); margin: 0 0 var(--space-2); line-height: 1.25;
+    }
+    .detail-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--space-3); }
+    .detail-deps, .detail-subplan {
+      display: grid; grid-template-columns: 60px 1fr; gap: var(--space-2);
+      align-items: baseline; margin-bottom: var(--space-2);
+      font-size: var(--text-body-sm);
+    }
+    .detail-label {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--fg-faint);
+    }
+    .detail-value { color: var(--fg-muted); }
+    .detail-value.mono { font-family: var(--font-mono); font-size: 11px; }
+    .detail-subplan a { color: var(--primary); text-decoration: none; border-bottom: 1px dashed currentColor; }
+    .detail-subplan a:hover { color: var(--fg); }
+    .detail-brief-label {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--fg-faint);
+      margin: var(--space-3) 0 var(--space-2);
+      padding-top: var(--space-2);
+      border-top: 1px dashed var(--border-soft);
+    }
+    .detail-brief {
+      font-family: var(--font-mono); font-size: 11.5px; line-height: 1.6;
+      color: var(--fg); background: var(--bg-sunken);
+      border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      margin: 0;
+      max-height: 240px; overflow-y: auto;
+      white-space: pre-wrap; word-break: break-word;
+      user-select: text; cursor: text;
+    }
+    .detail-actions {
+      display: flex; gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .detail-actions .btn { flex: 1; justify-content: center; }
+    .decision-row { padding: var(--space-2) 0; border-top: 1px dashed var(--border-soft); }
+    .decision-row:first-child { border-top: 0; padding-top: 0; }
+    .decision-row-head { font-family: var(--font-mono); font-size: 10px; color: var(--primary); letter-spacing: .06em; text-transform: uppercase; }
+    .decision-row-note { color: var(--fg-muted); font-size: 11.5px; line-height: 1.45; margin-top: 4px; }
+    .coverage-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: var(--text-body-sm); }
+    .coverage-row .phase-tag { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-muted); letter-spacing: .06em; }
+    .coverage-row .phase-count { font-family: var(--font-mono); font-size: 10.5px; }
+    .coverage-row .phase-count.ok { color: var(--achievement); }
+    .coverage-row .phase-count.warn { color: var(--danger); }
+    .subplan-row { padding: var(--space-2) 0; border-top: 1px dashed var(--border-soft); }
+    .subplan-row:first-child { border-top: 0; padding-top: 0; }
+    .subplan-row-link { color: var(--primary); text-decoration: none; border-bottom: 1px dashed currentColor; font-size: 11.5px; word-break: break-word; }
+    .subplan-row-link:hover { color: var(--fg); }
+    .subplan-row-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .subplan-tag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 1px 5px; }
+    .subplan-ref { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); }
+    .subplan-ref-cross { font-style: italic; }
+    .subplan-status { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-faint); }
+
+    /* Kanban layout — columns by status (was Wave Board; wave info now lives on cards).
+       Round-8 layout pass: inherits the App-level .scroll-area scroller, so this only
+       controls horizontal overflow within the column strip; vertical scroll falls
+       through to the scroll-area. Columns stretch to viewport-minus-header height. */
+    .kanban-strip {
+      display: flex; gap: var(--space-3);
+      padding: var(--space-4) var(--space-6);
+      overflow-x: auto; align-items: stretch;
+      min-height: calc(100vh - 220px);
+    }
+    .kanban-col {
+      flex: 1 1 240px; min-width: 240px;
+      display: flex; flex-direction: column;
+      background: var(--bg-surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md); overflow: hidden;
+    }
+    /* Status-flavored column accents — top edge picks up the dot color */
+    .kanban-col.status-queued      { border-top: 3px solid var(--fg-faint); }
+    .kanban-col.status-in_progress { border-top: 3px solid var(--primary); }
+    .kanban-col.status-blocked     { border-top: 3px solid var(--danger); }
+    .kanban-col.status-done        { border-top: 3px solid var(--achievement); opacity: .85; }
+    .kanban-col-head { padding: var(--space-3); background: var(--bg-sunken); border-bottom: 1px solid var(--border-soft); }
+    .kanban-col-title { display: flex; align-items: center; gap: var(--space-2); }
+    .kanban-col-label { font-family: var(--font-display); font-weight: 500; font-size: var(--text-h3); color: var(--fg); }
+    .kanban-col-count { margin-left: auto; font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-muted); }
+    .kanban-col-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); margin-top: 4px; }
+    .kanban-col-body { flex: 1; overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+    .kanban-col-empty { padding: var(--space-4); text-align: center; font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-faint); }
+    .wp-card {
+      background: var(--bg-base); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: var(--space-3);
+      cursor: pointer;
+      transition: border-color var(--motion-fast) var(--ease-calm), background var(--motion-fast) var(--ease-calm);
+    }
+    .wp-card:hover { border-color: var(--primary); }
+    .wp-card.is-selected { border-color: var(--primary); background: var(--primary-soft); }
+    .wp-card-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 4px; }
+    .wp-card-title { font-size: var(--text-body-sm); font-weight: 500; color: var(--fg); line-height: 1.3; margin-top: 4px; }
+    .wp-card-meta { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); margin-top: 6px; }
+    .wp-card-actions { display: flex; gap: 4px; margin-top: var(--space-2); }
+    .wp-card-actions .btn { flex: 1; justify-content: center; }
+
+    /* Footer */
+    .page-foot {
+      padding: var(--space-3) var(--space-6);
+      border-top: 1px solid var(--border-soft);
+      background: var(--bg-sunken);
+      display: flex; align-items: center; gap: var(--space-4);
+      font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint);
+      letter-spacing: .06em;
+    }
+    .page-foot code { color: var(--fg-muted); }
+    .chip-carve {
+      color: var(--chip-carve); letter-spacing: .35em;
+      font-family: var(--font-mono);
+    }
+
+    /* Scrollbars (subtle) */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: var(--space-4); left: 50%; transform: translateX(-50%);
+      z-index: 200; background: var(--bg-raised); border: 1px solid var(--border);
+      color: var(--fg); font-size: var(--text-body-sm);
+      padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-3);
+      animation: toast-in .18s var(--ease-calm);
+    }
+    @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    /* Shell-mode badge */
+    .host-badge {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: var(--radius-pill);
+      background: var(--bg-base); border: 1px solid var(--border-soft); color: var(--fg-faint);
+    }
+    .host-badge.in-shell { background: var(--systemic-soft); border-color: var(--systemic); color: var(--systemic); }
+    .host-badge.mock { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+
+    /* ⌘K Command Palette (WP-21) — modal overlay listing all 9 groundwork actions.
+       Backdrop blurs the board; the palette card sits ~18% from the top so the
+       focused input is at a comfortable reading height. ESC + backdrop-click close. */
+    .palette-backdrop {
+      position: fixed; inset: 0; z-index: 300;
+      background: color-mix(in srgb, var(--bg-base) 60%, transparent);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 12vh var(--space-4) var(--space-4);
+      animation: palette-fade .14s var(--ease-calm);
+    }
+    @keyframes palette-fade { from { opacity: 0; } to { opacity: 1; } }
+    .palette {
+      width: 100%; max-width: 560px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-3);
+      display: flex; flex-direction: column; max-height: 70vh; overflow: hidden;
+    }
+    .palette-search {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .palette-search input {
+      flex: 1; border: 0; background: transparent; outline: 0;
+      color: var(--fg); font-size: var(--text-body); font-family: inherit;
+    }
+    .palette-search input::placeholder { color: var(--fg-faint); }
+    .palette-kbd {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em;
+      color: var(--fg-faint); padding: 2px 6px; border-radius: var(--radius-xs);
+      border: 1px solid var(--border-soft); background: var(--bg-base);
+    }
+    .palette-list { overflow-y: auto; padding: var(--space-1) 0; }
+    .palette-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-2) var(--space-4); cursor: pointer;
+      border: 0; background: transparent; width: 100%; text-align: left;
+      color: var(--fg); font-family: inherit; font-size: var(--text-body-sm);
+    }
+    .palette-row:hover:not(:disabled), .palette-row.is-active { background: var(--bg-base); }
+    .palette-row:disabled { opacity: .42; cursor: not-allowed; }
+    .palette-row-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); background: var(--bg-base);
+      color: var(--fg-muted);
+    }
+    .palette-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .palette-row-label { font-weight: 500; color: var(--fg); }
+    .palette-row-desc { font-size: var(--text-micro); color: var(--fg-muted); }
+    .palette-row-hint {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em;
+      padding: 2px 6px; border-radius: var(--radius-xs);
+      flex-shrink: 0;
+    }
+    .palette-row-hint.mint    { color: var(--primary);     background: var(--primary-soft, var(--bg-raised)); }
+    .palette-row-hint.attach  { color: var(--systemic);    background: var(--systemic-soft); }
+    .palette-row-hint.locked  { color: var(--fg-faint);    background: var(--bg-base); border: 1px dashed var(--border-soft); }
+    .palette-foot {
+      padding: var(--space-2) var(--space-4);
+      border-top: 1px solid var(--border-soft);
+      font-size: var(--text-micro); color: var(--fg-faint);
+      display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
+    }
+    .palette-foot kbd {
+      font-family: var(--font-mono); font-size: 10px;
+      padding: 1px 5px; border-radius: var(--radius-xs);
+      border: 1px solid var(--border-soft); background: var(--bg-base); color: var(--fg-muted);
+    }
+    /* Run… button in the header — sits left of the Theme/Layout cluster. */
+    .btn-run { padding: 0 var(--space-3); height: 28px; gap: 6px; }
+    .btn-run .palette-kbd { margin-left: 4px; }
+
+    /* Argument-picker modals (WP-23) — invoked from the palette for `subplan`
+       and `init` (the two parameterized actions). Reuses .palette-backdrop for
+       the overlay; the card chrome mirrors .palette so the visual language is
+       continuous (palette → modal → confirm → dispatch). No new tokens. */
+    .picker {
+      width: 100%; max-width: 520px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-3);
+      display: flex; flex-direction: column; max-height: 80vh; overflow: hidden;
+    }
+    .picker-head {
+      display: flex; align-items: baseline; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .picker-head h2 {
+      margin: 0; font-size: var(--text-body); font-weight: 600; color: var(--fg);
+    }
+    .picker-head .picker-sub {
+      font-size: var(--text-micro); color: var(--fg-faint); margin-left: auto;
+    }
+    .picker-body {
+      overflow-y: auto; padding: var(--space-3) var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-3);
+    }
+    .picker-field { display: flex; flex-direction: column; gap: 6px; }
+    .picker-label {
+      font-size: var(--text-micro); color: var(--fg-muted);
+      text-transform: uppercase; letter-spacing: .06em; font-weight: 500;
+    }
+    .picker-label .picker-req { color: var(--danger); margin-left: 4px; }
+    .picker-input, .picker-textarea {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-base); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
+      color: var(--fg); font-family: inherit; font-size: var(--text-body-sm); outline: 0;
+    }
+    .picker-textarea { font-family: var(--font-mono); resize: vertical; min-height: 64px; }
+    .picker-input:focus, .picker-textarea:focus { border-color: var(--primary, var(--fg-muted)); }
+    .picker-input::placeholder, .picker-textarea::placeholder { color: var(--fg-faint); }
+    .picker-seg {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+    }
+    .picker-seg button {
+      flex: 1; min-width: 0;
+      background: var(--bg-base); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
+      color: var(--fg-muted); font-family: inherit; font-size: var(--text-body-sm);
+      cursor: pointer; text-align: left;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .picker-seg button:hover { color: var(--fg); }
+    .picker-seg button.is-on {
+      border-color: var(--primary, var(--fg)); color: var(--fg);
+      background: var(--primary-soft, var(--bg-raised));
+    }
+    .picker-seg .picker-seg-label { font-weight: 500; font-family: var(--font-mono); font-size: var(--text-micro); }
+    .picker-seg .picker-seg-desc  { color: var(--fg-faint); font-size: 11px; line-height: 1.35; }
+    .picker-warn {
+      font-size: var(--text-micro); color: var(--warn, var(--fg-faint));
+      padding-left: 2px;
+    }
+    .picker-help {
+      font-size: var(--text-micro); color: var(--fg-faint);
+    }
+    .picker-foot {
+      display: flex; gap: var(--space-2); align-items: center;
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-soft);
+    }
+    .picker-foot .picker-spacer { flex: 1; }
+    .picker-btn {
+      padding: 6px var(--space-3); border-radius: var(--radius-sm);
+      border: 1px solid var(--border-soft); background: var(--bg-base);
+      color: var(--fg-muted); font-family: inherit; font-size: var(--text-body-sm);
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .picker-btn:hover { color: var(--fg); border-color: var(--border); }
+    .picker-btn.is-primary {
+      background: var(--primary, var(--fg));
+      color: var(--bg-base); border-color: var(--primary, var(--fg)); font-weight: 500;
+    }
+    .picker-btn.is-primary:hover { filter: brightness(1.05); }
+    .picker-btn:disabled { opacity: .42; cursor: not-allowed; }
+
+    /* ─── C1 Hierarchical DAG layout (D-03, Round 10–12) ─────────────────────
+       Pannable canvas; gates as nodes in dedicated between-wave columns; edges
+       color-coded by source-node status; focus-fade non-neighbor subgraph when
+       something is selected. All classes prefixed `.dag-c1-*` to keep this
+       layout's styles isolated from Mission Control + Kanban. */
+    .dag-c1-canvas { flex: 1; position: relative; overflow: auto; background: var(--bg-base); min-height: 0; cursor: grab; }
+    .dag-c1-canvas.is-panning { cursor: grabbing; user-select: none; }
+    .dag-c1-canvas.is-panning .dag-c1-node { pointer-events: none; }
+    .dag-c1-inner { position: relative; padding: 56px 80px var(--space-6); }
+
+    .dag-c1-edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 1; }
+    .dag-c1-edges path { fill: none; stroke: var(--border); stroke-width: 1.5; opacity: .55; transition: stroke var(--motion-fast) var(--ease-calm), stroke-width var(--motion-fast) var(--ease-calm), opacity var(--motion-fast) var(--ease-calm); }
+    .dag-c1-edges path.from-done         { stroke: var(--achievement); opacity: .55; }
+    .dag-c1-edges path.from-in_progress  { stroke: var(--primary);     opacity: .75; }
+    .dag-c1-edges path.from-blocked      { stroke: var(--danger);      opacity: .5; }
+    .dag-c1-edges path.gates             { stroke-dasharray: 4 3; }
+    .dag-c1-edges path.gates.from-passed { stroke: var(--achievement); opacity: .6; }
+    .dag-c1-edges path.is-selected       { opacity: 1; stroke-width: 2.5; }
+    .dag-c1-edges.has-focus path         { opacity: .12; }
+    .dag-c1-edges.has-focus path.is-selected { opacity: 1; }
+
+    .dag-c1-col-label { position: absolute; font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-faint); top: 24px; white-space: nowrap; }
+    .dag-c1-col-label.gates { color: var(--achievement); }
+    .dag-c1-col-rule { position: absolute; top: 48px; bottom: var(--space-5); width: 1px; background: var(--border-soft); opacity: .35; z-index: 0; }
+    .dag-c1-col-rule.gates { background: var(--achievement); opacity: .15; }
+
+    /* WP nodes — color-coded left-edge stripe + status pill badge. */
+    .dag-c1-node { position: absolute; width: 180px; min-height: 68px; background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 9px 11px 10px 16px; cursor: pointer; transition: border-color var(--motion-fast) var(--ease-calm), background var(--motion-fast) var(--ease-calm), transform var(--motion-fast) var(--ease-calm), box-shadow var(--motion-fast) var(--ease-calm), opacity var(--motion-fast) var(--ease-calm); text-align: left; font-family: inherit; z-index: 2; box-shadow: var(--shadow-1); overflow: hidden; }
+    .dag-c1-node::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--fg-faint); transition: background var(--motion-fast) var(--ease-calm); }
+    .dag-c1-node.done::before        { background: var(--achievement); }
+    .dag-c1-node.in_progress::before { background: var(--primary); }
+    .dag-c1-node.blocked::before     { background: var(--danger); }
+    .dag-c1-node.queued::before      { background: var(--fg-muted); }
+    .dag-c1-node.stretch::before     { background: var(--chip-carve); }
+    .dag-c1-node.superseded::before  { background: var(--fg-faint); opacity: .5; }
+    .dag-c1-node:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.18), var(--shadow-1); }
+    .dag-c1-node.is-selected { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 3px var(--primary-soft), 0 4px 14px rgba(0,0,0,0.22); z-index: 4; }
+    .dag-c1-node.done             { opacity: .72; }
+    .dag-c1-node.done:hover,
+    .dag-c1-node.done.is-selected { opacity: 1; }
+    .dag-c1-node.superseded       { opacity: .45; }
+    .dag-c1-node.stretch          { border-style: dashed; }
+    .dag-c1-canvas.has-focus .dag-c1-node:not(.is-selected):not(.is-neighbor) { opacity: .35; }
+    .dag-c1-canvas.has-focus .dag-c1-node.done:not(.is-selected):not(.is-neighbor) { opacity: .25; }
+
+    .dag-c1-node .nhead { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .dag-c1-node .nid { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-muted); font-weight: 500; letter-spacing: .02em; }
+    .dag-c1-node.superseded .nid { text-decoration: line-through; }
+    .dag-c1-node .nbadge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px 2px 6px; border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; font-weight: 600; line-height: 1.4; background: var(--bg-sunken); color: var(--fg-muted); border: 1px solid var(--border-soft); white-space: nowrap; }
+    .dag-c1-node .nbadge::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .dag-c1-node.done .nbadge        { background: var(--achievement-soft); color: var(--achievement); border-color: var(--achievement); }
+    .dag-c1-node.in_progress .nbadge { background: var(--primary-soft);     color: var(--primary);     border-color: var(--primary); }
+    .dag-c1-node.in_progress .nbadge::before { animation: pulse 1.6s var(--ease-calm) infinite; }
+    .dag-c1-node.blocked .nbadge     { background: var(--danger-soft);      color: var(--danger);      border-color: var(--danger); }
+    .dag-c1-node.queued .nbadge      { background: var(--bg-sunken);        color: var(--fg);          border-color: var(--border); }
+    .dag-c1-node.stretch .nbadge     { background: var(--bg-sunken);        color: var(--fg-faint);    border-color: var(--border-soft); border-style: dashed; }
+    .dag-c1-node.superseded .nbadge  { background: var(--bg-sunken);        color: var(--fg-faint);    border-color: var(--border-soft); }
+    .dag-c1-node .ntitle { font-size: var(--text-body-sm); font-weight: 500; color: var(--fg); line-height: 1.3; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .dag-c1-node .nmeta { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: .04em; }
+    .dag-c1-node .nmeta .repo-tag { padding: 1px 5px; border-radius: var(--radius-xs); background: var(--bg-sunken); border: 1px solid var(--border-soft); color: var(--fg-muted); text-transform: lowercase; letter-spacing: 0; }
+    .dag-c1-node .nmeta .gate-mark { color: var(--achievement); font-weight: 600; }
+
+    /* Gate nodes — pill silhouette + prominent lock chip. */
+    .dag-c1-node.gate { width: 168px; min-height: 64px; border-radius: 36px; padding: 10px 14px 10px 42px; background: var(--achievement-soft); border: 1.5px solid var(--achievement); }
+    .dag-c1-node.gate::before { display: none; }
+    .dag-c1-node.gate.pending   { background: var(--bg-sunken); border-color: var(--chip-carve); border-style: dashed; }
+    .dag-c1-node.gate.cancelled { background: var(--bg-sunken); border-color: var(--border-soft); opacity: .55; }
+    .dag-c1-node.gate:hover     { border-color: var(--primary); }
+    .dag-c1-node.gate.is-selected { border-color: var(--primary); background: var(--primary-soft); }
+    .dag-c1-node.gate .glock-chip { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; background: var(--achievement); color: var(--bg-base); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+    .dag-c1-node.gate.pending .glock-chip   { background: var(--bg-base); color: var(--chip-carve); border: 1.5px dashed var(--chip-carve); box-shadow: none; }
+    .dag-c1-node.gate.cancelled .glock-chip { background: var(--bg-sunken); color: var(--fg-faint); border: 1px solid var(--border-soft); box-shadow: none; }
+    .dag-c1-node.gate .nid { color: var(--achievement); font-weight: 700; font-size: 11px; letter-spacing: .08em; }
+    .dag-c1-node.gate.pending .nid   { color: var(--fg-muted); }
+    .dag-c1-node.gate.cancelled .nid { color: var(--fg-faint); text-decoration: line-through; }
+    .dag-c1-node.gate .gate-title { font-size: 11.5px; font-weight: 500; color: var(--fg); margin-top: 2px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .dag-c1-node.gate.pending .gate-title   { color: var(--fg-muted); }
+    .dag-c1-node.gate.cancelled .gate-title { color: var(--fg-faint); }
+    .dag-c1-node.gate .gate-sub { font-size: 9px; color: var(--fg-faint); margin-top: 4px; font-family: var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+
+    .dag-c1-legend { position: absolute; right: var(--space-6); top: var(--space-3); display: flex; gap: var(--space-4); font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); letter-spacing: .06em; z-index: 3; align-items: center; }
+    .dag-c1-legend .swatch { display: inline-block; width: 22px; height: 1.5px; background: var(--border); margin-right: 6px; vertical-align: middle; }
+    .dag-c1-legend .swatch.dashed { background: transparent; border-bottom: 1.5px dashed var(--border); height: 0; }
+    .dag-c1-legend .pan-hint { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: var(--radius-xs); background: var(--bg-sunken); border: 1px solid var(--border-soft); color: var(--fg-muted); }
+
+    /* Detail panel: fixed so it stays put while the canvas pans. */
+    .dag-c1-detail { position: fixed; bottom: var(--space-5); right: var(--space-5); width: 320px; background: var(--bg-raised); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-3); z-index: 6; box-shadow: var(--shadow-1); }
+    .dag-c1-detail .dp-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+    .dag-c1-detail .dp-close { background: transparent; border: 0; color: var(--fg-faint); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: var(--radius-xs); transition: color var(--motion-fast) var(--ease-calm), background var(--motion-fast) var(--ease-calm); }
+    .dag-c1-detail .dp-close:hover { color: var(--fg); background: var(--bg-sunken); }
+    .dag-c1-detail .dp-id { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-muted); }
+    .dag-c1-detail .dp-title { font-weight: 500; margin-top: 4px; color: var(--fg); }
+    .dag-c1-detail .dp-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .dag-c1-detail .dp-deps { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); margin-top: 8px; }
+    .dag-c1-detail .dp-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .dag-c1-detail .dp-actions .btn { flex: 1; justify-content: center; }
+
+    /* Layout root */
+    /* Clamp to the viewport so internal columns scroll instead of the whole
+       page — mirrors how the in-shell pane sizes us, so the sticky table
+       header + independent rail/column scroll work standalone too. */
+    .shell { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+    .shell-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  </style>
+
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+
+  <!--
+    Bridge polyfill — `art` shape mirrors the real Ikenga AppBridge.
+    Standalone: postMessage to a same-window parent is a no-op; inShell=false.
+    In-shell:  the host receives `{__iyke:true, kind:'state', payload}` per
+               iframe and exposes them via `iyke iframe-state <pane>`.
+    Seeded sessions: the polyfill round-trips `host.openSessionDialog` to the
+    host (iyke iframe-registry), which opens the shell's New-Session dialog
+    pre-filled with the args (the dialog IS consent — user sees + can edit
+    the prompt before clicking Start) and replies keyed by request_id;
+    standalone (no host) it resolves {ok:false} and the caller copy-prompts.
+    Host-context handshake (theme/mode/density push from shell) is also
+    polyfilled — the shell sets data-mode/data-theme on this iframe's <html>
+    via a separate AppBridge message; we listen for it here too.
+  -->
+  <script>
+  window.__groundwork_bridge_polyfill__ = {
+    init: function () {
+      function post(kind, payload) {
+        try { if (window.parent && window.parent !== window) window.parent.postMessage({ __iyke: true, kind, payload }, '*'); } catch (e) {}
+      }
+      const inShell = !!(window.parent && window.parent !== window);
+      // Listen for host-context updates from the shell — theme/mode/density push.
+      window.addEventListener('message', (ev) => {
+        const m = ev.data;
+        if (!m || !m.__iyke || m.kind !== 'host-context') return;
+        const ctx = m.payload || {};
+        if (ctx.theme)   document.documentElement.setAttribute('data-theme', ctx.theme);
+        if (ctx.mode)    document.documentElement.setAttribute('data-mode',  ctx.mode);
+        if (ctx.density) document.documentElement.setAttribute('data-density', ctx.density);
+      });
+      return Promise.resolve({
+        host: { kind: inShell ? 'ikenga' : 'browser' },
+        publishState: (key, value) => post('state', { key, value }),
+        // openSessionDialog (WP-27 / G-SESSION-DIALOG, Round 7 2026-05-22) —
+        // round-trips to the host (iyke iframe-registry), which opens the
+        // shell's New-Session dialog pre-filled with the args. The dialog IS
+        // the consent surface: user sees + can edit the prompt + picks
+        // chat/terminal + engine + cwd before clicking Start. Replaces the
+        // retired host.startChatSession + WP-10's bespoke confirm modal.
+        // Resolves: { ok:true, kind:'chat', threadId } | { ok:true, kind:'terminal', paneId } | { ok:false, reason:'cancelled'|'scope-denied'|'timeout' }.
+        // Standalone (no host): resolves {ok:false, reason:'no-shell'} so the
+        // caller falls back to clipboard.
+        openSessionDialog: (args) => {
+          if (!inShell) return Promise.resolve({ ok: false, reason: 'no-shell' });
+          return new Promise((resolve) => {
+            const reqId = 'osd-' + Math.random().toString(36).slice(2) + '-' + Date.now();
+            const onMsg = (ev) => {
+              const m = ev.data;
+              if (!m || !m.__iyke || m.kind !== 'host.openSessionDialog:result' || m.request_id !== reqId) return;
+              window.removeEventListener('message', onMsg);
+              clearTimeout(timer);
+              resolve(m.payload || { ok: false, reason: 'empty-payload' });
+            };
+            const timer = setTimeout(() => { window.removeEventListener('message', onMsg); resolve({ ok: false, reason: 'timeout' }); }, 180000);
+            window.addEventListener('message', onMsg);
+            window.parent.postMessage({ __iyke: true, kind: 'host.openSessionDialog', request_id: reqId, payload: args }, '*');
+          });
+        },
+        // host.sendToActiveSession (WP-22) — sibling to openSessionDialog. Round-trips
+        // a request_id over postMessage and resolves with { ok, threadId?, reason? }
+        // matching the WP-22 verb signature. Same shape as openSessionDialog:
+        // standalone returns {ok:false} immediately so the palette can fall back to
+        // clipboard; in-shell uses the same 180s timeout convention.
+        sendToActiveSession: (args) => {
+          if (!inShell) return Promise.resolve({ ok: false, reason: 'no-shell' });
+          return new Promise((resolve) => {
+            const reqId = 'stas-' + Math.random().toString(36).slice(2) + '-' + Date.now();
+            const onMsg = (ev) => {
+              const m = ev.data;
+              if (!m || !m.__iyke || m.kind !== 'host.sendToActiveSession:result' || m.request_id !== reqId) return;
+              window.removeEventListener('message', onMsg);
+              clearTimeout(timer);
+              resolve(m.payload || { ok: false, reason: 'empty-payload' });
+            };
+            const timer = setTimeout(() => { window.removeEventListener('message', onMsg); resolve({ ok: false, reason: 'timeout' }); }, 180000);
+            window.addEventListener('message', onMsg);
+            window.parent.postMessage({ __iyke: true, kind: 'host.sendToActiveSession', request_id: reqId, payload: args }, '*');
+          });
+        },
+        // Pin-request handshake (G8). In-shell, the real AppBridge handles it
+        // and the activity bar lights up; standalone, this is a no-op.
+        pin: () => { post('pin', {}); },
+        // Notes-back loop API. The shell's AppBridge auto-injects the 💬
+        // button + element-picker UI; this polyfill exposes the explicit
+        // .send() entry-point so artifact code can route programmatic notes.
+        // Standalone: no-op + clipboard-copy fallback.
+        notes: {
+          send: (text, opts) => {
+            post('notes.send', { text, ...opts });
+            if (!inShell) {
+              try { navigator.clipboard.writeText(text); } catch (e) {}
+            }
+          },
+        },
+        inShell,
+      });
+    }
+  };
+  </script>
+</head>
+
+<body>
+  <div id="root"><div style="padding: var(--space-6); color: var(--fg-muted); font-size: var(--text-body-sm);">Initializing…</div></div>
+
+  <script type="text/babel" data-presets="env,react">
+  (function () {
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    /* ── Read board-data (live, written by refresh-board) or fall back to mock ── */
+    function readJsonTag(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      try { return JSON.parse(el.textContent.replace(/<!--[\s\S]*?-->/g, '').trim() || 'null'); } catch (e) { return null; }
+    }
+    const LIVE = readJsonTag('board-data');
+    const MOCK = readJsonTag('board-mock-data');
+    const META = readJsonTag('board-meta') || {};
+    const DATA = LIVE || MOCK;
+    const USING_MOCK = !LIVE;
+
+    /* Repo tint mapping — three roles from the canonical token surface */
+    const REPO_TAG_CLASS = {
+      contract:      'tag-system',   // verdigris — systemic
+      shell:         'tag-tint',     // primary
+      'ikenga-pkgs': 'tag-deal',     // achievement
+    };
+
+    const STATUS_LABEL = {
+      done: 'done', in_progress: 'in progress', queued: 'queued', blocked: 'blocked',
+    };
+    const FILTERS = ['all', 'in_progress', 'blocked', 'queued', 'done'];
+
+    /* Lucide-style minimal icons (inline path; matches studio/artifact pattern) */
+    const Icon = ({ name, size = 12 }) => {
+      const paths = {
+        check:    'M20 6 9 17l-5-5',
+        circle:   'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z',
+        play:     'M5 3l14 9-14 9V3z',
+        copy:     'M16 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2M8 4h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z',
+        table:    'M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14',
+        columns:  'M3 4h6v16H3zM15 4h6v16h-6z',
+        refresh:  'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+        spark:    'm12 3-1.5 4.5L6 9l4.5 1.5L12 15l1.5-4.5L18 9l-4.5-1.5L12 3Z',
+        search:   'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35',
+        bolt:     'M13 2 3 14h7l-1 8 10-12h-7l1-8Z',
+        'git-fork': 'M12 6v6m0 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM18 6v2a4 4 0 0 1-4 4M6 6v2a4 4 0 0 0 4 4M18 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+      };
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d={paths[name] || paths.circle} />
+        </svg>
+      );
+    };
+
+    function briefFor(wp) {
+      if (wp.brief) return wp.brief;
+      return `WP ${wp.id} — ${wp.title}\nRepo / scope: ${wp.repo || 'unspecified'}\nDepends on: ${(wp.deps||[]).join(', ') || 'none'}\n\nRead the full brief in 09-orchestration.md §${wp.id}. Work only the named files/scope; report DoD when done.`;
+    }
+
+    /* ─────── Orchestrator brief (Kickoff card · WP-20) ───────
+       Verbatim copy of the brief in `.claude/skills/groundwork/agents/orchestrator.md`
+       under §"Brief (substitute placeholders, pass verbatim)". Embedded inline
+       because the board is a browser artifact and can't read the filesystem.
+
+       SYNC-WITH: .claude/skills/groundwork/agents/orchestrator.md §Brief
+       — if the orchestrator brief changes, mirror it here. A future drift-check
+       action can diff this constant against the source.
+
+       Placeholders: {plan_title} {plan_folder} {plan_slug} {profile}
+       Substituted by buildOrchestratorBrief() below. */
+    const ORCHESTRATOR_BRIEF_TEMPLATE = `You are the orchestrator for the {plan_title} build. Your single job: drive {plan_folder}/09-orchestration.md to ship. Read that doc end-to-end; it is the source of truth.
+
+WHAT YOU OWN
+
+- Wave sequencing per the wave plan in §"Wave plan".
+- Freeze-gate sign-off per §"Freeze gates".
+- Branch / PR / output ownership per the work-package matrix.
+- Merge order across repos / owners.
+- Conflict resolution.
+- 05-tracking.md checkbox writes (no one else writes that file).
+- Final §"Verification" sweep.
+
+WHAT SUBAGENTS OWN
+
+- One {{vocab.work_unit}} each. They receive the brief verbatim from 09 §WP-NN. They work on the branch / scope you name. They self-check against the Definition of Done. They report back: done / blocked / needs-decision. They do NOT merge, do NOT touch other packages' files, and do NOT edit 05-tracking.md.
+
+EXECUTION PROTOCOL
+
+1. KICKOFF
+   - Run \`groundwork status\` first to confirm clarify-pass and the matrix is fresh.
+   - Mirror \`05-tracking.md\` into the harness: for every \`WP-NN\` in the matrix (echoed in \`09\`), create a Task (TaskCreate) titled \`WP-NN <title>\` with the WP's Definition of Done as the body. These Tasks are the **live session + board view**; \`05-tracking.md\` stays the **durable cross-session source of truth**. The in-shell board, once seeded via \`host.startChatSession\` (WP-11), reflects this run rather than re-parsing stale markdown.
+   - Mirror the wave plan into Task dependencies where supported.
+
+2. LIVE RUN
+   - When you spawn a subagent for a WP, set its Task \`in_progress\`.
+   - When the subagent's DoD report passes review, set the Task \`completed\` and tick the matching 05-tracking.md checkbox.
+   - Subagents never touch Tasks or 05 markdown.
+
+3. DURABLE SYNC
+   - On each WP completion, commit (meta-repo) with \`chore({plan_slug}): WP-NN done\`.
+   - 05-tracking.md stays the cross-session SoT; Tasks are the live session view.
+
+4. BLOCKED / NEEDS-DECISION
+   - Resolve, escalate to the user, or re-scope the brief.
+   - Schema / interface / contract changes go through you — they're frozen gates. A subagent never invents a contract change.
+
+5. MERGE ORDER
+   - Per repo / owner, follow the wave plan.
+   - For {profile} = software: contract/lib changes merge first; \`pnpm install\` at workspace root; then consumer changes in dep order.
+   - For {profile} = general: decision-lock deliverables land before dependent deliverables; coordinate ownership.
+
+REVIEW
+
+After each wave completes, decide whether to:
+- Continue (everything green) — proceed to next wave.
+- Pause for a review pass (\`groundwork review\`) — major surprises came up.
+- Pause for a status check (\`groundwork status\`) — drift suspected.
+
+Never proceed past a freeze gate without sign-off.
+
+WHAT TO DO RIGHT NOW
+
+1. Read {plan_folder}/09-orchestration.md.
+2. Run \`groundwork status\` and \`groundwork clarify\`.
+3. Confirm the plan is ready.
+4. Create Tasks for all WPs.
+5. Start Wave 0.`;
+
+    /* Resolve placeholders for the orchestrator brief.
+       Sources, in order:
+         {plan_title}  ← meta.title  → data.plan.title  → 'this plan'
+         {plan_folder} ← meta.plan_folder (added in WP-20)  → derived from plan_slug  → 'this plan folder'
+         {plan_slug}   ← meta.plan_slug  → slugify(plan_title)  → 'plan'
+         {profile}     ← meta.profile  → data.plan.profile  → 'software' */
+    function buildOrchestratorBrief(meta, data) {
+      const planTitle  = (meta && meta.title)        || (data && data.plan && data.plan.title)   || 'this plan';
+      const profile    = (meta && meta.profile)      || (data && data.plan && data.plan.profile) || 'software';
+      const planSlug   = (meta && meta.plan_slug)    || planTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'plan';
+      const planFolder = (meta && meta.plan_folder)  || `plans/${planSlug}`;
+      return ORCHESTRATOR_BRIEF_TEMPLATE
+        .replace(/\{plan_title\}/g,  planTitle)
+        .replace(/\{plan_folder\}/g, planFolder)
+        .replace(/\{plan_slug\}/g,   planSlug)
+        .replace(/\{profile\}/g,     profile);
+    }
+
+    /* ─────── ACTIONS — the 9 groundwork actions surfaced by the ⌘K palette ───────
+       Each row carries both a standalone-slash form (clipboard fallback when no
+       shell verb is available) and a seeded-session form (substituted at runtime
+       against board-meta and handed to art.openSessionDialog / art.sendToActiveSession).
+       The standalone form is the unconditional floor — clipboard always works.
+       Disabled actions (subplan · init) need argument pickers that arrive in WP-23.
+       SYNC-WITH: .claude/skills/groundwork/actions/<id>.md §Click-to-fire prompt
+       — when the canonical prompts land in the action files, mirror any divergence
+       back here (or have a drift-check action surface a warn). */
+    const ACTIONS = [
+      { id: 'research', label: 'Research pass', desc: 'External + internal research into 02/03',
+        surface: 'new-session', icon: 'search', disabled: false,
+        standaloneForm: '/groundwork research',
+        seededForm: 'Run a groundwork research pass on `{plan_folder}` (plan title: {plan_title}).\n\nIf the groundwork skill is loaded in this session, follow its `research` action verbatim — read `.claude/skills/groundwork/actions/research.md` and `.claude/skills/groundwork/agents/researcher.md`, then spawn a researcher agent to fill `02-research-external.md` and `03-research-internal.md` inside their generated-region fences. If the skill is not loaded, read `{plan_folder}/01-plan.md` for context and produce findings + sources by hand, writing inside the existing `<!-- groundwork:auto:start findings -->` fences in the 02 / 03 files.\n\nCite every external claim with a URL; cite every internal claim with `path:line`. Stamp the run in `.groundwork.json.research.<file>.stamped` to today\'s date.' },
+      { id: 'design',   label: 'Design pass', desc: '≥2 mockups + lock one for the active phase',
+        surface: 'new-session', icon: 'spark', disabled: false,
+        standaloneForm: '/groundwork design --phase {phase}',
+        seededForm: 'Run a groundwork design pass on `{plan_folder}` (plan title: {plan_title}) for phase {phase}.\n\nIf the groundwork skill is loaded in this session, follow its `design` action verbatim — read `.claude/skills/groundwork/actions/design.md`, invoke the `design-language` skill first to discover the project\'s design contract, then produce ≥2 comparable mockups under `{plan_folder}/designs/`, surface them for comparison, and lock one. If the skill is not loaded, read `{plan_folder}/01-plan.md` §"Phase {phase}" for what\'s being designed, produce 2-3 self-contained HTML mockups under `{plan_folder}/designs/`, and present them side-by-side with a one-paragraph rationale per option.\n\nRefuse if the plan profile\'s `produces_designs` is false unless the user explicitly opted in.' },
+      { id: 'review',   label: 'Review pass', desc: 'Gap-analysis → new Round → ID-driven re-sync',
+        surface: 'new-session', icon: 'check', disabled: false,
+        standaloneForm: '/groundwork review',
+        seededForm: 'Run a groundwork review pass on `{plan_folder}` (plan title: {plan_title}).\n\nIf the groundwork skill is loaded in this session, follow its `review` action verbatim — read `.claude/skills/groundwork/actions/review.md` and `.claude/skills/groundwork/agents/reviewer.md`, spawn a reviewer agent, allocate `G-NN` IDs for each finding, append a new Round to `04-discussion.md` (newest-first), and re-sync affected docs via the IDs\' `touches[]` lists. If the skill is not loaded, read `{plan_folder}/01-plan.md` + `04-discussion.md` for current state, then critique the plan structurally (gaps, risks not surfaced, contradictions, readiness for next phase), allocate sequential `G-NN` IDs starting from the highest already in use, and append a Round in the standard format.\n\nStrengths-to-defend are required, not optional — list the design choices that are sound after considering alternatives.' },
+      { id: 'orchestrate', label: 'Orchestrate', desc: 'Generate 09-orchestration.md from 05',
+        surface: 'new-session', icon: 'play', disabled: false,
+        standaloneForm: '/groundwork orchestrate',
+        seededForm: 'Run groundwork orchestrate on `{plan_folder}` (plan title: {plan_title}, slug: {plan_slug}, profile: {profile}).\n\nIf the groundwork skill is loaded in this session, follow its `orchestrate` action verbatim — read `.claude/skills/groundwork/actions/orchestrate.md`, run `clarify` as a pre-step, derive the WP matrix / freeze gates / wave plan / per-WP briefs from `05-tracking.md` + `.groundwork.json.ids`, and write `09-orchestration.md` inside its generated-region fence. If the skill is not loaded, read `{plan_folder}/05-tracking.md` + `01-plan.md` + `.groundwork.json` and produce the equivalent doc by hand — the canonical section layout is documented in `.claude/skills/groundwork/actions/orchestrate.md` §"`09-orchestration.md` shape" (header list, fence convention, brief template).\n\nDo not spawn subagents — orchestrate derives the doc deterministically. The orchestrator-at-kickoff brief (the one that actually drives the build by spawning subagents) is in `.claude/skills/groundwork/agents/orchestrator.md` — that\'s a separate seeding step, fired by the Kickoff card.' },
+      { id: 'clarify',  label: 'Clarify', desc: '7-point readiness scan before orchestrate',
+        surface: 'active-session', icon: 'circle', disabled: false,
+        standaloneForm: '/groundwork clarify',
+        seededForm: 'Run a groundwork clarify (readiness gate) on `{plan_folder}` (plan title: {plan_title}).\n\nIf the groundwork skill is loaded in this session, follow its `clarify` action verbatim — read `.claude/skills/groundwork/actions/clarify.md` and run the seven-point readiness scan, returning per-check pass/warn/fail. If the skill is not loaded, read `{plan_folder}/01-plan.md`, `04-discussion.md`, `05-tracking.md`, and `.groundwork.json` and produce the same seven checks: (1) open questions in 04, (2) unspecified IDs in 01, (3) missing locked designs for visual profiles, (4) 05 drift from 01, (5) critical-path freshness, (6) active sub-plans, (7) profile conformance.\n\nRead-only. Do not write to disk.' },
+      { id: 'status',   label: 'Status', desc: 'Read-only health report on the plan',
+        surface: 'active-session', icon: 'table', disabled: false,
+        standaloneForm: '/groundwork status',
+        seededForm: 'Run groundwork status on `{plan_folder}` (plan title: {plan_title}).\n\nIf the groundwork skill is loaded in this session, follow its `status` action verbatim — read `.claude/skills/groundwork/actions/status.md` and produce the standard health report (profile, spine version, doc freshness, ID summary, sub-plan status, suggestions). If the skill is not loaded, read `{plan_folder}/.groundwork.json` and the docs it tracks, then produce the same report shape by hand.\n\nRead-only. Do not write to disk.' },
+      { id: 'refresh-board', label: 'Refresh board', desc: 'Re-render artifact/board.html from current state',
+        surface: 'active-session', icon: 'columns', disabled: false,
+        standaloneForm: '/groundwork refresh-board',
+        seededForm: 'Run groundwork refresh-board on `{plan_folder}` (plan title: {plan_title}).\n\nIf the groundwork skill is loaded in this session, follow its `refresh-board` action verbatim — read `.claude/skills/groundwork/actions/refresh-board.md`, build the board data model from `05-tracking.md` + `09-orchestration.md` + `.groundwork.json`, and write it into the `board-data` generated-region fence inside `{plan_folder}/artifact/board.html` (scaffolding the artifact directory on first run). If the skill is not loaded, read those same files, construct the board JSON, and inject it into the `<!-- groundwork:auto:start board-data -->` fence in `artifact/board.html` directly.\n\nPreserve hand-authored prose outside fences byte-identical.' },
+      { id: 'subplan',  label: 'New sub-plan', desc: 'Scaffold a focused NN-*.md sub-plan',
+        surface: 'new-session', icon: 'copy', disabled: false, needsPicker: 'subplan',
+        standaloneForm: '/groundwork subplan --archetype {archetype} --topic "{topic}" --ref {ref}',
+        seededForm: 'Scaffold a new groundwork sub-plan in `{plan_folder}` (plan title: {plan_title}).\n\nArchetype: {archetype} (one of: diff-plan, decision-doc, bug-doc). Topic: {topic}. Reference: {ref}.\n\nIf the groundwork skill is loaded in this session, follow its `subplan` action verbatim — read `.claude/skills/groundwork/actions/subplan.md`, resolve the next free `NN` number ≥ 06, render the matching template from `profiles/_shared/templates/subplans/{archetype}.md`, write to `{plan_folder}/NN-<slug>.md`, register in `.groundwork.json.subplans`, and cross-link from `00-README.md`. If the skill is not loaded, read the canonical reference instance for the archetype (`{plan_folder}/06-startSeededChat-extraction.md` for diff-plan, `07-spine-version-migration.md` for decision-doc, `08-index-board-fence-confusion.md` for bug-doc) and mirror its section shape with the new topic.\n\nDon\'t reuse a number already in use; don\'t write to 09 (reserved for orchestrate).' },
+      { id: 'init',     label: 'Initialize plan', desc: 'Scaffold a new groundwork plan folder',
+        surface: 'new-session', icon: 'spark', disabled: false, needsPicker: 'init',
+        standaloneForm: '/groundwork init {target_folder} --profile {profile} --goal "{goal}"',
+        seededForm: 'Scaffold a new groundwork plan folder at `{target_folder}`.\n\nProfile: {profile} (one of: software, general). Goal: {goal}.\n\nIf the groundwork skill is loaded in this session, follow its `init` action — read `.claude/skills/groundwork/actions/init.md`, run the discovery interview (skipping questions already answered above), and scaffold the spine. If the skill is not loaded, treat this as a plain instruction: create the folder, write the standard 6-doc spine (00-README through 05-tracking) plus an empty `.groundwork.json` anchored at `spine_version: "1"` with the profile and goal, and report back the file list.\n\nDo NOT scaffold outside `{target_folder}`. Preserve any existing files there as hand-authored.' },
+    ];
+
+    /* substituteAction — replace {plan_folder}/{plan_title}/{profile}/{goal}/etc against
+       board-meta. Mirrors WP-20's substitution pattern. {plan_folder} falls back to
+       'plans/groundwork' if the meta fence hasn't been refreshed with it yet. */
+    function substituteAction(template, meta, dataPlan) {
+      const plan = dataPlan || {};
+      const fallbacks = {
+        plan_folder:   meta.plan_folder   || 'plans/groundwork',
+        plan_title:    meta.title         || plan.title || 'groundwork plan',
+        plan_slug:     meta.plan_slug     || (meta.plan_folder ? String(meta.plan_folder).split('/').filter(Boolean).pop() : 'groundwork'),
+        profile:       meta.profile       || plan.profile || 'software',
+        goal:          meta.goal          || plan.goal    || '(no goal set)',
+        phase:         meta.phase         || '(active phase)',
+        archetype:     meta.archetype     || '<archetype>',
+        topic:         meta.topic         || '<topic>',
+        ref:           meta.ref           || '<ref>',
+        target_folder: meta.target_folder || 'plans/<new-plan>/',
+      };
+      return String(template || '').replace(/\{(\w+)\}/g, (m, k) => (k in fallbacks ? fallbacks[k] : m));
+    }
+
+    /* ⌘K Command Palette (WP-21) — modal overlay listing the 9 actions.
+       Keyboard: ↑/↓ navigate enabled rows · Enter fires · Esc closes.
+       The component is pure-presentational; routing lives in App.onPaletteFire. */
+    function CommandPalette({ open, onClose, onFire, actions }) {
+      const [query, setQuery] = useState('');
+      const [active, setActive] = useState(0);
+      const inputRef = React.useRef(null);
+
+      useEffect(() => {
+        if (!open) return;
+        setQuery('');
+        setActive(0);
+        const t = setTimeout(() => { if (inputRef.current) inputRef.current.focus(); }, 0);
+        return () => clearTimeout(t);
+      }, [open]);
+
+      const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return actions;
+        return actions.filter(a =>
+          a.id.toLowerCase().includes(q) ||
+          a.label.toLowerCase().includes(q) ||
+          (a.desc || '').toLowerCase().includes(q)
+        );
+      }, [query, actions]);
+
+      const enabledIndices = useMemo(() => filtered.map((a, i) => a.disabled ? -1 : i).filter(i => i >= 0), [filtered]);
+
+      useEffect(() => {
+        if (!enabledIndices.length) { setActive(-1); return; }
+        if (!enabledIndices.includes(active)) setActive(enabledIndices[0]);
+      }, [enabledIndices]);
+
+      if (!open) return null;
+
+      const moveActive = (delta) => {
+        if (!enabledIndices.length) return;
+        const pos = enabledIndices.indexOf(active);
+        const next = pos < 0 ? 0 : (pos + delta + enabledIndices.length) % enabledIndices.length;
+        setActive(enabledIndices[next]);
+      };
+
+      const onKeyDown = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); return; }
+        if (e.key === 'ArrowUp')   { e.preventDefault(); moveActive(-1); return; }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const a = filtered[active];
+          if (a && !a.disabled) onFire(a);
+        }
+      };
+
+      const surfaceHint = (a) => {
+        if (a.surface === 'new-session')    return { className: 'mint',   label: 'mint' };
+        if (a.surface === 'active-session') return { className: 'attach', label: 'attach' };
+        return { className: 'locked', label: 'WP-23' };
+      };
+
+      return (
+        <div className="palette-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} role="dialog" aria-label="Command palette" aria-modal="true">
+          <div className="palette" onKeyDown={onKeyDown}>
+            <div className="palette-search">
+              <Icon name="search" size={14} />
+              <input
+                ref={inputRef}
+                type="text" placeholder="Run a groundwork action…"
+                value={query} onChange={(e) => setQuery(e.target.value)}
+                aria-label="Filter actions"
+              />
+              <span className="palette-kbd">ESC</span>
+            </div>
+            <div className="palette-list" role="listbox" aria-label="Groundwork actions">
+              {filtered.length === 0 && (
+                <div style={{ padding: 'var(--space-3) var(--space-4)', color: 'var(--fg-faint)', fontSize: 'var(--text-body-sm)' }}>
+                  No actions match "{query}".
+                </div>
+              )}
+              {filtered.map((a, i) => {
+                const hint = surfaceHint(a);
+                return (
+                  <button
+                    key={a.id}
+                    className={`palette-row${i === active ? ' is-active' : ''}`}
+                    onClick={() => { if (!a.disabled) onFire(a); }}
+                    onMouseEnter={() => { if (!a.disabled) setActive(i); }}
+                    disabled={a.disabled}
+                    title={a.disabled ? a.disabledReason : `${a.standaloneForm} · ${hint.label}`}
+                    role="option" aria-selected={i === active} aria-disabled={a.disabled || false}
+                  >
+                    <span className="palette-row-icon"><Icon name={a.icon || 'circle'} size={14} /></span>
+                    <span className="palette-row-body">
+                      <span className="palette-row-label">{a.label}</span>
+                      <span className="palette-row-desc">{a.disabled ? a.disabledReason : a.desc}</span>
+                    </span>
+                    <span className={`palette-row-hint ${hint.className}`}>{hint.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="palette-foot">
+              <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+              <span><kbd>↵</kbd> run</span>
+              <span><kbd>esc</kbd> close</span>
+              <span style={{ marginLeft: 'auto' }}>read-actions attach · write-actions mint a new chat</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────── Argument-picker modals (WP-23) ───────
+       Invoked from the palette for the two parameterized actions. Each picker
+       collects the form values, then hands them back via onSubmit so the App
+       can run the existing substituteAction + dispatch path. ESC closes; the
+       backdrop reuses .palette-backdrop for visual continuity.
+
+       SubplanPicker — archetype radio (3 options) + topic + optional ref.
+         Archetype descriptions read from actions/subplan.md §"What it does".
+       InitPicker    — target_folder + profile radio (2 options) + goal textarea.
+         Profiles enumerated from .claude/skills/groundwork/profiles/* (software,
+         general — `_shared` skipped; `content` is P3 stretch). */
+
+    const SUBPLAN_ARCHETYPES = [
+      { id: 'diff-plan',    label: 'diff-plan',    desc: 'Focused PR/change plan with file-by-file diff' },
+      { id: 'decision-doc', label: 'decision-doc', desc: 'Between-round deliberation that doesn’t fit in a Round' },
+      { id: 'bug-doc',      label: 'bug-doc',      desc: 'Postmortem-style root-cause + fix' },
+    ];
+
+    // Profiles enumerated from .claude/skills/groundwork/profiles/. `_shared` is
+    // the base (not user-pickable). `content` is P3 stretch (not on disk yet).
+    const INIT_PROFILES = [
+      { id: 'software', label: 'software', desc: 'Code/feature work — produces designs' },
+      { id: 'general',  label: 'general',  desc: 'Non-code, lean — no designs phase' },
+    ];
+
+    const REF_RE = /^(WP-\d+|§.+)$/;
+
+    /* Shared modal shell — handles ESC/backdrop close, focus-on-mount, foot buttons.
+       Children are the field rows; submit/cancel callbacks come from the caller. */
+    function PickerShell({ title, subtitle, onClose, onSubmit, canSubmit, submitLabel, children, firstFieldRef }) {
+      useEffect(() => {
+        const onKey = (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        window.addEventListener('keydown', onKey);
+        const t = setTimeout(() => { if (firstFieldRef && firstFieldRef.current) firstFieldRef.current.focus(); }, 0);
+        return () => { window.removeEventListener('keydown', onKey); clearTimeout(t); };
+      }, [onClose, firstFieldRef]);
+
+      const onFormSubmit = (e) => {
+        e.preventDefault();
+        if (canSubmit) onSubmit();
+      };
+
+      return (
+        <div
+          className="palette-backdrop"
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+          role="dialog"
+          aria-label={title}
+          aria-modal="true"
+        >
+          <form className="picker" onSubmit={onFormSubmit}>
+            <div className="picker-head">
+              <h2>{title}</h2>
+              {subtitle && <span className="picker-sub">{subtitle}</span>}
+            </div>
+            <div className="picker-body">
+              {children}
+            </div>
+            <div className="picker-foot">
+              <span className="picker-help">⏎ submit · esc cancel</span>
+              <span className="picker-spacer" />
+              <button type="button" className="picker-btn" onClick={onClose}>Cancel</button>
+              <button type="submit" className="picker-btn is-primary" disabled={!canSubmit}>
+                {submitLabel || 'Submit'}
+              </button>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    function SubplanPicker({ onClose, onSubmit }) {
+      const [archetype, setArchetype] = useState('diff-plan');
+      const [topic, setTopic]         = useState('');
+      const [ref, setRef]             = useState('');
+      const topicRef = React.useRef(null);
+
+      const topicOk = topic.trim().length > 0;
+      const refTrim = ref.trim();
+      const refWarn = refTrim.length > 0 && !REF_RE.test(refTrim);
+      const canSubmit = topicOk; // ref-warn doesn't block submit per spec
+
+      const submit = () => {
+        if (!canSubmit) return;
+        onSubmit({ archetype, topic: topic.trim(), ref: refTrim });
+      };
+
+      return (
+        <PickerShell
+          title="New sub-plan"
+          subtitle="subplan · scaffolds NN-*.md"
+          onClose={onClose}
+          onSubmit={submit}
+          canSubmit={canSubmit}
+          submitLabel="Scaffold sub-plan"
+          firstFieldRef={topicRef}
+        >
+          <div className="picker-field">
+            <span className="picker-label">Archetype<span className="picker-req" aria-hidden="true">*</span></span>
+            <div className="picker-seg" role="radiogroup" aria-label="Sub-plan archetype">
+              {SUBPLAN_ARCHETYPES.map(a => (
+                <button
+                  key={a.id} type="button" role="radio" aria-checked={archetype === a.id}
+                  className={archetype === a.id ? 'is-on' : ''}
+                  onClick={() => setArchetype(a.id)}
+                >
+                  <span className="picker-seg-label">{a.label}</span>
+                  <span className="picker-seg-desc">{a.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="picker-field">
+            <label className="picker-label" htmlFor="picker-subplan-topic">
+              Topic<span className="picker-req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="picker-subplan-topic"
+              ref={topicRef}
+              className="picker-input"
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. extract focused-pane resolver"
+              required
+            />
+            <span className="picker-help">Becomes the file slug (kebab-cased automatically by the action).</span>
+          </div>
+
+          <div className="picker-field">
+            <label className="picker-label" htmlFor="picker-subplan-ref">Ref (optional)</label>
+            <input
+              id="picker-subplan-ref"
+              className="picker-input"
+              type="text"
+              value={ref}
+              onChange={(e) => setRef(e.target.value)}
+              placeholder='WP-22 or §Phase 4 (leave empty for cross-cutting)'
+            />
+            {refWarn
+              ? <span className="picker-warn">Ref doesn’t match <code>WP-NN</code> or <code>§…</code> — submit anyway if intentional.</span>
+              : <span className="picker-help">Cross-link target. WP-NN or §section, or empty.</span>
+            }
+          </div>
+        </PickerShell>
+      );
+    }
+
+    function InitPicker({ onClose, onSubmit }) {
+      const [targetFolder, setTargetFolder] = useState('plans/');
+      const [profile, setProfile]           = useState('software');
+      const [goal, setGoal]                 = useState('');
+      const folderRef = React.useRef(null);
+
+      const folderTrim = targetFolder.trim();
+      const folderOk   = folderTrim.length > 0 && folderTrim !== 'plans/';
+      const folderWarn = folderOk && !folderTrim.startsWith('plans/');
+      const goalOk     = goal.trim().length > 0;
+      const canSubmit  = folderOk && goalOk;
+
+      const submit = () => {
+        if (!canSubmit) return;
+        onSubmit({ target_folder: folderTrim.replace(/\/+$/, ''), profile, goal: goal.trim() });
+      };
+
+      return (
+        <PickerShell
+          title="Initialize plan"
+          subtitle="init · scaffolds a groundwork spine"
+          onClose={onClose}
+          onSubmit={submit}
+          canSubmit={canSubmit}
+          submitLabel="Scaffold plan"
+          firstFieldRef={folderRef}
+        >
+          <div className="picker-field">
+            <label className="picker-label" htmlFor="picker-init-folder">
+              Target folder<span className="picker-req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="picker-init-folder"
+              ref={folderRef}
+              className="picker-input"
+              type="text"
+              value={targetFolder}
+              onChange={(e) => setTargetFolder(e.target.value)}
+              placeholder="plans/<new-plan-name>"
+              required
+            />
+            {folderWarn
+              ? <span className="picker-warn">Doesn’t start with <code>plans/</code> — submit anyway if intentional.</span>
+              : <span className="picker-help">Path the spine will be scaffolded into.</span>
+            }
+          </div>
+
+          <div className="picker-field">
+            <span className="picker-label">Profile<span className="picker-req" aria-hidden="true">*</span></span>
+            <div className="picker-seg" role="radiogroup" aria-label="Plan profile">
+              {INIT_PROFILES.map(p => (
+                <button
+                  key={p.id} type="button" role="radio" aria-checked={profile === p.id}
+                  className={profile === p.id ? 'is-on' : ''}
+                  onClick={() => setProfile(p.id)}
+                >
+                  <span className="picker-seg-label">{p.label}</span>
+                  <span className="picker-seg-desc">{p.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="picker-field">
+            <label className="picker-label" htmlFor="picker-init-goal">
+              Goal<span className="picker-req" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="picker-init-goal"
+              className="picker-textarea"
+              rows={3}
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              placeholder="One-sentence description of what this plan ships."
+              required
+            />
+          </div>
+        </PickerShell>
+      );
+    }
+
+    function Toast({ msg }) {
+      if (!msg) return null;
+      return <div className="toast">{msg}</div>;
+    }
+
+    /* ─────── Page head — title + goal + gate banner + layout toggle ───────
+       The layout toggle (Mission Control ↔ Wave Board) lives in the page-head
+       top-right cluster alongside the host badge + package count. No separate
+       sticky controls bar — the page-head IS the chrome. Theme / mode / density
+       are NEVER switchable here; the shell pushes them via host-context. */
+    function PageHead({ data, meta, filter, setFilter, counts, layout, setLayout, inShell, done, onKickoff, onOpenPalette }) {
+      const planTitle = meta.title || data.plan?.title || 'this plan';
+      const kickoffHint = inShell
+        ? 'Spawns the orchestrator agent · mirrors WPs to Tasks · drives waves to completion.'
+        : 'Outside Ikenga — copies the orchestrator brief to your clipboard.';
+      // Round-8 density wins:
+      //  - slim Kickoff once orchestrate has fired at least once (meta.orchestrated_at)
+      //  - gates collapsed to a summary chip by default; click expands.
+      const hasOrchestrated = !!meta.orchestrated_at;
+      const [gatesExpanded, setGatesExpanded] = React.useState(false);
+      const gates = data.gates || [];
+      const gatesPassed = gates.filter(g => g.status === 'passed').length;
+      const gatesCancelled = gates.filter(g => g.status === 'cancelled').length;
+      return (
+        <header className="page-head">
+          <div className="page-head-top">
+            <div className="page-head-titles">
+              <span className="eyebrow"><span className="eyebrow-dot"></span>groundwork · plan board</span>
+              <h1 className="plan-title">{meta.title || data.plan?.title || 'groundwork plan'}{' '}<em>· {(meta.profile || data.plan?.profile || 'software')}</em></h1>
+              {(data.plan?.goal || meta.goal) && <p className="plan-goal">{data.plan?.goal || meta.goal}</p>}
+            </div>
+            <div className="page-head-actions">
+              <button
+                className="btn btn-run"
+                onClick={onOpenPalette}
+                title="Open the groundwork command palette (⌘K / Ctrl-K)"
+                aria-label="Run a groundwork action"
+              >
+                <Icon name="bolt" size={12} /> Run<span aria-hidden="true">…</span>
+                <span className="palette-kbd" aria-hidden="true">⌘K</span>
+              </button>
+              <div className="seg seg-sm" role="tablist" aria-label="Board layout">
+                <button className={layout === 'mission-control' ? 'is-on' : ''} onClick={() => setLayout('mission-control')} title="Mission Control — dense WP table + cross-cutting rail">
+                  <Icon name="table" size={12} /> Mission Control
+                </button>
+                <button className={layout === 'kanban' ? 'is-on' : ''} onClick={() => setLayout('kanban')} title="Kanban — columns by status (Queued · In Progress · Blocked · Done)">
+                  <Icon name="columns" size={12} /> Kanban
+                </button>
+                <button className={layout === 'dag-hierarchical' ? 'is-on' : ''} onClick={() => setLayout('dag-hierarchical')} title="DAG — hierarchical dependency graph; gates as choke-point nodes; drag to pan">
+                  <Icon name="git-fork" size={12} /> DAG
+                </button>
+              </div>
+              <div className="seg seg-sm">
+                <button onClick={() => location.reload()} title="Reload the board from disk (picks up a refresh-board run)" aria-label="Reload board">
+                  <Icon name="refresh" size={12} />
+                </button>
+              </div>
+              <span className={`host-badge ${inShell ? 'in-shell' : ''} ${USING_MOCK ? 'mock' : ''}`}>
+                {inShell ? 'in shell' : 'standalone'}{USING_MOCK && ' · mock'}
+              </span>
+              <span className="page-head-counts mono">
+                <strong>{done}</strong> / {data.wps.length} done
+              </span>
+            </div>
+          </div>
+
+          {/* Kickoff (WP-20) — full card on cold boards (no orchestrate.last_run);
+              slim button once orchestrate has fired at least once. Round 8 density. */}
+          {hasOrchestrated ? (
+            <button
+              type="button"
+              className="kickoff-compact"
+              onClick={onKickoff}
+              title={inShell ? 'Re-spawn the orchestrator agent for the whole plan' : 'Copy orchestrator brief to clipboard'}
+              aria-label={`Re-kickoff orchestrator for ${planTitle}`}
+            >
+              <span className="kickoff-compact-glyph"><Icon name="play" size={11} /></span>
+              <span>Re-kickoff</span>
+              <span className="kickoff-compact-when">last run {meta.orchestrated_at}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="kickoff"
+              onClick={onKickoff}
+              title={inShell ? 'Spawn the orchestrator agent for the whole plan' : 'Copy orchestrator brief to clipboard'}
+              aria-label={`Kickoff orchestrator for ${planTitle}`}
+            >
+              <span className="kickoff-glyph"><Icon name="play" size={14} /></span>
+              <span className="kickoff-body">
+                <span className="kickoff-eyebrow">Kickoff</span>
+                <span className="kickoff-title">Spawn the orchestrator for {planTitle}</span>
+                <span className="kickoff-hint">{kickoffHint}</span>
+              </span>
+              <span className="kickoff-mode">{inShell ? 'send to your chi' : 'copy brief'}</span>
+            </button>
+          )}
+
+          {/* Freeze gates — collapsed to a summary chip by default; click expands.
+              Round 8: saves ~110px of vertical real estate on warm boards. */}
+          {!gatesExpanded ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <button
+                type="button"
+                className="gates-summary"
+                onClick={() => setGatesExpanded(true)}
+                title="Show every freeze gate"
+                aria-expanded="false"
+              >
+                <span className="gates-summary-caret">▸</span>
+                <strong>{gatesPassed}/{gates.length - gatesCancelled}</strong> gates passed
+                {gatesCancelled > 0 && <span> · {gatesCancelled} cancelled</span>}
+              </button>
+              <div className="filters">
+                {FILTERS.map(f => (
+                  <button key={f} className={`filter-chip ${filter === f ? 'is-on' : ''}`} onClick={() => setFilter(f)}>
+                    {f.replace('_', ' ')}
+                    {f !== 'all' && counts[f] ? <span className="filter-chip-count">{counts[f]}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="gates">
+              <button
+                type="button"
+                className="gates-summary"
+                onClick={() => setGatesExpanded(false)}
+                title="Collapse"
+                style={{ marginRight: 'var(--space-2)', marginTop: 0 }}
+                aria-expanded="true"
+              >
+                <span className="gates-summary-caret">▾</span> freeze gates
+              </button>
+              {gates.map(g => (
+                <span key={g.id} className={`gate ${g.status === 'passed' ? 'passed' : ''}`} title={`${g.label} (${g.wp})`}>
+                  {g.status === 'passed' ? <Icon name="check" size={11} /> : <Icon name="circle" size={9} />}
+                  <span>{g.id}</span>
+                  <span style={{ color: 'currentColor', opacity: .6 }}>· {g.label}</span>
+                </span>
+              ))}
+              <div className="filters">
+                {FILTERS.map(f => (
+                  <button key={f} className={`filter-chip ${filter === f ? 'is-on' : ''}`} onClick={() => setFilter(f)}>
+                    {f.replace('_', ' ')}
+                    {f !== 'all' && counts[f] ? <span className="filter-chip-count">{counts[f]}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </header>
+      );
+    }
+
+    /* ─────── WP detail card — the rail's top section ───────
+       Populated when a WP is selected; shows a placeholder otherwise. The
+       brief renders in a scrollable mono <pre> so the user can select-and-
+       copy partial text. Action buttons (Copy / Start) live at the bottom;
+       hidden entirely when status === 'done', matching the table + kanban. */
+    function WpDetailCard({ wp, subplan, onCopy, onStart, onClear, inShell }) {
+      if (!wp) {
+        return (
+          <section className="detail-card detail-card-empty">
+            <span className="eyebrow">
+              <span className="eyebrow-dot" style={{ background: 'var(--fg-faint)' }}></span>
+              nothing selected
+            </span>
+            <p className="detail-empty-text">
+              Click a row or card to see its full brief here. The brief is what you'd paste into a session.
+            </p>
+          </section>
+        );
+      }
+      const status = STATUS_LABEL[wp.status] || wp.status;
+      const repoClass = REPO_TAG_CLASS[wp.repo] || '';
+      const briefText = wp.brief || `WP ${wp.id} — ${wp.title}\nRepo / scope: ${wp.repo || 'unspecified'}\nDepends on: ${(wp.deps||[]).join(', ') || 'none'}\n\nRead the full brief in 09-orchestration.md §${wp.id}.`;
+      return (
+        <section className="detail-card detail-card-selected">
+          <div className="detail-head">
+            <span className="eyebrow"><span className="eyebrow-dot"></span>selected</span>
+            <button className="detail-clear" onClick={onClear} title="Clear selection" aria-label="Clear selection">×</button>
+          </div>
+          <div className="detail-id-line">
+            <span className="mono detail-id">{wp.id}</span>
+            <span className="mono detail-wave">wave {wp.wave}</span>
+            <span className="wp-status-cell"><span className={`dot ${wp.status}`}></span>{status}</span>
+          </div>
+          <h3 className="detail-title">{wp.title}</h3>
+          <div className="detail-tags">
+            <span className={`tag ${repoClass}`}>{wp.repo || '—'}</span>
+            {wp.gate && <span className="tag tag-deal">◆ {wp.gate}</span>}
+          </div>
+          <div className="detail-deps">
+            <span className="detail-label">needs</span>
+            <span className="detail-value mono">{(wp.deps || []).join(' · ') || '—'}</span>
+          </div>
+          {subplan && (
+            <div className="detail-subplan">
+              <span className="detail-label">sub-plan</span>
+              <span className="detail-value">
+                <a href={`../${subplan.path}`} target="_top" title={subplan.archetype}>{subplan.path}</a>
+              </span>
+            </div>
+          )}
+          <div className="detail-brief-label">Brief</div>
+          <pre className="detail-brief">{briefText}</pre>
+          {wp.status !== 'done' && (
+            <div className="detail-actions">
+              <button className="btn" onClick={() => onCopy(wp)}><Icon name="copy" size={11} /> Copy brief</button>
+              <button className="btn is-primary" onClick={() => onStart(wp)} title={inShell ? "Send this WP's brief to your Chi" : 'Copy-prompt path'}><Icon name="play" size={10} /> Start</button>
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    /* ─────── PaneRail — shared right-side context column ───────
+       Identical across Mission Control + Kanban. Detail card on top (the
+       currently-selected WP or a placeholder); persistent cross-cutting
+       state below (decisions log · design coverage · research stamps).
+       Nothing here hides/blurs/disables the main content. */
+    function PaneRail({ data, selectedWp, subplan, onCopy, onStart, onClear, inShell }) {
+      return (
+        <aside className="rail">
+          <div className="rail-sticky">
+          <WpDetailCard
+            wp={selectedWp} subplan={subplan}
+            onCopy={onCopy} onStart={onStart} onClear={onClear}
+            inShell={inShell}
+          />
+          {data.decisions && data.decisions.length > 0 && (
+            <section className="detail-card">
+              <span className="detail-card-label">Decisions log</span>
+              {data.decisions.map(d => (
+                <div key={`${d.round}-${d.n}`} className="decision-row">
+                  <div className="decision-row-head">Round {d.round} · {d.n} decision{d.n === 1 ? '' : 's'}</div>
+                  <div className="decision-row-note">{d.note}</div>
+                </div>
+              ))}
+            </section>
+          )}
+          {data.subplans && data.subplans.length > 0 && (
+            <section className="detail-card">
+              <span className="detail-card-label">Sub-plans</span>
+              {data.subplans.map(sp => (
+                <div key={sp.path} className="subplan-row">
+                  <a href={`../${sp.path}`} target="_top" className="subplan-row-link" title={sp.archetype}>{sp.path}</a>
+                  <div className="subplan-row-meta">
+                    <span className="subplan-tag">{sp.archetype}</span>
+                    {sp.ref
+                      ? <span className="subplan-ref mono">{sp.ref}</span>
+                      : <span className="subplan-ref subplan-ref-cross">cross-cutting</span>}
+                    {sp.status && sp.status !== 'active' && <span className="subplan-status">{sp.status}</span>}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+          {data.coverage && data.coverage.length > 0 && (
+            <section className="detail-card">
+              <span className="detail-card-label">Design coverage</span>
+              {data.coverage.map(c => (
+                <div key={c.phase} className="coverage-row">
+                  <span className="phase-tag">{c.phase}</span>
+                  <span className={`phase-count ${c.ok ? 'ok' : 'warn'}`}>{c.designs}/{c.of} {c.ok ? '✓' : '⚠'}</span>
+                </div>
+              ))}
+              <div style={{ fontSize: 10, color: 'var(--fg-faint)', marginTop: 8, lineHeight: 1.4 }}>
+                Designs are produced per phase as approached.
+              </div>
+            </section>
+          )}
+          {data.research && (
+            <section className="detail-card">
+              <span className="detail-card-label">Research</span>
+              <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--fg-muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div>02 stamped <span className="mono" style={{ color: 'var(--fg-faint)' }}>{data.research.external_stamped || 'n/a'}</span></div>
+                <div>03 stamped <span className="mono" style={{ color: 'var(--fg-faint)' }}>{data.research.internal_stamped || 'n/a'}</span></div>
+              </div>
+            </section>
+          )}
+          </div>
+        </aside>
+      );
+    }
+
+    /* ─────── Mission Control ─────── */
+    function MissionControl({ data, selected, setSelected, selectedWp, subplan, filter, onCopy, onStart, onClear, inShell }) {
+      const rows = useMemo(() => filter === 'all' ? data.wps : data.wps.filter(w => w.status === filter), [filter, data.wps]);
+
+      return (
+        <div className="board-grid">
+          {/* Table column — no per-section overflow; the App-level
+              <main.scroll-area> is the single scroller. The thead's
+              position:sticky;top:0 pins to that container. */}
+          <div>
+            <table className="wp-table">
+              <thead>
+                <tr>
+                  <th>WP</th>
+                  <th>Title</th>
+                  <th>Scope</th>
+                  <th style={{ textAlign: 'center' }}>Wave</th>
+                  <th>Needs</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(wp => (
+                  <tr key={wp.id} className={selected === wp.id ? 'is-selected' : ''} onClick={() => setSelected(wp.id)}>
+                    <td className="wp-cell-id">{wp.id}{wp.gate && <span className="gate-mark" title={wp.gate}>◆</span>}</td>
+                    <td>{wp.title}</td>
+                    <td><span className={`tag ${REPO_TAG_CLASS[wp.repo] || ''}`}>{wp.repo || '—'}</span></td>
+                    <td className="wp-cell-wave">{wp.wave}</td>
+                    <td className="wp-cell-deps">{(wp.deps || []).join(' · ') || '—'}</td>
+                    <td><span className="wp-status-cell"><span className={`dot ${wp.status}`}></span>{STATUS_LABEL[wp.status]}</span></td>
+                    <td style={{ textAlign: 'right' }}>
+                      {wp.status !== 'done' && (
+                        <span className="wp-actions">
+                          <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); onCopy(wp); }}><Icon name="copy" size={11} /> Copy</button>
+                          <button className="btn btn-sm is-primary" onClick={(e) => { e.stopPropagation(); onStart(wp); }} title={inShell ? "Send this WP's brief to your Chi" : 'Copy-prompt path'}><Icon name="play" size={10} /> Start</button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <PaneRail
+            data={data} selectedWp={selectedWp} subplan={subplan}
+            onCopy={onCopy} onStart={onStart} onClear={onClear}
+            inShell={inShell}
+          />
+        </div>
+      );
+    }
+
+    /* ─────── Kanban — columns by status (was Wave Board) ───────
+       Columns are workflow-ordered: Queued → In Progress → Blocked → Done.
+       Wave is preserved as per-card metadata (cards retain their wave info
+       at the bottom). Done-column cards omit the Copy/Start actions row,
+       matching the "actions blank for done" rule in Mission Control. */
+    const STATUS_COLUMNS = [
+      { id: 'queued',      label: 'Queued',      sub: 'next up' },
+      { id: 'in_progress', label: 'In Progress', sub: 'active' },
+      { id: 'blocked',     label: 'Blocked',     sub: 'gated · needs attention' },
+      { id: 'done',        label: 'Done',        sub: 'shipped · history' },
+    ];
+
+    function Kanban({ data, selected, setSelected, selectedWp, subplan, onCopy, onStart, onClear, inShell }) {
+      const colsWithCards = STATUS_COLUMNS.map(col => ({
+        ...col,
+        cards: data.wps.filter(w => w.status === col.id),
+      }));
+      return (
+        <div className="board-grid">
+          <div className="kanban-strip">
+            {colsWithCards.map(col => (
+            <div key={col.id} className={`kanban-col status-${col.id}`}>
+              <div className="kanban-col-head">
+                <div className="kanban-col-title">
+                  <span className={`dot ${col.id}`}></span>
+                  <span className="kanban-col-label">{col.label}</span>
+                  <span className="kanban-col-count">{col.cards.length}</span>
+                </div>
+                <div className="kanban-col-sub">{col.sub}</div>
+              </div>
+              <div className="kanban-col-body">
+                {col.cards.length === 0 ? (
+                  <div className="kanban-col-empty">—</div>
+                ) : col.cards.map(wp => (
+                  <button key={wp.id} className={`wp-card ${selected === wp.id ? 'is-selected' : ''}`} onClick={() => setSelected(wp.id)}>
+                    <div className="wp-card-row">
+                      <span className="mono" style={{ fontSize: 'var(--text-micro)', color: 'var(--fg-muted)' }}>{wp.id}</span>
+                      <span className="mono" style={{ fontSize: 'var(--text-micro)', color: 'var(--fg-faint)' }}>wave {wp.wave}</span>
+                    </div>
+                    <div className="wp-card-title">{wp.title}</div>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                      <span className={`tag ${REPO_TAG_CLASS[wp.repo] || ''}`}>{wp.repo || '—'}</span>
+                      {wp.gate && <span className="tag tag-deal">◆ {wp.gate}</span>}
+                    </div>
+                    {(wp.deps || []).length > 0 && (
+                      <div className="wp-card-meta">needs: {wp.deps.join(' · ')}</div>
+                    )}
+                    {wp.status !== 'done' && (
+                      <div className="wp-card-actions">
+                        <span className="btn btn-sm" onClick={(e) => { e.stopPropagation(); onCopy(wp); }}><Icon name="copy" size={10} /> Copy brief</span>
+                        <span className="btn btn-sm is-primary" onClick={(e) => { e.stopPropagation(); onStart(wp); }}><Icon name="play" size={9} /> Start</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          </div>
+          <PaneRail
+            data={data} selectedWp={selectedWp} subplan={subplan}
+            onCopy={onCopy} onStart={onStart} onClear={onClear}
+            inShell={inShell}
+          />
+        </div>
+      );
+    }
+
+    /* ─────── DAG Hierarchical (C1, D-03 · Round 10–12) ───────
+       L→R hierarchical DAG. WPs in wave columns; gates in dedicated between-wave
+       columns. Edges color-coded by source-node status. Drag-to-pan; click-empty
+       / Esc / ✕ / click-selected-again to deselect. When a node is selected,
+       the non-neighbor subgraph fades for clarity. */
+    const C1_NODE_W = 180, C1_GATE_W = 168, C1_NODE_H = 68, C1_V_GAP = 28;
+    const C1_ROW_STEP = C1_NODE_H + C1_V_GAP;        // 96
+    const C1_COL_STEP = 280;
+    const C1_BASE_X   = 80;
+    const C1_BASE_Y   = 48;
+    const C1_STATUS_BADGE = { done: 'DONE', in_progress: 'ACTIVE', queued: 'QUEUED', blocked: 'BLOCKED', stretch: 'STRETCH', superseded: 'RETIRED' };
+    const C1_GATE_GLYPH  = { passed: '✓', pending: '◌', cancelled: '✕' };
+
+    /** Auto-layout: place WPs in wave columns; gates in synthetic columns
+     *  inserted after the wave that owns them. Returns positions, column
+     *  labels, and canvas dimensions for any plan shape. */
+    function computeC1Layout(wps, gates) {
+      const waves = [...new Set(wps.map(w => (w.wave ?? 0)))].sort((a, b) => a - b);
+      const gatesByWave = {};
+      for (const g of gates) {
+        const owner = wps.find(w => w.id === g.wp);
+        const ownerWave = owner ? (owner.wave ?? 0) : (waves[0] ?? 0);
+        (gatesByWave[ownerWave] = gatesByWave[ownerWave] || []).push(g);
+      }
+
+      const positions = {};
+      const cols      = [];
+      let x = C1_BASE_X;
+
+      for (const w of waves) {
+        cols.push({ x, label: `wave ${w}`, kind: 'wave' });
+        const wpsInWave = wps.filter(wp => (wp.wave ?? 0) === w);
+        wpsInWave.forEach((wp, i) => { positions[wp.id] = { x, y: C1_BASE_Y + i * C1_ROW_STEP, kind: 'wp' }; });
+        x += C1_COL_STEP;
+        if (gatesByWave[w] && gatesByWave[w].length) {
+          cols.push({ x, label: `gates · ${w}→${w + 1}`, kind: 'gates' });
+          gatesByWave[w].forEach((g, i) => { positions[g.id] = { x, y: C1_BASE_Y + i * C1_ROW_STEP, kind: 'gate' }; });
+          x += C1_COL_STEP;
+        }
+      }
+
+      const tallest = Math.max(
+        0,
+        ...waves.map(w => wps.filter(wp => (wp.wave ?? 0) === w).length),
+        ...Object.values(gatesByWave).map(arr => arr.length)
+      );
+      const canvasWidth  = Math.max(1200, x + 80);
+      const canvasHeight = Math.max(560,  C1_BASE_Y + tallest * C1_ROW_STEP + 80);
+      return { positions, cols, canvasWidth, canvasHeight };
+    }
+
+    function DagHierarchical({ data, selected, setSelected, selectedWp, subplan, onCopy, onStart, onClear, inShell }) {
+      const canvasRef = useRef(null);
+      const wps   = data.wps   || [];
+      const gates = data.gates || [];
+      const layout = useMemo(() => computeC1Layout(wps, gates), [wps, gates]);
+
+      useEffect(() => {
+        const el = canvasRef.current; if (!el) return;
+        let dragging = false, moved = false, startX = 0, startY = 0, scrollX = 0, scrollY = 0;
+        const onDown = (e) => {
+          if (e.button !== 0) return;
+          if (e.target.closest('.dag-c1-node, .btn, .dag-c1-detail')) return;
+          dragging = true; moved = false;
+          startX = e.clientX; startY = e.clientY;
+          scrollX = el.scrollLeft; scrollY = el.scrollTop;
+          e.preventDefault();
+        };
+        const onMove = (e) => {
+          if (!dragging) return;
+          const dx = e.clientX - startX, dy = e.clientY - startY;
+          if (!moved && Math.hypot(dx, dy) > 5) { moved = true; el.classList.add('is-panning'); }
+          if (moved) { el.scrollLeft = scrollX - dx; el.scrollTop = scrollY - dy; }
+        };
+        const onUp = (e) => {
+          if (!dragging) return;
+          const wasPan = moved;
+          dragging = false; moved = false;
+          el.classList.remove('is-panning');
+          if (!wasPan && !e.target.closest('.dag-c1-node, .btn, .dag-c1-detail')) setSelected(null);
+        };
+        const onWheel = (e) => { if (e.shiftKey) { e.preventDefault(); el.scrollLeft += e.deltaY; } };
+        const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
+        el.addEventListener('mousedown', onDown);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        el.addEventListener('wheel', onWheel, { passive: false });
+        window.addEventListener('keydown', onKey);
+        return () => {
+          el.removeEventListener('mousedown', onDown);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          el.removeEventListener('wheel', onWheel);
+          window.removeEventListener('keydown', onKey);
+        };
+      }, [setSelected]);
+
+      const statusOf = (id) => {
+        const w = wps.find(x => x.id === id); if (w) return w.status;
+        const g = gates.find(x => x.id === id); if (g) return g.status;
+        return 'queued';
+      };
+      const mkPath = (from, to) => {
+        const fromW = from.kind === 'gate' ? C1_GATE_W : C1_NODE_W;
+        const x1 = from.x + fromW, y1 = from.y + C1_NODE_H / 2;
+        const x2 = to.x,           y2 = to.y   + C1_NODE_H / 2;
+        const dx = Math.max(40, (x2 - x1) * 0.45);
+        return `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+      };
+
+      const edges = useMemo(() => {
+        const out = [];
+        for (const wp of wps) {
+          for (const dep of (wp.deps || [])) {
+            const from = layout.positions[dep], to = layout.positions[wp.id];
+            if (!from || !to) continue;
+            out.push({ id: `${dep}->${wp.id}`, d: mkPath(from, to), isGate: from.kind === 'gate', fromStatus: statusOf(dep), selectedHit: selected === wp.id || selected === dep });
+          }
+        }
+        for (const g of gates) {
+          const from = layout.positions[g.wp], to = layout.positions[g.id];
+          if (!from || !to) continue;
+          out.push({ id: `${g.wp}->${g.id}`, d: mkPath(from, to), isGate: true, fromStatus: statusOf(g.wp), selectedHit: selected === g.id || selected === g.wp });
+        }
+        return out;
+      }, [wps, gates, layout, selected]);
+
+      const neighborSet = useMemo(() => {
+        if (!selected) return new Set();
+        const ns = new Set([selected]);
+        const wp = wps.find(w => w.id === selected);
+        if (wp) {
+          (wp.deps || []).forEach(d => ns.add(d));
+          const owned = gates.find(g => g.wp === selected);
+          if (owned) ns.add(owned.id);
+        }
+        const g = gates.find(g => g.id === selected);
+        if (g) ns.add(g.wp);
+        wps.forEach(w => { if ((w.deps || []).includes(selected)) ns.add(w.id); });
+        return ns;
+      }, [selected, wps, gates]);
+      const hasFocus = !!selected;
+
+      const selWp   = wps.find(w => w.id === selected);
+      const selGate = gates.find(g => g.id === selected);
+      const selNode = selWp ? { ...selWp, kind: 'wp' } : selGate ? { ...selGate, kind: 'gate' } : null;
+
+      return (
+        <div className={`dag-c1-canvas ${hasFocus ? 'has-focus' : ''}`} ref={canvasRef}>
+          <div className="dag-c1-inner" style={{ minWidth: layout.canvasWidth, minHeight: layout.canvasHeight }}>
+            <div className="dag-c1-legend">
+              <span><i className="swatch"/>WP &rarr; WP</span>
+              <span><i className="swatch dashed"/>through-gate</span>
+              <span className="pan-hint">drag to pan &middot; shift-wheel &harr; &middot; Esc deselects</span>
+            </div>
+
+            {layout.cols.map((c, i) => {
+              const center = c.x + (c.kind === 'gates' ? C1_GATE_W : C1_NODE_W) / 2;
+              return (
+                <React.Fragment key={`col-${i}`}>
+                  <div className={`dag-c1-col-rule ${c.kind === 'gates' ? 'gates' : ''}`} style={{ left: center }} />
+                  <div className={`dag-c1-col-label ${c.kind === 'gates' ? 'gates' : ''}`} style={{ left: c.x }}>{c.label}</div>
+                </React.Fragment>
+              );
+            })}
+
+            <svg className={`dag-c1-edges ${hasFocus ? 'has-focus' : ''}`}>
+              <defs>
+                <marker id="c1-board-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+                </marker>
+              </defs>
+              {edges.map(e => (
+                <path key={e.id} d={e.d} className={`${e.isGate ? 'gates' : ''} from-${e.fromStatus} ${e.selectedHit ? 'is-selected' : ''}`} markerEnd="url(#c1-board-arrow)" />
+              ))}
+            </svg>
+
+            {wps.map(wp => {
+              const pos = layout.positions[wp.id]; if (!pos) return null;
+              const isSel = selected === wp.id;
+              const isNb  = !isSel && neighborSet.has(wp.id);
+              const cls = ['dag-c1-node', wp.status, isSel && 'is-selected', isNb && 'is-neighbor'].filter(Boolean).join(' ');
+              const onClk = () => setSelected(s => s === wp.id ? null : wp.id);
+              return (
+                <button key={wp.id} className={cls} style={{ left: pos.x, top: pos.y }} onClick={onClk}>
+                  <div className="nhead">
+                    <span className="nid">{wp.id}</span>
+                    <span className="nbadge">{C1_STATUS_BADGE[wp.status] || (wp.status || '').toUpperCase()}</span>
+                  </div>
+                  <div className="ntitle">{wp.title}</div>
+                  <div className="nmeta">
+                    <span className="repo-tag">{wp.repo || '—'}</span>
+                    {wp.gate && <span className="gate-mark">&#x25c6; {wp.gate}</span>}
+                  </div>
+                </button>
+              );
+            })}
+
+            {gates.map(g => {
+              const pos = layout.positions[g.id]; if (!pos) return null;
+              const isSel = selected === g.id;
+              const isNb  = !isSel && neighborSet.has(g.id);
+              const cls = ['dag-c1-node', 'gate', g.status, isSel && 'is-selected', isNb && 'is-neighbor'].filter(Boolean).join(' ');
+              const onClk = () => setSelected(s => s === g.id ? null : g.id);
+              return (
+                <button key={g.id} className={cls} style={{ left: pos.x, top: pos.y }} onClick={onClk}>
+                  <span className="glock-chip">{C1_GATE_GLYPH[g.status] || '◆'}</span>
+                  <span className="nid">&#x25c6; {g.id}</span>
+                  <div className="gate-title">{g.label}</div>
+                  <div className="gate-sub">{g.status} &middot; {g.wp}</div>
+                </button>
+              );
+            })}
+
+            {selNode && (
+              <div className="dag-c1-detail">
+                <div className="dp-head">
+                  <div className="dp-id">{selNode.kind === 'gate' ? `◆ ${selNode.id}` : selNode.id}</div>
+                  <button type="button" className="dp-close" onClick={() => setSelected(null)} title="Clear selection (Esc)" aria-label="Clear selection">&times;</button>
+                </div>
+                <div className="dp-title">{selNode.kind === 'gate' ? selNode.label : selNode.title}</div>
+                {selNode.kind === 'wp' && (
+                  <>
+                    <div className="dp-row">
+                      <span className="wp-status-cell"><span className={`dot ${selNode.status}`}></span>{selNode.status}</span>
+                      <span className={`tag ${REPO_TAG_CLASS[selNode.repo] || ''}`}>{selNode.repo || '—'}</span>
+                      {selNode.gate && <span className="tag tag-deal">&#x25c6; {selNode.gate}</span>}
+                    </div>
+                    {(selNode.deps || []).length > 0 && <div className="dp-deps">needs: {selNode.deps.join(' · ')}</div>}
+                    {selNode.status !== 'done' && (
+                      <div className="dp-actions">
+                        <button className="btn btn-sm" onClick={() => onCopy(selNode)}><Icon name="copy" size={11} /> Copy</button>
+                        <button className="btn btn-sm is-primary" onClick={() => onStart(selNode)} title={inShell ? "Send this WP's brief to your Chi" : 'Copy-prompt path'}><Icon name="play" size={10} /> Start</button>
+                      </div>
+                    )}
+                  </>
+                )}
+                {selNode.kind === 'gate' && (
+                  <>
+                    <div className="dp-row">
+                      <span className={`gate ${selNode.status === 'passed' ? 'passed' : ''}`}>{selNode.status === 'passed' ? '✓ passed' : '◌ pending'}</span>
+                      <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>owned by {selNode.wp}</span>
+                    </div>
+                    <div className="dp-deps">Every dependent waits for this gate.</div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────── App root ─────── */
+    function App({ art }) {
+      const [layout,   setLayout]   = useState('mission-control');
+      const [filter,   setFilter]   = useState('all');
+      const [selected, setSelected] = useState((DATA.wps[0] || {}).id);
+      const [toast,    setToast]    = useState(null);
+      const [paletteOpen, setPaletteOpen] = useState(false);
+      // Picker modal state (WP-23). null when closed; otherwise { kind:
+      // 'subplan'|'init', action }. WP-23 pickers collect action arguments;
+      // they live alongside paletteOpen so the palette can close + the picker
+      // open in one flow (palette → modal → submit → dispatch). Engine choice
+      // is NOT collected here (Round 7 / WP-25R) — the shell's New-Session
+      // dialog (WP-27) handles engine + chat/terminal + cwd as part of its
+      // own consent surface, opened by art.openSessionDialog.
+      const [picker, setPicker] = useState(null);
+      const inShell = art.inShell;
+
+      useEffect(() => {
+        art.publishState && art.publishState('board', { layout, filter, selected });
+      }, [layout, filter, selected, art]);
+
+      // ⌘K / Ctrl-K opens the palette globally.
+      useEffect(() => {
+        const onKey = (e) => {
+          const meta = e.metaKey || e.ctrlKey;
+          if (meta && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            setPaletteOpen(o => !o);
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, []);
+
+      // Pin-on-first-mount (G8). Idempotent via localStorage — the shell handles
+      // idempotency at its end too, but this guard avoids re-posting on every reload.
+      useEffect(() => {
+        if (!inShell || !art.pin) return;
+        const KEY = 'groundwork-board:pinned';
+        try {
+          if (!localStorage.getItem(KEY)) {
+            art.pin();
+            localStorage.setItem(KEY, '1');
+          }
+        } catch (e) { /* storage blocked — let the shell dedupe */ }
+      }, [inShell, art]);
+
+      const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 1800); };
+
+      const onCopy = (wp) => {
+        const text = briefFor(wp);
+        try { navigator.clipboard.writeText(text); } catch (e) {}
+        flash(`Copied ${wp.id} brief`);
+      };
+      const planTitle = META.title || DATA.plan?.title || 'plan';
+
+      /* flashResult — unified result→toast handler for openSessionDialog.
+         Result shape from WP-27:
+           · { ok: true, kind: 'chat', threadId }       → "Started <label> session"
+           · { ok: true, kind: 'terminal', paneId }     → "Started <label> in terminal"
+           · { ok: false, reason: 'cancelled' }         → "Cancelled — <label> not started"
+           · { ok: false, reason: <anything else> }     → caller does clipboard floor
+         Returns true if we handled it (success or explicit cancel); false if
+         the caller should fall through to clipboard. */
+      const flashResult = (label, res) => {
+        if (res && res.ok) {
+          flash(res.kind === 'terminal' ? `Started ${label} in terminal` : `Started ${label} session`);
+          return true;
+        }
+        if (res && res.reason === 'cancelled') {
+          flash(`Cancelled — ${label} not started`);
+          return true;
+        }
+        return false;
+      };
+
+      const onStart = async (wp) => {
+        const text = briefFor(wp);
+        const label = `${wp.id} — ${wp.title}`;
+        // In-shell: round-trip to art.openSessionDialog (WP-27) — the shell's
+        // New-Session dialog opens pre-filled with the brief, user picks
+        // chat/terminal + engine + cwd + clicks Start. Clipboard is the floor
+        // when the verb is absent / dialog cancelled / standalone.
+        if (inShell && art.openSessionDialog) {
+          const res = await art.openSessionDialog({ initialPrompt: text, title: label, source: 'wp-card' });
+          if (flashResult(wp.id, res)) return;
+        }
+        try { navigator.clipboard.writeText(text); } catch (e) {}
+        flash(inShell ? `Copied ${wp.id} brief (verb unavailable)` : `Outside Ikenga → copied ${wp.id} brief`);
+      };
+
+      // Kickoff (WP-20) — seeds the orchestrator brief for the whole plan.
+      // Round 7 (WP-25R): no TargetPicker pre-step — the New-Session dialog
+      // (WP-27) is the consent + target-choice surface. One click → dialog
+      // opens pre-filled with the orchestrator brief.
+      const onKickoff = async () => {
+        const brief = buildOrchestratorBrief(META, DATA);
+        if (inShell && art.openSessionDialog) {
+          const res = await art.openSessionDialog({
+            initialPrompt: brief,
+            title: `${planTitle} orchestrator`,
+            source: 'board',
+          });
+          if (flashResult('orchestrator', res)) return;
+        }
+        try { navigator.clipboard.writeText(brief); } catch (e) {}
+        flash(inShell ? 'Verb unavailable → orchestrator brief copied' : 'Outside Ikenga → orchestrator brief copied');
+      };
+
+      /* dispatchAction (WP-21 core, extended for WP-23). Clipboard fallback is the
+         unconditional floor:
+           - write-actions  (mint)   → art.openSessionDialog (Round 7)
+           - read-actions   (attach) → art.sendToActiveSession
+         `extraMeta` carries argument-picker values (archetype/topic/ref for
+         subplan; target_folder/profile/goal for init) — they're merged over META
+         before substituteAction resolves the seeded + standalone forms, so the
+         {placeholder} tokens fill from the form rather than the META fallbacks.
+         The standalone slash form is always what hits the clipboard so a user can
+         drop it into any chat surface. */
+      const dispatchAction = async (action, extraMeta) => {
+        const meta = extraMeta ? { ...META, ...extraMeta } : META;
+        const seeded = substituteAction(action.seededForm, meta, DATA.plan);
+        const standalone = substituteAction(action.standaloneForm, meta, DATA.plan);
+        const title = `groundwork · ${action.label}`;
+        let result = { ok: false, reason: 'no-verb' };
+        try {
+          if (action.surface === 'new-session' && art.openSessionDialog) {
+            result = await art.openSessionDialog({ initialPrompt: seeded, title, source: 'palette' });
+          } else if (action.surface === 'active-session' && art.sendToActiveSession) {
+            result = await art.sendToActiveSession({ prompt: seeded, source: 'palette' });
+          }
+        } catch (e) { result = { ok: false, reason: 'threw' }; }
+
+        if (result && result.ok) {
+          flash(action.surface === 'new-session'
+            ? (result.kind === 'terminal' ? `Started ${action.label} in terminal` : `Seeded new chat → ${action.label}`)
+            : `Sent to active session → ${action.label}`);
+          return;
+        }
+        if (result && result.reason === 'cancelled') {
+          flash(`Cancelled — ${action.label} not started`);
+          return;
+        }
+        // Floor: clipboard the standalone slash form so the user can paste anywhere.
+        try { navigator.clipboard.writeText(standalone); } catch (e) {}
+        const why = (result && result.reason) || 'fallback';
+        flash(`Copied ${standalone}  · ${inShell ? `(${why})` : 'standalone'}`);
+      };
+
+      /* onPaletteFire (WP-23 + Round 7). Branching map:
+           · needsPicker: 'subplan' | 'init' → arg-picker (archetype/topic/ref
+             or target_folder/profile/goal). Submit → dispatchAction with the
+             values merged into META → openSessionDialog opens pre-filled.
+           · surface: 'new-session'          → dispatchAction → openSessionDialog
+             pre-filled (research / design / review / orchestrate).
+           · surface: 'active-session'       → dispatchAction → sendToActiveSession
+             (clarify / status / refresh-board). */
+      const onPaletteFire = (action) => {
+        if (action.disabled) return;
+        setPaletteOpen(false);
+        if (action.needsPicker === 'subplan' || action.needsPicker === 'init') {
+          setPicker({ kind: action.needsPicker, action }); return;
+        }
+        dispatchAction(action);
+      };
+
+      // onPickerSubmit (WP-23) — close the picker, then dispatch with the
+      // collected args merged over META. Engine/chat-vs-terminal choice lives
+      // in the New-Session dialog (WP-27), not the picker.
+      const onPickerSubmit = (values) => {
+        const cur = picker;
+        setPicker(null);
+        if (!cur || !cur.action) return;
+        dispatchAction(cur.action, values);
+      };
+
+      const counts = useMemo(() => DATA.wps.reduce((a, w) => (a[w.status] = (a[w.status]||0)+1, a), {}), []);
+      const done = counts.done || 0;
+
+      // Resolve the selected WP object + any sub-plan that references it.
+      // Both feed the WpDetailCard inside the rail.
+      const selectedWp = useMemo(() => DATA.wps.find(w => w.id === selected) || null, [selected]);
+      const subplan = useMemo(() => {
+        if (!selectedWp || !Array.isArray(DATA.subplans)) return null;
+        return DATA.subplans.find(sp => sp.ref === selectedWp.id) || null;
+      }, [selectedWp]);
+      const onClear = () => setSelected(null);
+
+      return (
+        <div className="shell">
+          {/* Single scroll area wraps page-head + grid so the hero scrolls
+              away naturally; the sticky thead inside the table pins to the
+              top of this main element. Round 8 layout pass. */}
+          <main className="scroll-area">
+            <PageHead
+              data={DATA} meta={META}
+              filter={filter} setFilter={setFilter} counts={counts}
+              layout={layout} setLayout={setLayout}
+              inShell={inShell} done={done}
+              onKickoff={onKickoff}
+              onOpenPalette={() => setPaletteOpen(true)}
+            />
+            {layout === 'mission-control' ? <MissionControl   data={DATA} selected={selected} setSelected={setSelected} selectedWp={selectedWp} subplan={subplan} filter={filter} onCopy={onCopy} onStart={onStart} onClear={onClear} inShell={inShell} /> :
+             layout === 'kanban'          ? <Kanban           data={DATA} selected={selected} setSelected={setSelected} selectedWp={selectedWp} subplan={subplan}                onCopy={onCopy} onStart={onStart} onClear={onClear} inShell={inShell} /> :
+                                            <DagHierarchical  data={DATA} selected={selected} setSelected={setSelected} selectedWp={selectedWp} subplan={subplan}                onCopy={onCopy} onStart={onStart} onClear={onClear} inShell={inShell} />
+            }
+          </main>
+          <footer className="page-foot">
+            <span className="chip-carve">▽▽▽</span>
+            <span>◆ = freeze gate · click a row/card to select</span>
+            <span style={{ marginLeft: 'auto' }}>
+              {META.refreshed ? <>refreshed {META.refreshed}</> : <>never refreshed — run <code>groundwork refresh-board</code></>}
+            </span>
+          </footer>
+          <Toast msg={toast} />
+          <CommandPalette
+            open={paletteOpen}
+            onClose={() => setPaletteOpen(false)}
+            onFire={onPaletteFire}
+            actions={ACTIONS}
+          />
+          {/* Picker modals — routed by picker.kind. Submit → onPickerSubmit
+              (which dispatches with the collected values via openSessionDialog);
+              Cancel / ESC / backdrop → setPicker(null) (no dispatch). WP-23
+              covers subplan + init. Round 7 (WP-25R) removed the target picker:
+              the New-Session dialog (WP-27) is the engine + chat/terminal +
+              cwd consent surface. */}
+          {picker && picker.kind === 'subplan' && (
+            <SubplanPicker onClose={() => setPicker(null)} onSubmit={onPickerSubmit} />
+          )}
+          {picker && picker.kind === 'init' && (
+            <InitPicker onClose={() => setPicker(null)} onSubmit={onPickerSubmit} />
+          )}
+        </div>
+      );
+    }
+
+    window.__groundwork_bridge_polyfill__.init().then((art) =>
+      ReactDOM.createRoot(document.getElementById('root')).render(<App art={art} />));
+  })();
+  </script>
+</body>
+</html>

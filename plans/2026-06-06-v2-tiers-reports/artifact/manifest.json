@@ -1,0 +1,24 @@
+{
+  "format": "ikenga-artifact",
+  "formatVersion": "0.1",
+  "id": "2026-06-06-v2-tiers-reports-plan",
+  "name": "Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports — within PythonAnywhere free-tier limits. — plan",
+  "version": "0.1.0",
+  "description": "Living spec + tracking board for the Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports — within PythonAnywhere free-tier limits. plan. index.html is the multi-tab conceptual walkthrough; board.html is the operational dashboard.",
+  "license": "Apache-2.0",
+  "icon": { "lucide": "book-open-text" },
+  "dataSources": {
+    "_comment": "Optional external data sources keyed by name. The artifact loads them at runtime via the AppBridge `sources` API. When absent or unreachable (e.g. standalone in a browser), the artifact falls through to the mock-data block declared in `fallback.dataTag`. Example: `\"board\": { \"type\": \"file\", \"path\": \"./data/board.json\", \"refresh\": { \"mode\": \"manual\" } }`."
+  },
+  "fallback": {
+    "mode": "mock",
+    "dataTag": "board-mock-data",
+    "banner": "Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports — within PythonAnywhere free-tier limits. — running standalone"
+  },
+  "pin": {
+    "suggested": true,
+    "section": "Planning",
+    "label": "Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports — within PythonAnywhere free-tier limits."
+  },
+  "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+}

@@ -1,0 +1,290 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-06-06T16:38:26Z",
+  "updated": "2026-06-06T16:49:28Z",
+  "goal": "Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports \u2014 within PythonAnywhere free-tier limits.",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:e7041ca83025e805a6d26d95c582bed1081e611f84fbd911d5c253abedaafa3c",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:007584bf878f4be8d367c7d58ebcc3b26f52f070738e249b3606611a90fa26a8",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:f7917fbecc12d56680087772b955e471666f84df8917b4a2200e9102ea6eb661",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:4c876245decd0e0a8940eb7a62242a50a2f283d08970debccdbe44e6419df7c2",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:777035c8f0442cb3a5a6e07bcf836ab7d00cc9338258d7d506ddd37095c546b2",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:a1c5ae6b92ad579368afc495fbef9406242fba39de9e656917aa641769ac9424",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:f88248852c528d22a4fc2961de2bbb15a8db956374281534a96d1de7a4c0f5d2",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:c9bf85dc0c266af01f3e7a2e13eb1383e93a967ffe0d8e5ec4d72e6f3d4af4c2",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:b54ddaff758149c482efec894d26800a2e37c8a116e2b476f44155f443b261aa",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-06T16:45:47Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:30612ddb6f1977c957c6c696b4084610419c84fc59defb0493ef5d62baf9f0e0",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-06T16:46:22Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1ee8644cfa64d69d4195b72c63b4a0f30463086ac1f0441bdfbc6eecf75901d2",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-06T16:46:22Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:0c2537cd2e10ec78501d9ecb6f62264550bfe49043fd135f3c866cb4463db713",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-06-06T16:38:26Z"
+        }
+      ]
+    },
+    "09-orchestration.md": {
+      "generated_regions": [
+        {
+          "id": "orchestration",
+          "hash": "sha256:c3db2bb87b1ff7d68b0bb58a6315fa861b347bc7716b7c5895fdb326be3fe42e",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-06T16:47:51Z"
+        }
+      ],
+      "hash": "sha256:c1ed37e39f93489730707cdc825ae2875b262c25bb3db6c4754d371364defac1"
+    },
+    "artifact/board.html": {
+      "generated_regions": [
+        {
+          "id": "board-data",
+          "hash": "sha256:a954410d978531b4e36637643c1132630fc88930fd0db8b207e13cdb36f8759b",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-06T16:49:28Z"
+        },
+        {
+          "id": "board-meta",
+          "hash": "sha256:581536dad7ce8bfb6e4f9a1c1e80298e697529059ddf43e8dad264b23a3f0d8c",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-06T16:49:28Z"
+        }
+      ],
+      "hash": "sha256:207954f01fc4126700c4b69b6bde154601b8cf31107ca991778ee3c605577206"
+    }
+  },
+  "ids": {
+    "WP-02": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "gate": "G-REPORT-SCHEMA",
+      "depends_on": [
+        "WP-01"
+      ]
+    },
+    "WP-14": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": [
+        "WP-13",
+        "WP-02",
+        "WP-03",
+        "WP-04",
+        "WP-05",
+        "WP-07"
+      ]
+    },
+    "WP-01": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-REPORT-SCHEMA"
+    },
+    "WP-03": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-01"
+      ],
+      "gate": "G-REPORT-SCHEMA"
+    },
+    "WP-04": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-01"
+      ],
+      "gate": "G-REPORT-SCHEMA"
+    },
+    "WP-05": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-01"
+      ],
+      "gate": "G-REPORT-SCHEMA"
+    },
+    "WP-06": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-TIER-SCHEMA"
+    },
+    "WP-07": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ],
+      "gate": "G-TIER-SCHEMA"
+    },
+    "WP-08": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-07"
+      ]
+    },
+    "WP-09": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-07"
+      ]
+    },
+    "WP-10": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ],
+      "gate": "G-TIER-SCHEMA"
+    },
+    "WP-11": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-10",
+        "WP-07"
+      ]
+    },
+    "WP-12": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-07"
+      ]
+    },
+    "WP-13": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ],
+      "gate": "G-TIER-SCHEMA"
+    },
+    "G-REPORT-SCHEMA": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-01",
+      "status": "pending"
+    },
+    "G-TIER-SCHEMA": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-06",
+      "status": "pending"
+    }
+  },
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}
