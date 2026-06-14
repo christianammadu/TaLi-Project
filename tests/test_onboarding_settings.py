@@ -1,0 +1,209 @@
+"""Unit tests for in-chat onboarding + settings (WP-03/04/05/06).
+
+DB-free: every database boundary (``session_scope`` and the ``auth`` setters) is
+mocked, so these run without MySQL or network — matching ``test_transaction_agent``.
+
+Covered:
+- ``auth.get_onboarding_state`` — the resumable "what's next" computation, incl.
+  the business branch and the skipped-name case.
+- ``routes.handle_set`` — each ``set <field> <value>`` edit + invalid input.
+- ``routes.handle_onboarding_answer`` — answer routing per pending question.
+"""
+
+import unittest
+from contextlib import contextmanager
+from unittest import mock
+
+
+def _fake_session_scope(row):
+    """Return a session_scope replacement whose .execute(...).first() yields `row`."""
+    @contextmanager
+    def _cm():
+        s = mock.MagicMock()
+        s.execute.return_value.first.return_value = row
+        yield s
+    return _cm
+
+
+class TestOnboardingState(unittest.TestCase):
+    """auth.get_onboarding_state — next-question logic (record IS the state)."""
+
+    def _next(self, row):
+        with mock.patch('app.auth.session_scope', _fake_session_scope(row)):
+            from app.auth import get_onboarding_state
+            return get_onboarding_state(1)
+
+    # row = (display_name, usage_type, business_profile, onboarding_step)
+    def test_fresh_user_asks_name(self):
+        st = self._next((None, None, None, None))
+        self.assertEqual(st['next'], 'name')
+        self.assertFalse(st['complete'])
+
+    def test_name_set_asks_usage(self):
+        self.assertEqual(self._next(('Ada', None, None, None))['next'], 'usage')
+
+    def test_skipped_name_advances_to_usage(self):
+        # step >= 1 means the name was offered + skipped — don't re-ask in-flow.
+        self.assertEqual(self._next((None, None, None, 1))['next'], 'usage')
+
+    def test_personal_is_complete(self):
+        st = self._next(('Ada', 'personal', None, None))
+        self.assertTrue(st['complete'])
+        self.assertIsNone(st['next'])
+
+    def test_business_needs_name(self):
+        self.assertEqual(self._next(('Ada', 'business', {}, None))['next'], 'business_name')
+
+    def test_business_needs_type(self):
+        self.assertEqual(
+            self._next(('Ada', 'business', {'name': 'Ada Kitchen'}, None))['next'],
+            'business_type',
+        )
+
+    def test_business_complete(self):
+        st = self._next(('Ada', 'business', {'name': 'Ada Kitchen', 'type': 'Food / Restaurant'}, None))
+        self.assertTrue(st['complete'])
+
+    def test_missing_user_returns_none(self):
+        self.assertIsNone(self._next(None))
+
+
+class TestHandleSet(unittest.TestCase):
+    """routes.handle_set — settings edits."""
+
+    def setUp(self):
+        self.session = {'user_id': 1}
+        patches = mock.patch.multiple(
+            'app.web.routes',
+            send_reply=mock.DEFAULT,
+            set_display_name=mock.DEFAULT,
+            set_usage_type=mock.DEFAULT,
+            update_business_profile=mock.DEFAULT,
+            _set_base_currency=mock.DEFAULT,
+        )
+        self.m = patches.start()
+        self.addCleanup(patches.stop)
+        # setters succeed by default
+        for k in ('set_display_name', 'set_usage_type', 'update_business_profile', '_set_base_currency'):
+            self.m[k].return_value = True
+
+    def _reply(self):
+        return self.m['send_reply'].call_args[0][1]
+
+    def test_set_name(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set name Ada', self.session)
+        self.m['set_display_name'].assert_called_once_with(1, 'Ada')
+        self.assertIn('Name updated', self._reply())
+
+    def test_set_currency_uppercases(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set currency usd', self.session)
+        self.m['_set_base_currency'].assert_called_once_with(1, 'USD')
+        self.assertIn('USD', self._reply())
+
+    def test_set_currency_invalid_rejected(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set currency dollars', self.session)
+        self.m['_set_base_currency'].assert_not_called()
+        self.assertIn('3-letter', self._reply())
+
+    def test_set_type_business(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set type business', self.session)
+        self.m['set_usage_type'].assert_called_once_with(1, 'business')
+
+    def test_set_type_invalid_rejected(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set type corporate', self.session)
+        self.m['set_usage_type'].assert_not_called()
+
+    def test_set_business_implies_business_usage(self):
+        from app.web.routes import handle_set
+        handle_set('234', "set business Ada's Kitchen", self.session)
+        self.m['update_business_profile'].assert_called_once_with(1, name="Ada's Kitchen")
+        self.m['set_usage_type'].assert_called_once_with(1, 'business')
+
+    def test_set_missing_value_shows_usage(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set name', self.session)
+        self.m['set_display_name'].assert_not_called()
+        self.assertIn('Usage', self._reply())
+
+    def test_set_unknown_field(self):
+        from app.web.routes import handle_set
+        handle_set('234', 'set colour blue', self.session)
+        self.assertIn('name', self._reply().lower())
+
+
+class TestOnboardingAnswer(unittest.TestCase):
+    """routes.handle_onboarding_answer — answer routing per pending question."""
+
+    def setUp(self):
+        self.session = {'user_id': 1}
+        patches = mock.patch.multiple(
+            'app.web.routes',
+            send_reply=mock.DEFAULT,
+            get_onboarding_state=mock.DEFAULT,
+            set_display_name=mock.DEFAULT,
+            set_usage_type=mock.DEFAULT,
+            update_business_profile=mock.DEFAULT,
+            set_onboarding_state=mock.DEFAULT,
+            _send_next_onboarding=mock.DEFAULT,
+        )
+        self.m = patches.start()
+        self.addCleanup(patches.stop)
+
+    def _state(self, nxt):
+        self.m['get_onboarding_state'].return_value = {'complete': False, 'next': nxt}
+
+    def test_name_answer_sets_name(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('name')
+        handle_onboarding_answer('234', 'Ada', self.session)
+        self.m['set_display_name'].assert_called_once_with(1, 'Ada')
+        self.m['_send_next_onboarding'].assert_called_once()
+
+    def test_name_skip_advances_step(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('name')
+        handle_onboarding_answer('234', 'skip', self.session)
+        self.m['set_display_name'].assert_not_called()
+        self.m['set_onboarding_state'].assert_called_once_with(1, step=1)
+
+    def test_usage_two_is_business(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('usage')
+        handle_onboarding_answer('234', '2', self.session)
+        self.m['set_usage_type'].assert_called_once_with(1, 'business')
+
+    def test_usage_invalid_reasks(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('usage')
+        handle_onboarding_answer('234', 'maybe', self.session)
+        self.m['set_usage_type'].assert_not_called()
+        self.m['_send_next_onboarding'].assert_not_called()
+        self.assertIn('1', self.m['send_reply'].call_args[0][1])
+
+    def test_business_name_captured(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('business_name')
+        handle_onboarding_answer('234', 'Ada Kitchen', self.session)
+        self.m['update_business_profile'].assert_called_once_with(1, name='Ada Kitchen')
+
+    def test_business_type_numeric_maps_to_category(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('business_type')
+        handle_onboarding_answer('234', '2', self.session)
+        self.m['update_business_profile'].assert_called_once_with(1, type='Food / Restaurant')
+
+    def test_business_type_garbage_reasks(self):
+        from app.web.routes import handle_onboarding_answer
+        self._state('business_type')
+        handle_onboarding_answer('234', 'x' * 80, self.session)
+        self.m['update_business_profile'].assert_not_called()
+        self.m['_send_next_onboarding'].assert_not_called()
+
+
+if __name__ == '__main__':
+    unittest.main()
