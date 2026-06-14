@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T17:05:20Z",
-  "updated": "2026-06-13T20:47:19Z",
+  "updated": "2026-06-14T23:20:00Z",
   "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
   "docs": {
     "00-README.md": {
@@ -207,7 +207,7 @@
     "WP-07": {
       "doc": "05-tracking.md",
       "wave": 2,
-      "status": "queued",
+      "status": "done",
       "depends_on": [
         "WP-06"
       ]
