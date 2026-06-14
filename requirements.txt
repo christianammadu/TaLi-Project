@@ -9,3 +9,4 @@ alembic>=1.13,<2.0
 httpx==0.27.2
 reportlab>=4.0,<5.0
 openpyxl>=3.1,<4.0
+band-sdk>=1.0,<2.0  # Band (Thenvoi) Agent API — WP-02; only needed for BAND_BACKEND=live
