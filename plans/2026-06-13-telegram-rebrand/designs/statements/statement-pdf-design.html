@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — PDF statement design (print-adapted D-01)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── TaLi PDF statement design — print-adapted D-01 "Market Ledger".
+     PRINT ADAPTATION: paper is WHITE (legibility + ink), not the warm web paper.
+     Terracotta accent kept for the header rule, section underlines and total rules only.
+     This mockup is what app/services/report_renderer.py (reportlab) should target.
+     A4 portrait · 210×297mm · ~18mm margins. */
+  :root{
+    --ink:#241F1A; --soft:#6B6258; --accent:#C2562F; --line:#D9D2C6; --line-soft:#ECE6DB;
+    --in:#1E7A45; --out:#B23A2E; --band:#FBF7EF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#CFC8BC;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);
+    padding:34px 16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .stack{display:flex;flex-direction:column;align-items:center;gap:34px}
+  /* A4 sheet */
+  .sheet{width:794px;min-height:1123px;background:#fff;box-shadow:0 24px 60px -28px rgba(0,0,0,.45);
+    padding:64px 60px 56px;position:relative}
+  @media(max-width:840px){.sheet{width:100%;min-height:0;padding:34px 26px}}
+  .tnum{font-variant-numeric:tabular-nums}
+  /* letterhead */
+  .head{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;
+    border-bottom:2px solid var(--accent)}
+  .brand{font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.01em}
+  .brand .dot{color:var(--accent)}
+  .brand .tagline{font-family:'Hanken Grotesk';font-weight:500;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--soft);margin-top:4px}
+  .doc-meta{text-align:right;font-size:12.5px;color:var(--soft);line-height:1.6}
+  .doc-meta .title{font-family:'Fraunces',serif;font-size:18px;color:var(--ink);font-weight:600}
+  /* business + period strip */
+  .bizstrip{display:flex;justify-content:space-between;margin:18px 0 26px;font-size:12.5px;color:var(--soft)}
+  .bizstrip b{color:var(--ink);font-weight:600;font-size:14px;display:block;font-family:'Fraunces',serif}
+  /* section */
+  .sec{margin-bottom:22px}
+  .sec h3{font-family:'Fraunces',serif;font-size:14px;font-weight:600;letter-spacing:.02em;
+    color:var(--accent);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .ln{display:grid;grid-template-columns:1fr 130px;gap:12px;padding:6px 2px;font-size:14px}
+  .ln.indent{padding-left:18px;color:var(--soft);font-size:13px}
+  .ln .v{text-align:right}
+  .ln.sub{border-top:1px solid var(--line-soft);font-weight:600}
+  .ln.total{border-top:1.5px solid var(--ink);margin-top:4px;padding-top:9px;font-weight:600;font-size:15px}
+  .ln.grand{border-top:2px solid var(--accent);border-bottom:2px double var(--accent);margin-top:6px;
+    padding:10px 2px;font-family:'Fraunces',serif;font-size:17px;font-weight:600}
+  .ln.grand .v{color:var(--in)}
+  .neg{color:var(--out)}
+  /* ledger table (statement of account) */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
+    font-weight:600;padding:8px 8px;border-bottom:1.5px solid var(--ink);background:var(--band)}
+  th.r,td.r{text-align:right;font-variant-numeric:tabular-nums}
+  tbody td{padding:8px 8px;border-bottom:1px solid var(--line-soft)}
+  tbody tr:nth-child(even) td{background:#FCFAF6}
+  tfoot td{padding:10px 8px;border-top:1.5px solid var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;font-weight:600}
+  .pill.in{background:#E4F1E9;color:var(--in)} .pill.out{background:#F6E5E2;color:var(--out)}
+  /* footer */
+  .foot{position:absolute;left:60px;right:60px;bottom:34px;display:flex;justify-content:space-between;
+    font-size:10.5px;color:var(--soft);border-top:1px solid var(--line-soft);padding-top:10px}
+  .foot .audit{color:var(--accent);font-weight:600}
+  @media(max-width:840px){.foot{position:static;margin-top:24px;left:0;right:0}}
+  .label{position:fixed;top:10px;left:10px;background:var(--ink);color:#fff;font-size:11px;padding:5px 10px;border-radius:8px;font-family:monospace;z-index:9}
+  .cap{width:794px;max-width:100%;color:#3a342b;font-size:13px;text-align:center;margin-top:-18px}
+  @media print{body{background:#fff;padding:0}.label,.cap{display:none}.sheet{box-shadow:none;page-break-after:always}}
+</style>
+</head>
+<body>
+<div class="label">PDF statement design · print-adapted D-01</div>
+<div class="stack">
+
+  <!-- ① INCOME STATEMENT (the "accounting statement" / P&L) -->
+  <div class="cap">① Income Statement (Profit &amp; Loss) — the “accounting statement”</div>
+  <div class="sheet">
+    <div class="head">
+      <div><div class="brand">TaLi<span class="dot">.</span></div><div class="tagline">Bookkeeping in your chat</div></div>
+      <div class="doc-meta"><div class="title">Income Statement</div>1 – 30 June 2026<br>Generated 14 Jul 2026</div>
+    </div>
+    <div class="bizstrip">
+      <div><b>Amaka Provisions Stores</b>12 Market Road, Onitsha</div>
+      <div style="text-align:right">Currency: ₦ (NGN)<br>Prepared by TaLi</div>
+    </div>
+
+    <div class="sec">
+      <h3>Revenue</h3>
+      <div class="ln indent"><span>Sales</span><span class="v tnum">482,000.00</span></div>
+      <div class="ln indent"><span>Other income</span><span class="v tnum">8,000.00</span></div>
+      <div class="ln sub"><span>Total revenue</span><span class="v tnum">490,000.00</span></div>
+    </div>
+
+    <div class="sec">
+      <h3>Cost of goods sold</h3>
+      <div class="ln indent"><span>Opening stock</span><span class="v tnum">120,000.00</span></div>
+      <div class="ln indent"><span>Add: Purchases</span><span class="v tnum">193,400.00</span></div>
+      <div class="ln indent"><span>Less: Closing stock</span><span class="v tnum neg">(98,000.00)</span></div>
+      <div class="ln sub"><span>Cost of goods sold</span><span class="v tnum">215,400.00</span></div>
+    </div>
+    <div class="ln total"><span>Gross profit</span><span class="v tnum">274,600.00</span></div>
+
+    <div class="sec" style="margin-top:18px">
+      <h3>Operating expenses</h3>
+      <div class="ln indent"><span>Fuel &amp; transport</span><span class="v tnum">12,500.00</span></div>
+      <div class="ln indent"><span>Rent</span><span class="v tnum">40,000.00</span></div>
+      <div class="ln indent"><span>Utilities</span><span class="v tnum">8,200.00</span></div>
+      <div class="ln sub"><span>Total operating expenses</span><span class="v tnum">60,700.00</span></div>
+    </div>
+
+    <div class="ln grand"><span>Net profit</span><span class="v tnum">213,900.00</span></div>
+
+    <div class="foot"><span>TaLi · Income Statement · Amaka Provisions Stores</span><span class="audit">Every entry validated &amp; auditable</span><span>Page 1 of 3</span></div>
+  </div>
+
+  <!-- ② STATEMENT OF ACCOUNT (transactions ledger, Debit/Credit/Balance) -->
+  <div class="cap">② Statement of Account — transactions ledger (Debit / Credit / running Balance)</div>
+  <div class="sheet">
+    <div class="head">
+      <div><div class="brand">TaLi<span class="dot">.</span></div><div class="tagline">Bookkeeping in your chat</div></div>
+      <div class="doc-meta"><div class="title">Statement of Account</div>1 – 30 June 2026<br>Generated 14 Jul 2026</div>
+    </div>
+    <div class="bizstrip">
+      <div><b>Amaka Provisions Stores</b>12 Market Road, Onitsha</div>
+      <div style="text-align:right">Opening balance: ₦50,000.00<br>Closing balance: ₦261,300.00</div>
+    </div>
+    <table>
+      <thead><tr><th>Date</th><th>Description</th><th>Cat.</th><th class="r">Money in</th><th class="r">Money out</th><th class="r">Balance</th></tr></thead>
+      <tbody>
+        <tr><td>01 Jun</td><td>Opening balance</td><td>—</td><td class="r"></td><td class="r"></td><td class="r tnum">50,000.00</td></tr>
+        <tr><td>02 Jun</td><td>Rice — sale</td><td>Sales</td><td class="r tnum">5,000.00</td><td class="r"></td><td class="r tnum">55,000.00</td></tr>
+        <tr><td>02 Jun</td><td>Fuel — expense</td><td>Transport</td><td class="r"></td><td class="r tnum">2,000.00</td><td class="r tnum">53,000.00</td></tr>
+        <tr><td>04 Jun</td><td>Malt — sale (credit, Mr Amadi)</td><td>Sales</td><td class="r tnum">13,000.00</td><td class="r"></td><td class="r tnum">66,000.00</td></tr>
+        <tr><td>05 Jun</td><td>Rice — restock (6 bags)</td><td>Purchases</td><td class="r"></td><td class="r tnum">2,400.00</td><td class="r tnum">63,600.00</td></tr>
+        <tr><td>…</td><td>123 more entries</td><td>—</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>
+      </tbody>
+      <tfoot><tr><td colspan="3">Totals (June)</td><td class="r">452,000.00</td><td class="r">240,700.00</td><td class="r">261,300.00</td></tr></tfoot>
+    </table>
+    <p style="font-size:11px;color:var(--soft);margin-top:12px">Money in <span class="pill in">credit</span> · Money out <span class="pill out">debit</span> · Balance is the running cash position.</p>
+    <div class="foot"><span>TaLi · Statement of Account</span><span class="audit">Every entry validated &amp; auditable</span><span>Page 2 of 3</span></div>
+  </div>
+
+  <!-- ③ CASHFLOW STATEMENT -->
+  <div class="cap">③ Cashflow Statement (direct method)</div>
+  <div class="sheet">
+    <div class="head">
+      <div><div class="brand">TaLi<span class="dot">.</span></div><div class="tagline">Bookkeeping in your chat</div></div>
+      <div class="doc-meta"><div class="title">Cashflow Statement</div>1 – 30 June 2026<br>Generated 14 Jul 2026</div>
+    </div>
+    <div class="bizstrip"><div><b>Amaka Provisions Stores</b>12 Market Road, Onitsha</div><div style="text-align:right">Currency: ₦ (NGN)</div></div>
+
+    <div class="ln total" style="border-top:0;margin-top:0"><span>Opening cash balance</span><span class="v tnum">50,000.00</span></div>
+    <div class="sec" style="margin-top:14px">
+      <h3>Cash in</h3>
+      <div class="ln indent"><span>Receipts from sales</span><span class="v tnum">430,000.00</span></div>
+      <div class="ln indent"><span>Debt repayments received</span><span class="v tnum">22,000.00</span></div>
+      <div class="ln sub"><span>Total cash in</span><span class="v tnum">452,000.00</span></div>
+    </div>
+    <div class="sec">
+      <h3>Cash out</h3>
+      <div class="ln indent"><span>Payments to suppliers</span><span class="v tnum neg">(180,000.00)</span></div>
+      <div class="ln indent"><span>Operating expenses</span><span class="v tnum neg">(60,700.00)</span></div>
+      <div class="ln sub"><span>Total cash out</span><span class="v tnum neg">(240,700.00)</span></div>
+    </div>
+    <div class="ln total"><span>Net cash movement</span><span class="v tnum">211,300.00</span></div>
+    <div class="ln grand"><span>Closing cash balance</span><span class="v tnum">261,300.00</span></div>
+    <div class="foot"><span>TaLi · Cashflow Statement</span><span class="audit">Every entry validated &amp; auditable</span><span>Page 3 of 3</span></div>
+  </div>
+
+</div>
+</body>
+</html>
