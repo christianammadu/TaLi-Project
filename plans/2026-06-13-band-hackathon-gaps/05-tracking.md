@@ -158,6 +158,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-06 — Webhook→room gateway; delete the in-memory broker
 
+- **Status:** `[x]` **done** (2026-06-14, against the stub) — `AgentRouter` is now the gateway: one shared connector, agents wired as room handlers, `band_sdk.py` **deleted**, `transaction_agent` fallback retired (G-09). All agents share one client; round-trip is collectable; 5/5 gateway tests green; **0 new regressions**. `routes.py` unchanged. Live mode (persistent agents) is the WP-02 follow-up.
 - **Goal:** Replace `AgentRouter.route` with a gateway that drops the inbound WhatsApp message into the Band room; delete `app/agents/band_sdk.py`.
 - **Repo:** tali · **Branch:** `feat/band-gateway`
 - **Depends on:** WP-03, WP-04, WP-05
@@ -169,6 +170,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-07 — Compliance/Reviewer agent (the review leg)
 
+- **Status:** `[x]` **done** (2026-06-14) — `compliance_agent.py`: rule-based pre-commit veto (large-amount threshold) + optional AI/ML `compliance` anomaly pass; **auto-wired** into the gateway room. End-to-end test proves the Ledger's two-phase gate **rejects a flagged write pre-commit**; 5/5 tests green. The chain is now a real **plan→execute→review** loop. Follow-up: enrich the split-path envelope with amounts so threshold checks cover multi-item writes.
 - **Goal:** New 4th agent on a Featherless model that reviews Ledger's proposed-write envelope **before commit** (duplicate / threshold / anomaly checks reusing `_get_evaluated_thresholds`); approve / reject / escalate. Converts chain → plan→execute→review.
 - **Repo:** tali · **Branch:** `feat/compliance-agent`
 - **Depends on:** WP-04, `G-MODEL-ROUTER`

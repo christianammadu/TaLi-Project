@@ -30,7 +30,7 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T14:51:51Z -->
+<!-- last_action: refresh-board · 2026-06-13T15:25:58Z -->
 {
   "plan": {
     "title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS",
@@ -121,7 +121,7 @@
         "WP-04",
         "WP-05"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "brief": "See 09 §WP-06. Gateway drops the inbound WhatsApp message into the room; delete band_sdk.py. GREP-CLEAN both BandSDK importers AND AgentRouter callers (transaction_agent.py:31-33 is the hidden dependent). DoD: a sale works end-to-end with the broker gone; reply arrives over WhatsApp; 3 participants; migrated test suite GREEN; rollback via BAND_BACKEND=stub."
     },
@@ -134,7 +134,7 @@
         "WP-04",
         "G-MODEL-ROUTER"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "brief": "See 09 §WP-07. 4th agent (Featherless) reviews the proposed-write envelope before commit (dup/threshold/anomaly, reusing _get_evaluated_thresholds); approve/reject/escalate. Depends on WP-04's two-phase commit so the reject actually blocks the write. DoD: a flagged write rejected pre-commit, visible in the room."
     },
