@@ -16,6 +16,25 @@ from app.web.whatsapp import send_otp_template
 web_bp = Blueprint('web', __name__, template_folder='../templates', static_folder='../static')
 
 
+@web_bp.app_context_processor
+def inject_channel_links():
+    """Generic (token-less) channel entry deep-links for the marketing CTAs.
+
+    The landing/marketing "Continue on WhatsApp / Telegram" buttons open the bot
+    chat directly; per-user binding tokens are minted later in the register/verify
+    flow. Falls back to the web register page when a channel isn't configured so the
+    buttons never render as dead links in dev.
+    """
+    from flask import url_for
+    number = (current_app.config.get('WHATSAPP_PUBLIC_NUMBER') or '').strip().lstrip('+')
+    username = (current_app.config.get('TELEGRAM_BOT_USERNAME') or '').strip().lstrip('@')
+    register = url_for('web.register')
+    return {
+        'whatsapp_url': f'https://wa.me/{number}' if number else register,
+        'telegram_url': f'https://t.me/{username}' if username else register,
+    }
+
+
 @web_bp.route('/', methods=['GET'])
 def index():
     """Public marketing landing page."""
