@@ -30,7 +30,7 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T19:05:23Z -->
+<!-- last_action: refresh-board · 2026-06-13T20:00:47Z -->
 {
   "plan": {
     "title": "Telegram channel + dual-CTA landing + total rebrand — TaLi",
@@ -41,13 +41,13 @@
     {
       "id": "G-CHANNEL-CONTRACT",
       "wp": "WP-01",
-      "status": "pending",
+      "status": "passed",
       "label": "Channel interface frozen"
     },
     {
       "id": "G-IDENTITY",
       "wp": "WP-02",
-      "status": "pending",
+      "status": "passed",
       "label": "Multi-channel identity frozen"
     },
     {
@@ -63,7 +63,7 @@
       "title": "Channel adapter interface + WhatsApp refactor",
       "wave": 0,
       "deps": [],
-      "status": "queued",
+      "status": "done",
       "gate": "G-CHANNEL-CONTRACT",
       "repo": "tali",
       "brief": "See 09 §WP-01. Define app/channels/base.py (Channel + InboundMessage); lift WhatsApp send/verify into app/channels/whatsapp.py; namespace sender wa:<phone>. DoD: interface frozen; WhatsApp parse_inbound->send_text round-trips; existing flow unchanged."
@@ -73,7 +73,7 @@
       "title": "Multi-channel identity + binding tokens",
       "wave": 0,
       "deps": [],
-      "status": "queued",
+      "status": "done",
       "gate": "G-IDENTITY",
       "repo": "tali",
       "brief": "See 09 §WP-02. 0005 migration for channel_accounts + binding_tokens; channel-scoped session lookup with WhatsApp back-compat. DoD: migration clean; existing wa: user resolves; (channel,id) lookup works."

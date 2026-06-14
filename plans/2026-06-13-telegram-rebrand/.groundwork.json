@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T17:05:20Z",
-  "updated": "2026-06-13T19:05:24Z",
+  "updated": "2026-06-13T20:00:47Z",
   "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
   "docs": {
     "00-README.md": {
@@ -122,9 +122,9 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:0e8cb8fb076d078d6ce325f2fc507e532ccf46ab0d06e7d32dc4b47fdd160c12",
+          "hash": "sha256:5f4174ada5e9f3d7fc9a274bf626dedfd07c2f140a0e7ceff5dfc16a3fddd3e8",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T19:05:23Z"
+          "last_written": "2026-06-13T20:00:47Z"
         },
         {
           "id": "board-meta",
@@ -133,7 +133,7 @@
           "last_written": "2026-06-13T19:05:24Z"
         }
       ],
-      "hash": "sha256:9479ff016c3f3938740433126a24ef47522d26a92addb41189e41b96cfa17152"
+      "hash": "sha256:61ff42b75d2cfa8bf5c1f1932deae2611ffe7080879ff41ec263467e023da461"
     }
   },
   "ids": {
@@ -141,13 +141,13 @@
       "doc": "01-plan.md",
       "kind": "freeze_gate",
       "wp": "WP-01",
-      "status": "pending"
+      "status": "passed"
     },
     "G-IDENTITY": {
       "doc": "01-plan.md",
       "kind": "freeze_gate",
       "wp": "WP-02",
-      "status": "pending"
+      "status": "passed"
     },
     "G-BRAND": {
       "doc": "01-plan.md",
@@ -158,14 +158,14 @@
     "WP-01": {
       "doc": "05-tracking.md",
       "wave": 0,
-      "status": "queued",
+      "status": "done",
       "depends_on": [],
       "gate": "G-CHANNEL-CONTRACT"
     },
     "WP-02": {
       "doc": "05-tracking.md",
       "wave": 0,
-      "status": "queued",
+      "status": "done",
       "depends_on": [],
       "gate": "G-IDENTITY"
     },

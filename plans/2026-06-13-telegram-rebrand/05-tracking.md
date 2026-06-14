@@ -90,6 +90,7 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 
 ### WP-01 — Channel adapter interface + WhatsApp adapter refactor
 
+- **Status:** `[x]` **done** (2026-06-14, branch `feat/channel-foundations`) — `app/channels/{base,whatsapp}.py` land the `Channel` seam + `InboundMessage` + `wa:`/`tg:` namespacing; `web/whatsapp.py` delegates transport to the adapter; 6/6 tests; 0 regressions. **`G-CHANNEL-CONTRACT` frozen.** (routes.py rewiring to use the adapter is WP-05.)
 - **Goal:** Define `app/channels/base.py` (`Channel` + `InboundMessage`); lift WhatsApp send/verify out of `app/web/whatsapp.py` into `app/channels/whatsapp.py`; namespace sender as `wa:<phone>`. Freezes `G-CHANNEL-CONTRACT`.
 - **Repo:** tali · **Branch:** `feat/channel-abstraction`
 - **Depends on:** —
@@ -99,6 +100,7 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 
 ### WP-02 — Multi-channel identity + binding tokens
 
+- **Status:** `[x]` **done** (2026-06-14, branch `feat/channel-foundations`) — `ChannelAccount` + `BindingToken` models + `0005` migration (backfills `whatsapp_accounts`→`channel_accounts`); `auth` gains `issue/redeem_binding_token`, `link/unlink_channel`, `resolve_channel_user` + `resolve_user_by_address` (legacy `wa:` fallback); 4/4 tests; 0 regressions. **`G-IDENTITY` frozen.** DB CRUD verified against a live DB (the 0005 up/down) — pure helpers unit-tested.
 - **Goal:** Alembic migration for `channel_accounts(channel, channel_user_id, user_id)` + `binding_tokens(token, user_id, expires_at)`; channel-scoped session lookup in `auth` with WhatsApp back-compat. Freezes `G-IDENTITY`.
 - **Repo:** tali · **Branch:** `feat/channel-identity`
 - **Depends on:** —
