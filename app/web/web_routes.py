@@ -150,8 +150,14 @@ def verify_otp():
         # Mark user as verified
         user_id = register_user(phone)
         if user_id:
+            # WP-04: mint a one-time binding token + offer both channels (web-first onboarding).
+            from app.auth import issue_binding_token
+            from app.channels.onboarding import telegram_deeplink, whatsapp_deeplink
+            token = issue_binding_token(user_id)
             return render_template('register.html', step='done', phone=phone,
-                                   message='✅ Registration complete! Open WhatsApp and send "login" to start using TaLi.',
+                                   message='✅ Registration complete! Tap to start in your chat app:',
+                                   telegram_link=(telegram_deeplink(token) if token else None),
+                                   whatsapp_link=(whatsapp_deeplink(token) if token else None),
                                    error=None)
         else:
             return render_template('register.html', step='otp', message=None,

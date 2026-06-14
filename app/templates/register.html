@@ -111,6 +111,17 @@
     <div class="center">
       <span class="mark lg"><svg class="ic"><use href="#i-check-circle"/></svg></span>
     </div>
+    {% if telegram_link or whatsapp_link %}
+    <div class="cta-stack">
+      {% if telegram_link %}
+      <a href="{{ telegram_link }}" class="btn btn-tg">Continue on Telegram</a>
+      {% endif %}
+      {% if whatsapp_link %}
+      <a href="{{ whatsapp_link }}" class="btn btn-wa">Continue on WhatsApp</a>
+      {% endif %}
+      <p class="foot-note">One tap links this account to your chat. The link works once and expires soon.</p>
+    </div>
+    {% endif %}
     {% endif %}
 
   </div>
