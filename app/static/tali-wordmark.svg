@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="72" viewBox="0 0 220 72" role="img" aria-label="TaLi">
+  <!-- D-01 "Market Ledger" wordmark: typeset Fraunces + terracotta full-stop + ledger-rule.
+       The type IS the mark. Falls back to Georgia/serif where Fraunces isn't loaded. -->
+  <text x="6" y="48" font-family="Fraunces, Georgia, 'Times New Roman', serif"
+        font-weight="600" font-size="48" letter-spacing="-0.5" fill="#241F1A">TaLi<tspan fill="#C2562F">.</tspan></text>
+  <!-- terracotta ledger-rule under the wordmark -->
+  <rect x="8" y="56" width="150" height="2.5" rx="1.25" fill="#C2562F" opacity="0.5"/>
+</svg>
