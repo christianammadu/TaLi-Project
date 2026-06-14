@@ -1,0 +1,211 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-06-05T07:59:44Z",
+  "updated": "2026-06-05T11:56:35Z",
+  "goal": "Add a settings mechanism plus onboarding that captures display name and usage type (business/personal) so welcomes are personalized and business users can record business info; decide whether settings live on an authenticated web page or via WhatsApp commands.",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:04ad98d9aa55ab25591a96f8faa27130921395f21f5ff954156ebf17b87a9e66",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:a308cea093d362c63cb948c6dda4d6aa91b19b07c7751356923c37dd1cef7df0",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:4e8c28b1e4013db884178bb5f0d8473e932c87678d6b9f1d08a1c283ec29c4c3",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:7540c34b99f2cc7bd4841ef56d53e54ff9d844e79e63e25ccc56e74e263b6122",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:020f47ae75e8ea54dd717c2939575e0a38531dcc1b7eee628c7583a3656a483c",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:4f39850530ed4c1fbd8e6cb2112f53fabffb1867f30734d5f3805747887fe167",
+          "last_action": "research",
+          "last_written": "2026-06-05T10:56:03Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:bc043c251ac6da0dd863e3859bf45674cacaaa276b44f981fe3ce2e944f29d33",
+          "last_action": "research",
+          "last_written": "2026-06-05T10:56:03Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:31a3f41cbbec5483d934bc66040af8153a796b3727dc0b20890de5d5b9b16951",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:d6d017bf70d2a6b2a3509c4fcb4435b40a0445406308a1463c7b857f4d5a6b4a",
+          "last_action": "research",
+          "last_written": "2026-06-05T10:56:03Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:3b4ad071aaf9ce3293f13d4137e12852367993733665d444d71fbf869cf28fc4",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:f5c54f71d008677957f3a8bedb909fb85cab6a4af626ca340b6e9685e5c51fb1",
+          "last_action": "review",
+          "last_written": "2026-06-05T11:29:48Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:f30f8e798121c828233c1039d444b48e361c07d71bb0ace0ece617e609ba47c6",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:8c7f8b8ae177307b56ebf4a1aa10c6bfb7c2a091606d92b7a5aade9f2f85a66f",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-05T11:49:04Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:28237dcfe381a28fd5bd36a5262f866f1b5ab8dc83594176c447f8fc193d5c1f",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-05T11:49:04Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:74a3feb3d23588a1602f2a164898ab5396a64452b2e6a6a2039f0499a8b32a08",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-05T11:49:05Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:72550697c7306adec5a5acb5f9b63cd78101b27c4f279ce2c8c8b621c8116f73",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-06-05T07:59:44Z"
+        }
+      ]
+    },
+    "artifact/board.html": {
+      "generated_regions": [
+        {
+          "id": "board-data",
+          "hash": "sha256:693ebd12b8f854c83972a8f453873d8c7b6160b0560fb5b3ece77fdffd5f64e8",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-05T11:56:35Z"
+        }
+      ],
+      "hash": "sha256:f206fd7011ad8fe47e237c6d64a724318df9c8b546337d8b147b60505f76ae6a"
+    }
+  },
+  "ids": {
+    "D-01": {
+      "doc": "04-discussion.md",
+      "kind": "design",
+      "file": "designs/onboarding-settings-a-conversational.html",
+      "phase": "P1",
+      "locked": true,
+      "locked_in": "Round 1"
+    },
+    "D-02": {
+      "doc": "04-discussion.md",
+      "kind": "design",
+      "file": "designs/onboarding-settings-b-interactive.html",
+      "phase": "P2",
+      "locked": false
+    },
+    "G-SCHEMA": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "status": "pending",
+      "decision": "Option A \u2014 usage_type enum + business_profile JSON on users",
+      "wp": "WP-01"
+    },
+    "WP-01": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "gate": "G-SCHEMA",
+      "title": "Schema migration (usage_type + business_profile)"
+    },
+    "WP-02": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": "WP-01",
+      "title": "Auth/data setters + onboarding accessors"
+    },
+    "WP-03": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": "WP-02",
+      "design": "D-01",
+      "title": "Onboarding state machine + gate"
+    },
+    "WP-04": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": "WP-02",
+      "design": "D-01",
+      "title": "settings command + set edits"
+    },
+    "WP-05": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": "WP-03",
+      "title": "Personalized welcome wiring"
+    },
+    "WP-06": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": "WP-03,WP-04",
+      "title": "Tests"
+    }
+  },
+  "designs": {},
+  "subplans": {},
+  "research": {
+    "02-research-external.md": {
+      "stamped": "2026-06-05"
+    },
+    "03-research-internal.md": {
+      "stamped": "2026-06-05"
+    }
+  }
+}

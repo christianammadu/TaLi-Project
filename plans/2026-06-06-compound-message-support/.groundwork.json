@@ -1,0 +1,126 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-06-06T13:12:29Z",
+  "updated": "2026-06-06T13:12:29Z",
+  "goal": "Support multiple transactions/inventory/debts per WhatsApp message, plus clean up the obsolete 0004 UUID migration and stamp Alembic.",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:058b88ed88cb2f5b3a9159e937d0d9c22d91ea733347aa6b1106d0d16ff05145",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:007584bf878f4be8d367c7d58ebcc3b26f52f070738e249b3606611a90fa26a8",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:984ade100788932d15dfb4469f4fac768b26b0619b945fed175f9eeec9984d6e",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:26405ecd8b5b9ecdc56f8c6da459417b48884e537881a2ec344bdce5575b8eb6",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:50368f5b2d2a1184582f229b4b97f4cf94256d5b55c49180d8817828dfc02436",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:6b20f0789fdae0758a21e7995aea23219660cc047c0dcff7fee98944dce96b62",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:c7283380c053291dd586a4eb4a51b846c3fa33a30b4ec56e889224a7e6c88e82",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:0b373b3b2aae98a48120179fa5fad3a577a6f5f557a33980cff5eca6d0f1ad35",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:59282ceed822b22194a5a2b9d365ac6a8b9e62a3eb72f82cb47400944b614929",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:96773de602ffe0af276fd29de15d2dac6d1c013eca1a31cb7612823473ea4109",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-06-06T13:12:29Z"
+        }
+      ]
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

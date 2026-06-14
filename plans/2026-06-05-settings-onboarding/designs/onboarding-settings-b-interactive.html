@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TaLi · Onboarding & Settings — Variant B (Interactive)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wa:#25D366; --wa-dark:#1DA851; --teal:#00a884; --glow:rgba(37,211,102,.28);
+  --bg:#0a0a0f; --tp:#f0f0f5; --ts:#9a9ab0; --tm:#5c5c72;
+  --bord:rgba(255,255,255,.09);
+  --wa-head:#1f2c34; --wa-chat:#0b141a; --wa-out:#005c4b; --wa-in:#1f2c34;
+  --wa-ink:#e9edef; --wa-sub:#8696a0; --tick:#53bdeb; --btn-ink:#53bdeb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tp);line-height:1.5;
+  min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:-50%;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 700px 600px at 20% 0%,var(--glow),transparent 70%),
+             radial-gradient(ellipse 600px 520px at 85% 60%,var(--glow),transparent 72%);
+  opacity:.4}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:40px 28px 70px}
+
+.phead{margin-bottom:8px;display:flex;align-items:center;gap:13px}
+.mark{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--wa),var(--wa-dark));
+  display:grid;place-items:center;box-shadow:0 4px 16px var(--glow);flex-shrink:0}
+.mark svg{width:23px;height:23px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.phead h1{font-size:1.34rem;font-weight:800;letter-spacing:-.02em}
+.phead .sub{color:var(--ts);font-size:.86rem}
+.vtag{margin:18px 0 6px;display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--wa);background:rgba(37,211,102,.08);
+  border:1px solid rgba(37,211,102,.2);padding:6px 13px;border-radius:100px}
+.lead{color:var(--ts);font-size:1rem;max-width:760px;margin:10px 0 4px}
+.lead b{color:var(--tp);font-weight:600}
+.note{color:var(--tm);font-size:.82rem;margin-top:6px}
+
+.stage{display:flex;gap:40px;flex-wrap:wrap;margin-top:38px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:14px}
+.cap{font-size:.9rem;color:var(--ts)}
+.cap b{color:var(--tp);font-weight:700}
+.cap .step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);color:var(--wa);
+  font-size:.72rem;font-weight:800;margin-right:8px}
+
+.phone{width:330px;border-radius:42px;background:#0c0c12;border:1px solid var(--bord);
+  box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 70px rgba(37,211,102,.06);padding:11px;position:relative}
+.phone::before{content:'';position:absolute;top:13px;left:50%;transform:translateX(-50%);
+  width:104px;height:25px;background:#000;border-radius:100px;z-index:5}
+.screen{border-radius:33px;overflow:hidden;background:var(--wa-chat);display:flex;flex-direction:column;position:relative}
+.wa-top{background:var(--wa-head);padding:32px 15px 11px;display:flex;align-items:center;gap:11px}
+.wa-back{color:var(--wa-sub);font-size:1.2rem;line-height:1}
+.wa-av{width:37px;height:37px;border-radius:50%;background:linear-gradient(135deg,var(--wa),var(--wa-dark));
+  display:grid;place-items:center;flex-shrink:0}
+.wa-av svg{width:19px;height:19px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.wa-name{font-weight:600;font-size:.92rem;color:var(--wa-ink)}
+.wa-sub{font-size:.68rem;color:var(--wa-sub)}
+.wa-top .grow{flex:1}.wa-ic{color:var(--wa-sub);font-size:1rem}
+
+.chat{padding:14px 12px 8px;display:flex;flex-direction:column;gap:7px;background:var(--wa-chat);
+  background-image:radial-gradient(rgba(255,255,255,.018) 1px,transparent 1px);background-size:22px 22px}
+.day{align-self:center;background:#182229;color:var(--wa-sub);font-size:.64rem;font-weight:600;
+  padding:4px 11px;border-radius:8px;margin:3px 0 6px}
+.bub{max-width:82%;padding:7px 10px 5px;border-radius:13px;font-size:.81rem;line-height:1.42;
+  color:var(--wa-ink);position:relative;word-wrap:break-word;animation:pop .4s both}
+.bub.in{align-self:flex-start;background:var(--wa-in);border-top-left-radius:4px}
+.bub.out{align-self:flex-end;background:var(--wa-out);border-top-right-radius:4px}
+.bub .t{display:block;text-align:right;font-size:.58rem;color:rgba(233,237,239,.5);margin-top:2px}
+.bub.out .t::after{content:'✓✓';color:var(--tick);margin-left:4px;letter-spacing:-1px}
+.bub b{color:#fff;font-weight:700}.bub em{color:#adebc4;font-style:italic}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+
+/* reply buttons — full-width tappable rows under an in bubble */
+.wa-btns{align-self:flex-start;width:82%;display:flex;flex-direction:column;gap:3px;margin-top:-3px}
+.wa-btn{background:var(--wa-in);border-radius:9px;padding:9px;text-align:center;font-size:.82rem;
+  font-weight:600;color:var(--btn-ink);display:flex;align-items:center;justify-content:center;gap:7px;
+  box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.wa-btn svg{width:15px;height:15px;stroke:var(--btn-ink);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* "list message" launcher row inside a bubble */
+.wa-listrow{margin-top:6px;padding-top:7px;border-top:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;gap:8px;color:var(--btn-ink);font-weight:700;font-size:.8rem}
+.wa-listrow svg{width:15px;height:15px;stroke:var(--btn-ink);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* button-selected reply (out bubble with a tiny corner mark) */
+.bub.picked::before{content:'⟳';position:absolute;left:-16px;bottom:4px;color:var(--wa-sub);font-size:.7rem}
+
+/* bottom-sheet list overlay */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0b141a;border-top-left-radius:16px;
+  border-top-right-radius:16px;box-shadow:0 -16px 40px rgba(0,0,0,.5);padding:0 0 8px;
+  border-top:1px solid rgba(255,255,255,.06);z-index:4;animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{transform:translateY(60%);opacity:0}to{transform:none;opacity:1}}
+.sheet-grab{width:36px;height:4px;border-radius:4px;background:#3a4a52;margin:9px auto 4px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.sheet-head .ttl{font-size:.92rem;font-weight:700;color:var(--wa-ink)}
+.sheet-head .x{color:var(--wa-sub);font-size:1.1rem}
+.srow{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.srow .txt{flex:1}
+.srow .st{font-size:.84rem;color:var(--wa-ink);font-weight:600}
+.srow .sd{font-size:.7rem;color:var(--wa-sub);margin-top:1px}
+.radio{width:19px;height:19px;border-radius:50%;border:2px solid #3a4a52;flex-shrink:0;position:relative}
+.radio.on{border-color:var(--wa)}
+.radio.on::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--wa)}
+.srow .lic{width:30px;height:30px;border-radius:8px;background:#182229;display:grid;place-items:center;font-size:.95rem;flex-shrink:0}
+
+.wa-input{background:var(--wa-head);margin:6px 9px 10px;border-radius:100px;padding:9px 15px;
+  color:var(--wa-sub);font-size:.76rem;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wa-input .ph{flex:1}
+.wa-send{width:30px;height:30px;border-radius:50%;background:var(--wa);display:grid;place-items:center;flex-shrink:0}
+.wa-send svg{width:15px;height:15px;stroke:var(--wa-chat);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+.legend{margin-top:46px;border-top:1px solid var(--bord);padding-top:22px;display:flex;gap:30px;flex-wrap:wrap}
+.legend div{font-size:.84rem;color:var(--ts);max-width:300px}
+.legend b{color:var(--tp)}
+.pill{display:inline-block;font-size:.7rem;font-weight:700;color:var(--wa);background:rgba(37,211,102,.1);
+  border:1px solid rgba(37,211,102,.22);padding:3px 9px;border-radius:7px;margin-bottom:7px}
+.pill.warn{color:#ffd479;background:rgba(255,200,80,.1);border-color:rgba(255,200,80,.22)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phead">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4v16M12 4v16M17 4v16"/></svg></div>
+    <div>
+      <h1>Onboarding &amp; Settings — in chat</h1>
+      <div class="sub">TaLi · Variant&nbsp;B</div>
+    </div>
+  </div>
+
+  <span class="vtag">● Variant B — Native interactive · buttons + lists</span>
+  <p class="lead">The same flow rendered with WhatsApp's native <b>reply buttons</b> and <b>list
+    messages</b> — the user <b>taps</b> instead of typing. Faster and less error-prone, but it needs
+    new send-side code and the choices are capped (≤3 buttons, ≤10 list rows). A <b>Phase&nbsp;2</b>
+    upgrade; note list/button UIs don't render on WhatsApp&nbsp;Web/desktop.</p>
+  <p class="note">Identical content to Variant A — only the input mechanism differs.</p>
+
+  <div class="stage">
+    <!-- PHONE 1 — onboarding with buttons + list sheet -->
+    <div class="col">
+      <div class="cap"><span class="step">1</span><b>First-run onboarding</b> — tap to choose usage &amp; category</div>
+      <div class="phone"><div class="screen">
+        <div class="wa-top">
+          <span class="wa-back">‹</span>
+          <div class="wa-av"><svg viewBox="0 0 24 24"><path d="M7 4v16M12 4v16M17 4v16"/></svg></div>
+          <div><div class="wa-name">TaLi</div><div class="wa-sub">online</div></div>
+          <span class="grow"></span><span class="wa-ic">⋮</span>
+        </div>
+        <div class="chat">
+          <div class="day">TODAY</div>
+          <div class="bub in">👋 Welcome to TaLi! What should I call you?<span class="t">9:41</span></div>
+          <div class="bub out">Ada<span class="t">9:41</span></div>
+          <div class="bub in">Nice to meet you, Ada 🙌 Are you using TaLi for personal or business?<span class="t">9:41</span></div>
+          <div class="wa-btns">
+            <div class="wa-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/></svg>Personal</div>
+            <div class="wa-btn"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5"/></svg>Business</div>
+          </div>
+          <div class="bub out picked">Business<span class="t">9:42</span></div>
+          <div class="bub in">Great — what's your <b>business name</b>?<span class="t">9:42</span></div>
+          <div class="bub out">Ada's Kitchen<span class="t">9:42</span></div>
+          <div class="bub in">What kind of business is it?
+            <span class="wa-listrow"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Choose category</span>
+            <span class="t">9:42</span></div>
+        </div>
+        <!-- list bottom-sheet overlay -->
+        <div class="sheet">
+          <div class="sheet-grab"></div>
+          <div class="sheet-head"><span class="ttl">Business type</span><span class="x">✕</span></div>
+          <div class="srow"><div class="lic">🛍️</div><div class="txt"><div class="st">Retail / Shop</div><div class="sd">Selling goods, market stall, kiosk</div></div><div class="radio"></div></div>
+          <div class="srow"><div class="lic">🍲</div><div class="txt"><div class="st">Food / Restaurant</div><div class="sd">Cooking, catering, bukka, bar</div></div><div class="radio on"></div></div>
+          <div class="srow"><div class="lic">🔧</div><div class="txt"><div class="st">Services</div><div class="sd">Salon, repairs, transport, trades</div></div><div class="radio"></div></div>
+          <div class="srow"><div class="lic">📦</div><div class="txt"><div class="st">Other</div><div class="sd">Something else</div></div><div class="radio"></div></div>
+        </div>
+      </div></div>
+      <div class="cap" style="font-size:.8rem;color:var(--tm)">The list sheet slides up over the chat; one tap returns a clean value. Final bubble after pick: <b style="color:var(--ts)">"✅ All set, Ada! Ada's Kitchen (Food) is ready."</b></div>
+    </div>
+
+    <!-- PHONE 2 — settings via interactive list + buttons -->
+    <div class="col">
+      <div class="cap"><span class="step">2</span><b>Settings</b> — an interactive list + tap-to-edit</div>
+      <div class="phone"><div class="screen">
+        <div class="wa-top">
+          <span class="wa-back">‹</span>
+          <div class="wa-av"><svg viewBox="0 0 24 24"><path d="M7 4v16M12 4v16M17 4v16"/></svg></div>
+          <div><div class="wa-name">TaLi</div><div class="wa-sub">online</div></div>
+          <span class="grow"></span><span class="wa-ic">⋮</span>
+        </div>
+        <div class="chat">
+          <div class="day">TODAY</div>
+          <div class="bub out">settings<span class="t">14:08</span></div>
+          <div class="bub in">⚙️ Here's everything you can change — tap one:
+            <span class="wa-listrow"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Open settings</span>
+            <span class="t">14:08</span></div>
+          <div class="bub in" style="max-width:62%">You picked <b>Currency</b>. Pick a new one:<span class="t">14:09</span></div>
+          <div class="wa-btns">
+            <div class="wa-btn">₦ &nbsp;NGN</div>
+            <div class="wa-btn">$ &nbsp;USD</div>
+            <div class="wa-btn">£ &nbsp;GBP</div>
+          </div>
+          <div class="bub out picked">$ USD<span class="t">14:09</span></div>
+          <div class="bub in">✅ Currency updated to <b>$ USD</b>. New transactions will use $.<span class="t">14:09</span></div>
+        </div>
+        <!-- settings list sheet overlay -->
+        <div class="sheet">
+          <div class="sheet-grab"></div>
+          <div class="sheet-head"><span class="ttl">Your settings</span><span class="x">✕</span></div>
+          <div class="srow"><div class="lic">🙂</div><div class="txt"><div class="st">Name</div><div class="sd">Ada</div></div><div class="radio"></div></div>
+          <div class="srow"><div class="lic">🏷️</div><div class="txt"><div class="st">Usage type</div><div class="sd">Business</div></div><div class="radio"></div></div>
+          <div class="srow"><div class="lic">🏪</div><div class="txt"><div class="st">Business</div><div class="sd">Ada's Kitchen · Food</div></div><div class="radio"></div></div>
+          <div class="srow"><div class="lic">💱</div><div class="txt"><div class="st">Currency</div><div class="sd">₦ NGN</div></div><div class="radio on"></div></div>
+          <div class="srow"><div class="lic">🔔</div><div class="txt"><div class="st">Alerts</div><div class="sd">Low stock &lt; 5</div></div><div class="radio"></div></div>
+        </div>
+      </div></div>
+      <div class="cap" style="font-size:.8rem;color:var(--tm)">Tapping a list row opens that field; small option sets (like currency) use reply buttons.</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div><span class="pill">Speed</span><br><b>Fastest, least error-prone.</b> Taps return clean values — no parsing "2" vs "two" vs "Business".</div>
+    <div><span class="pill warn">Build cost</span><br><b>Higher.</b> Needs new <code>send_buttons()</code>/<code>send_list()</code> helpers, interactive-reply handling, and (for forms) a Meta-reviewed Flow.</div>
+    <div><span class="pill warn">Limits</span><br>≤3 buttons, ≤10 list rows; <b>does not render on WhatsApp Web/desktop</b> — needs a text fallback anyway.</div>
+  </div>
+</div>
+</body>
+</html>

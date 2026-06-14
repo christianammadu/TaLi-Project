@@ -1,0 +1,925 @@
+<!-- GENERATED — edit .claude/skills/groundwork/ instead. Synced by sync-from-dev.mjs. -->
+<!doctype html>
+<html lang="en" data-theme="A" data-mode="dark" data-density="comfortable">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>settings-onboarding — living spec</title>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       Living spec for a groundwork plan folder. Scaffolded by `init` from
+       profiles/_shared/templates/artifact/index.html; the spec-state fence
+       below is the only region an action writes (via `refresh-living-spec`).
+
+       Tab layout (universal across every groundwork plan):
+         • Overview   — plan-specific (hand-authored, edit freely)
+         • Spine      — universal (describes the groundwork plan-folder shape)
+         • Actions    — universal (describes the 8 stateless actions)
+         • Profiles   — universal (describes the 3 domain profiles)
+         • State      — universal (describes fences + IDs + idempotency)
+         • Board      — universal (points at artifact/board.html)
+         • Phasing    — auto-regenerated from spec-state fence
+         • Decisions  — auto-regenerated from spec-state fence
+         • Risks      — auto-regenerated from spec-state fence
+
+       Theme/mode/density: deliberately NO in-page switcher. In-shell, the
+       AppBridge host-context handshake (handled below) sets data-theme /
+       data-mode / data-density on iframe-mount. Standalone, the defaults
+       on <html> apply (Theme A · Dusk Wood · dark · comfortable).
+       ────────────────────────────────────────────────────────────────── -->
+
+  <!--
+    Living-spec state — the ONLY region actions write to in this file.
+    The three volatile tabs (Phasing · Decisions · Risks) render from the JSON
+    inside the `<script id="groundwork-spec-state">` tag below. The fence wraps
+    the full `<script>…</script>` block so `refresh-living-spec` replaces the
+    whole thing (tags + JSON) cleanly. The other six tabs stay hand-authored
+    (universal: Spine/Actions/Profiles/State/Board) or plan-specific (Overview).
+  -->
+  <!-- groundwork:auto:start spec-state -->
+  <script type="application/groundwork+json" id="groundwork-spec-state">{"version":1,"generated_at":null,"generated_by":"init — empty scaffold; run `groundwork refresh-living-spec` to populate from anchor + docs","phases":[],"decisions":[],"risks":[]}</script>
+  <!-- groundwork:auto:end spec-state -->
+
+  <script type="application/json" id="ikenga-manifest">
+{
+  "format": "ikenga-artifact",
+  "formatVersion": "0.1",
+  "id": "2026-06-05-settings-onboarding-living-spec",
+  "name": "settings-onboarding — living spec",
+  "version": "0.1.0",
+  "description": "Multi-tab walkthrough of the settings-onboarding plan: overview, spine, actions, profiles, state, board, phasing, decisions, risks. Living document — updates as 01-plan + 04 + 05 evolve.",
+  "license": "Apache-2.0",
+  "icon": { "lucide": "book-open-text" },
+  "capabilities": {},
+  "fallback": {
+    "mode": "static",
+    "banner": "Living spec — no data dependencies; renders from the document itself."
+  },
+  "pin": {
+    "suggested": false,
+    "section": "Planning",
+    "label": "2026-06-05-settings-onboarding spec"
+  },
+  "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+}
+</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Inter:wght@300..600&family=JetBrains+Mono:wght@400..500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       @ikenga/tokens — full surface (mirrors /tokens/tokens.css).
+       Axes honored: data-theme × data-mode × data-density on <html>.
+       In-shell, the AppBridge host-context handshake (handled below) sets
+       these. Standalone, the defaults on <html> apply (Theme A · dark ·
+       comfortable). NO in-page switcher — that's a design-tool concern.
+       ═════════════════════════════════════════════════════════════════════ */
+    :root {
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px;
+      --radius-xs: 3px; --radius-sm: 5px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-pill: 999px;
+      --font-display: 'Fraunces', ui-serif, Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SF Mono, Menlo, monospace;
+      --text-h1: 32px; --text-h2: 24px; --text-h3: 18px;
+      --text-body-lg: 16px; --text-body: 14px; --text-body-sm: 13px;
+      --text-caption: 12px; --text-micro: 11px;
+      --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 260ms;
+      --ease-calm: cubic-bezier(0.2, 0.6, 0.2, 1);
+    }
+    :root[data-density="compact"]     { --row-pad-y: 5px;  --body-size: 13px; --tab-h: 32px; }
+    :root[data-density="comfortable"] { --row-pad-y: 8px;  --body-size: 14px; --tab-h: 38px; }
+    :root[data-density="spacious"]    { --row-pad-y: 11px; --body-size: 16px; --tab-h: 44px; }
+
+    [data-theme="A"][data-mode="dark"], :root[data-theme="A"]:not([data-mode]) { color-scheme: dark;
+      --bg-base:hsl(28,18%,4%);--bg-surface:hsl(28,14%,7%);--bg-raised:hsl(28,11%,11%);--bg-sunken:hsl(28,22%,2.5%);
+      --fg:hsl(36,28%,90%);--fg-muted:hsl(32,11%,56%);--fg-faint:hsl(28,9%,36%);
+      --border:hsl(28,14%,15%);--border-soft:hsl(28,14%,11%);
+      --primary:hsl(20,50%,34%);--primary-fg:hsl(36,30%,92%);--primary-soft:hsl(20,40%,14%);
+      --achievement:hsl(42,78%,54%);--achievement-soft:hsl(42,48%,18%);
+      --danger:hsl(8,68%,46%);--danger-soft:hsl(8,50%,16%);
+      --systemic:hsl(170,28%,34%);--systemic-soft:hsl(170,22%,16%);
+      --chip-carve:hsl(28,14%,32%);--rule:hsl(28,14%,18%);
+      --shadow-1:0 1px 2px rgba(0,0,0,.55);--shadow-2:0 4px 12px -2px rgba(0,0,0,.55);--shadow-3:0 12px 28px -8px rgba(0,0,0,.6); }
+    [data-theme="A"][data-mode="light"] { color-scheme: light;
+      --bg-base:hsl(36,22%,96%);--bg-surface:hsl(36,18%,93%);--bg-raised:hsl(36,14%,89%);--bg-sunken:hsl(36,26%,98%);
+      --fg:hsl(28,30%,14%);--fg-muted:hsl(28,14%,38%);--fg-faint:hsl(28,12%,56%);
+      --border:hsl(32,16%,78%);--border-soft:hsl(32,16%,84%);
+      --primary:hsl(20,50%,34%);--primary-fg:hsl(36,26%,98%);--primary-soft:hsl(20,50%,90%);
+      --achievement:hsl(42,78%,42%);--achievement-soft:hsl(42,60%,90%);
+      --danger:hsl(8,68%,42%);--danger-soft:hsl(8,60%,92%);
+      --systemic:hsl(170,36%,32%);--systemic-soft:hsl(170,30%,90%);
+      --chip-carve:hsl(28,14%,62%);--rule:hsl(36,14%,84%);
+      --shadow-1:0 1px 2px rgba(28,18,8,.08);--shadow-2:0 4px 12px -2px rgba(28,18,8,.10);--shadow-3:0 12px 28px -8px rgba(28,18,8,.14); }
+    [data-theme="B"][data-mode="dark"] { color-scheme: dark;
+      --bg-base:hsl(36,12%,8%);--bg-surface:hsl(36,10%,12%);--bg-raised:hsl(36,8%,16%);--bg-sunken:hsl(36,16%,6%);
+      --fg:hsl(40,28%,92%);--fg-muted:hsl(36,10%,62%);--fg-faint:hsl(36,8%,42%);
+      --border:hsl(36,12%,22%);--border-soft:hsl(36,12%,18%);
+      --primary:hsl(42,84%,60%);--primary-fg:hsl(36,30%,8%);--primary-soft:hsl(42,60%,18%);
+      --achievement:hsl(14,76%,56%);--achievement-soft:hsl(14,50%,18%);
+      --danger:hsl(8,70%,52%);--danger-soft:hsl(8,50%,18%);
+      --systemic:hsl(170,32%,46%);--systemic-soft:hsl(170,25%,18%);
+      --chip-carve:hsl(36,12%,38%);--rule:hsl(36,12%,22%);
+      --shadow-1:0 1px 2px rgba(0,0,0,.55);--shadow-2:0 4px 12px -2px rgba(0,0,0,.55);--shadow-3:0 12px 28px -8px rgba(0,0,0,.6); }
+    [data-theme="B"][data-mode="light"], :root[data-theme="B"]:not([data-mode]) { color-scheme: light;
+      --bg-base:hsl(36,28%,96%);--bg-surface:hsl(36,22%,94%);--bg-raised:hsl(36,18%,90%);--bg-sunken:hsl(36,32%,98%);
+      --fg:hsl(28,30%,12%);--fg-muted:hsl(28,14%,38%);--fg-faint:hsl(28,12%,56%);
+      --border:hsl(32,18%,80%);--border-soft:hsl(32,18%,86%);
+      --primary:hsl(42,82%,46%);--primary-fg:hsl(28,30%,8%);--primary-soft:hsl(42,60%,88%);
+      --achievement:hsl(14,72%,46%);--achievement-soft:hsl(14,60%,90%);
+      --danger:hsl(8,68%,42%);--danger-soft:hsl(8,60%,92%);
+      --systemic:hsl(170,36%,32%);--systemic-soft:hsl(170,30%,90%);
+      --chip-carve:hsl(28,14%,62%);--rule:hsl(36,14%,84%);
+      --shadow-1:0 1px 2px rgba(28,18,8,.08);--shadow-2:0 4px 12px -2px rgba(28,18,8,.10);--shadow-3:0 12px 28px -8px rgba(28,18,8,.14); }
+    [data-theme="C"][data-mode="dark"], :root[data-theme="C"]:not([data-mode]) { color-scheme: dark;
+      --bg-base:hsl(180,14%,7%);--bg-surface:hsl(180,12%,11%);--bg-raised:hsl(180,10%,15%);--bg-sunken:hsl(180,18%,5%);
+      --fg:hsl(40,18%,90%);--fg-muted:hsl(180,8%,60%);--fg-faint:hsl(180,8%,42%);
+      --border:hsl(180,12%,22%);--border-soft:hsl(180,12%,18%);
+      --primary:hsl(170,35%,50%);--primary-fg:hsl(180,18%,6%);--primary-soft:hsl(170,30%,18%);
+      --achievement:hsl(40,58%,64%);--achievement-soft:hsl(40,30%,18%);
+      --danger:hsl(8,70%,50%);--danger-soft:hsl(8,50%,18%);
+      --systemic:hsl(220,22%,56%);--systemic-soft:hsl(220,14%,18%);
+      --chip-carve:hsl(180,12%,38%);--rule:hsl(180,12%,22%);
+      --shadow-1:0 1px 2px rgba(0,0,0,.6);--shadow-2:0 4px 12px -2px rgba(0,0,0,.6);--shadow-3:0 12px 28px -8px rgba(0,0,0,.65); }
+    [data-theme="C"][data-mode="light"] { color-scheme: light;
+      --bg-base:hsl(180,10%,95%);--bg-surface:hsl(180,8%,92%);--bg-raised:hsl(180,6%,88%);--bg-sunken:hsl(180,12%,97%);
+      --fg:hsl(200,22%,14%);--fg-muted:hsl(200,10%,38%);--fg-faint:hsl(200,8%,58%);
+      --border:hsl(180,12%,80%);--border-soft:hsl(180,12%,86%);
+      --primary:hsl(170,42%,34%);--primary-fg:hsl(180,12%,97%);--primary-soft:hsl(170,30%,88%);
+      --achievement:hsl(40,64%,38%);--achievement-soft:hsl(40,50%,90%);
+      --danger:hsl(8,70%,42%);--danger-soft:hsl(8,60%,92%);
+      --systemic:hsl(220,24%,40%);--systemic-soft:hsl(220,22%,90%);
+      --chip-carve:hsl(200,8%,58%);--rule:hsl(180,12%,80%);
+      --shadow-1:0 1px 2px rgba(20,28,32,.08);--shadow-2:0 4px 12px -2px rgba(20,28,32,.10);--shadow-3:0 12px 28px -8px rgba(20,28,32,.14); }
+
+    /* ═════ Components ═════ */
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg-base); }
+    body {
+      font-family: var(--font-body); font-size: var(--body-size, 14px); line-height: 1.55;
+      color: var(--fg); -webkit-font-smoothing: antialiased;
+      transition: background 260ms var(--ease-calm), color 260ms var(--ease-calm);
+    }
+
+    .mono { font-family: var(--font-mono); }
+    .display { font-family: var(--font-display); font-weight: 500; letter-spacing: -.012em; }
+
+    .eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-faint); }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+    .section-tag, .detail-card-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); }
+
+    .tag { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: var(--radius-xs); background: var(--bg-sunken); color: var(--fg-muted); border: 1px solid var(--border-soft); white-space: nowrap; }
+    .tag-deal { color: var(--achievement); border-color: var(--achievement-soft); background: var(--achievement-soft); }
+    .tag-warn { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+    .tag-tint { color: var(--primary); border-color: var(--primary-soft); background: var(--primary-soft); }
+    .tag-system { color: var(--systemic); border-color: var(--systemic-soft); background: var(--systemic-soft); }
+
+    .shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .page-head { padding: var(--space-8) var(--space-8) var(--space-6); background: var(--bg-surface); border-bottom: 1px solid var(--border-soft); }
+    .page-head-eyebrow { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .plan-title { font-family: var(--font-display); font-weight: 500; font-size: 40px; line-height: 1.1; letter-spacing: -.018em; color: var(--fg); margin: 0; }
+    .plan-title em { font-style: italic; color: var(--primary); }
+    .plan-lede { font-size: var(--text-body-lg); color: var(--fg-muted); line-height: 1.6; max-width: 72ch; margin: var(--space-3) 0 0; }
+
+    .host-badge { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--bg-base); border: 1px solid var(--border-soft); color: var(--fg-faint); }
+    .host-badge.in-shell { background: var(--systemic-soft); border-color: var(--systemic); color: var(--systemic); }
+
+    .tabs { display: flex; align-items: center; gap: 0; padding: 0 var(--space-6); height: var(--tab-h); border-bottom: 1px solid var(--border-soft); background: var(--bg-surface); overflow-x: auto; overflow-y: hidden; position: sticky; top: 0; z-index: 10; }
+    .tab { height: 100%; padding: 0 var(--space-4); background: transparent; border: 0; color: var(--fg-muted); font-family: inherit; font-size: var(--text-body-sm); font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color var(--motion-fast) var(--ease-calm); }
+    .tab:hover { color: var(--fg); }
+    .tab.is-on { color: var(--fg); border-bottom-color: var(--primary); }
+    .tab-count { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); padding: 0 5px; border: 1px solid var(--border-soft); border-radius: var(--radius-pill); height: 16px; line-height: 14px; }
+    .tab.is-on .tab-count { color: var(--primary); border-color: var(--primary); }
+
+    .content { flex: 1; overflow-y: auto; background: var(--bg-base); }
+    .content-inner { max-width: 1080px; margin: 0 auto; padding: var(--space-8) var(--space-8) var(--space-12); display: flex; flex-direction: column; gap: var(--space-8); }
+
+    section { display: flex; flex-direction: column; gap: var(--space-4); }
+    section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-h2); letter-spacing: -.005em; color: var(--fg); margin: 0; }
+    section h3 { font-family: var(--font-body); font-weight: 600; font-size: var(--text-h3); color: var(--fg); margin: var(--space-3) 0 0; }
+    section p { margin: 0; line-height: 1.65; color: var(--fg); }
+    section p.muted { color: var(--fg-muted); }
+    section ul { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: 6px; }
+    section li { line-height: 1.55; }
+    section code { font-family: var(--font-mono); font-size: 12.5px; padding: 1px 5px; border-radius: var(--radius-xs); background: var(--bg-sunken); color: var(--primary); border: 1px solid var(--border-soft); }
+
+    .card { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); overflow: hidden; }
+    .card-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-soft); background: var(--bg-sunken); }
+    .card-name { font-family: var(--font-display); font-weight: 500; font-size: var(--text-h3); color: var(--fg); }
+    .card-meta { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); margin-left: auto; }
+    .card-body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .ikenga-table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); border: 1px solid var(--border-soft); border-radius: var(--radius-md); overflow: hidden; }
+    .ikenga-table thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); padding: var(--space-3); background: var(--bg-sunken); border-bottom: 1px solid var(--border-soft); font-weight: normal; }
+    .ikenga-table tbody td { padding: var(--row-pad-y, 8px) var(--space-3); border-bottom: 1px solid var(--border-soft); color: var(--fg); vertical-align: top; }
+    .ikenga-table tbody tr:last-child td { border-bottom: 0; }
+    .ikenga-table tbody td.mono { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+    .kpi { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+    .kpi-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-faint); }
+    .kpi-value { font-family: var(--font-display); font-weight: 500; font-size: 28px; line-height: 1.1; color: var(--fg); margin-top: 4px; }
+    .kpi-delta { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); margin-top: 4px; }
+    .kpi-delta.up { color: var(--achievement); }
+    .kpi-delta.down { color: var(--danger); }
+
+    .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+    .action-card { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+    .action-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+    .action-card-name { font-family: var(--font-mono); font-size: var(--text-body); font-weight: 500; color: var(--primary); letter-spacing: -.005em; }
+    .action-card-kind { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); }
+    .action-card-desc { color: var(--fg-muted); font-size: var(--text-body-sm); line-height: 1.55; margin: 0; }
+    .action-card-spawns { font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); }
+    .action-card-spawns code { color: var(--systemic); }
+
+    pre.code-block { background: var(--bg-sunken); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); margin: 0; overflow-x: auto; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--fg); }
+    pre.code-block .com { color: var(--fg-faint); }
+    pre.code-block .key { color: var(--primary); }
+    pre.code-block .str { color: var(--achievement); }
+    pre.code-block .num { color: var(--systemic); }
+
+    .round-entry { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+    .round-entry-head { display: flex; align-items: baseline; gap: var(--space-3); border-bottom: 1px solid var(--border-soft); padding-bottom: var(--space-2); }
+    .round-entry-num { font-family: var(--font-display); font-weight: 500; font-size: var(--text-h3); color: var(--primary); }
+    .round-entry-title { font-family: var(--font-body); font-weight: 500; color: var(--fg); flex: 1; }
+    .round-entry-date { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--fg-faint); letter-spacing: .04em; }
+    .round-entry-body { color: var(--fg-muted); font-size: var(--text-body-sm); line-height: 1.6; }
+    .round-entry-body strong { color: var(--fg); }
+    .round-entry-body ul { margin: var(--space-2) 0; padding-left: var(--space-4); }
+
+    .risk-grid { display: grid; gap: var(--space-3); }
+    .risk-card { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); border-left: 3px solid var(--danger); }
+    .risk-card.deferred { border-left-color: var(--systemic); }
+    .risk-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+    .risk-card-title { font-family: var(--font-body); font-weight: 600; color: var(--fg); }
+    .risk-card-body { font-size: var(--text-body-sm); color: var(--fg-muted); line-height: 1.55; }
+    .risk-card-body strong { color: var(--fg); }
+
+    .empty-state { text-align: center; padding: var(--space-12) var(--space-6); color: var(--fg-muted); }
+    .empty-state h3 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-h3); color: var(--fg); margin: 0 0 var(--space-3); }
+    .empty-state code { font-family: var(--font-mono); font-size: 12px; padding: 2px 6px; border-radius: var(--radius-xs); background: var(--bg-sunken); color: var(--primary); border: 1px solid var(--border-soft); }
+
+    a { color: var(--primary); text-decoration: none; border-bottom: 1px dashed currentColor; }
+    a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    .page-foot { padding: var(--space-3) var(--space-8); border-top: 1px solid var(--border-soft); background: var(--bg-sunken); display: flex; align-items: center; gap: var(--space-4); font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); letter-spacing: .06em; }
+    .chip-carve { color: var(--chip-carve); letter-spacing: .35em; font-family: var(--font-mono); }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    @media (max-width: 720px) {
+      .action-grid, .kpis { grid-template-columns: 1fr; }
+      .plan-title { font-size: 28px; }
+      .content-inner { padding: var(--space-5); }
+    }
+  </style>
+
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+
+  <!--
+    Bridge polyfill — host-context handshake ONLY (no in-page switcher).
+    The shell pushes { theme, mode, density } when the user changes app
+    preferences; we mirror onto <html>. Standalone, this is a no-op.
+  -->
+  <script>
+  window.__bridge__ = {
+    init: function () {
+      const inShell = !!(window.parent && window.parent !== window);
+      function post(kind, payload) { try { if (inShell) window.parent.postMessage({ __iyke: true, kind, payload }, '*'); } catch (e) {} }
+      window.addEventListener('message', (ev) => {
+        const m = ev.data;
+        if (!m || !m.__iyke || m.kind !== 'host-context') return;
+        const ctx = m.payload || {};
+        if (ctx.theme)   document.documentElement.setAttribute('data-theme', ctx.theme);
+        if (ctx.mode)    document.documentElement.setAttribute('data-mode',  ctx.mode);
+        if (ctx.density) document.documentElement.setAttribute('data-density', ctx.density);
+      });
+      return Promise.resolve({
+        inShell,
+        publishState: (key, value) => post('state', { key, value }),
+      });
+    }
+  };
+  </script>
+</head>
+
+<body>
+  <div id="root"><div style="padding: 32px; color: var(--fg-muted);">Initializing…</div></div>
+
+  <script type="text/babel" data-presets="env,react">
+  (function () {
+    const { useState, useEffect } = React;
+
+    /* ═════════ Spec-state fence ═════════
+       Read the fenced JSON state block (id="groundwork-spec-state").
+       Powers the three volatile tabs: Phasing · Decisions · Risks.
+       Regenerated by `groundwork refresh-living-spec` from the plan's
+       .groundwork.json + 04-discussion.md + 05-tracking.md + 01-plan §Risks. */
+    const SPEC_STATE = (() => {
+      const el = document.getElementById('groundwork-spec-state');
+      if (!el) return { phases: [], decisions: [], risks: [] };
+      try { return JSON.parse(el.textContent); }
+      catch (e) { console.error('[groundwork] spec-state parse failed:', e); return { phases: [], decisions: [], risks: [] }; }
+    })();
+
+    /* ═════════ Inline Lucide-style icons ═════════ */
+    const Icon = ({ name, size = 14 }) => {
+      const p = {
+        bookOpen:    'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+        layout:      'M3 3h18v18H3zM3 9h18M9 21V9',
+        listTree:    'M21 12h-8M21 6h-8M21 18h-8M3 6 5 8 3 10M3 12 5 14M3 18 5 20',
+        boxes:       'M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0Z',
+        users:       'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+        database:    'M5 4h14v4H5zm0 8h14v4H5zm0 8h14v0',
+        gitBranch:   'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 0c0 5-3 5-6 5s-6 0-6 6m12-1a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm-12 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z',
+        sparkles:    'm12 3-1.5 4.5L6 9l4.5 1.5L12 15l1.5-4.5L18 9l-4.5-1.5L12 3Z',
+        shield:      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+        circle:      'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z',
+      };
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d={p[name] || p.circle} />
+        </svg>
+      );
+    };
+
+    /* ═════════ Tab definitions ═════════ */
+    const TABS = [
+      { id: 'overview',  label: 'Overview',  icon: 'bookOpen' },
+      { id: 'spine',     label: 'Spine',     icon: 'listTree' },
+      { id: 'actions',   label: 'Actions',   icon: 'boxes',     count: 8 },
+      { id: 'profiles',  label: 'Profiles',  icon: 'users',     count: 3 },
+      { id: 'state',     label: 'State',     icon: 'database' },
+      { id: 'board',     label: 'Board',     icon: 'layout' },
+      { id: 'phasing',   label: 'Phasing',   icon: 'gitBranch', count: SPEC_STATE.phases.length },
+      { id: 'decisions', label: 'Decisions', icon: 'sparkles',  count: SPEC_STATE.decisions.length },
+      { id: 'risks',     label: 'Risks',     icon: 'shield',    count: SPEC_STATE.risks.length },
+    ];
+
+    /* ═════════ Plan-specific Overview (HAND-AUTHORED — edit freely) ═════════ */
+
+    const Overview = () => (
+      <>
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>What this plan is</span>
+          <h2>settings-onboarding — at a glance</h2>
+          <p>
+            Add a settings mechanism plus onboarding that captures display name and usage type (business/personal) so welcomes are personalized and business users can record business info; decide whether settings live on an authenticated web page or via WhatsApp commands.
+          </p>
+          <p className="muted">
+            This is a <strong>living spec</strong> — the multi-tab walkthrough of <code>plans/2026-06-05-settings-onboarding/</code>.
+            The <strong>Decisions</strong> tab carries the round-by-round log;
+            <strong> Phasing</strong> shows current phase state;
+            <strong> Risks</strong> tracks the named mitigations. Those three tabs auto-regenerate from
+            the plan docs via <code>groundwork refresh-living-spec</code>. The
+            <strong> Spine / Actions / Profiles / State / Board</strong> tabs are universal — they describe
+            the groundwork skill itself and are identical across every plan that uses it.
+          </p>
+        </section>
+
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>Customize this overview</span>
+          <h2>Replace this section with plan-specific content</h2>
+          <p className="muted">
+            This Overview tab is hand-authored. Replace it with the framing that fits the plan — goal cards,
+            a portability matrix, a KPI strip, a "what works where" table, an architecture sketch. Everything
+            outside the <code>spec-state</code> fence (the JSON block in the head) is hand-authored and never
+            touched by an action; you can edit any part of this file.
+          </p>
+          <p className="muted">
+            See <code>plans/groundwork/artifact/index.html</code> for a fully-built example (it overrides
+            this Overview with three KPI cards and a portability matrix).
+          </p>
+        </section>
+      </>
+    );
+
+    /* ═════════ Universal tabs (DO NOT EDIT PER-PLAN — these describe the skill) ═════════ */
+
+    const Spine = () => (
+      <>
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>The reusable spine</span>
+          <h2>What every <code>groundwork</code> plan folder looks like</h2>
+          <p>
+            A small, opinionated set of documents that fit on one tree. Most are markdown; the artifact (this page) is HTML;
+            the state anchor is JSON. <strong>The shape is constant across profiles</strong> — vocabulary inside the files
+            changes via the active profile (see the Profiles tab).
+          </p>
+          <table className="ikenga-table">
+            <thead>
+              <tr><th>Artifact</th><th>Role</th><th>Generalizes to (non-code)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td className="mono"><code>00-README.md</code></td><td>Index + status + read order</td><td>same</td></tr>
+              <tr><td className="mono"><code>01-plan.md</code></td><td>The authoritative spec</td><td>the authoritative brief / strategy</td></tr>
+              <tr><td className="mono"><code>02-research-external.md</code></td><td>Outside research, cited</td><td>market / precedent / literature research</td></tr>
+              <tr><td className="mono"><code>03-research-internal.md</code></td><td>Inside-the-project research</td><td>existing assets / prior work / constraints</td></tr>
+              <tr><td className="mono"><code>04-discussion.md</code></td><td>Newest-first "Round N" decision log</td><td>same</td></tr>
+              <tr><td className="mono"><code>05-tracking.md</code></td><td>Work blocks + critical path + status</td><td>workstreams + dependencies + status</td></tr>
+              <tr><td className="mono"><code>NN-*.md</code></td><td>Focused sub-plans for hard pieces</td><td>same</td></tr>
+              <tr><td className="mono"><code>drafts/</code></td><td>Ready-to-drop artifacts</td><td>templates, copy, datasets</td></tr>
+              <tr><td className="mono"><code>designs/</code></td><td>Option mockups to compare + lock (per phase, produced by the <strong>design</strong> action)</td><td>concept variations</td></tr>
+              <tr><td className="mono"><code>09-orchestration.md</code></td><td>Multi-agent kickoff: gates, WP matrix, briefs</td><td>owner/agent assignment + sequencing</td></tr>
+              <tr><td className="mono"><code>artifact/index.html</code></td><td>Living visual spec (this page) — Phasing/Decisions/Risks auto-regenerate, the rest is hand-authored</td><td>same</td></tr>
+              <tr><td className="mono"><code>artifact/board.html</code></td><td>Operational tracking board — generated by <code>refresh-board</code></td><td>same</td></tr>
+              <tr><td className="mono"><code>.groundwork.json</code></td><td><strong>Plan state/identity</strong>: profile, spine version, per-doc hashes + generated-region map. The anchor every action reads.</td><td>same</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>Generated-region fences</span>
+          <h2>How "augments, never clobbers" actually holds</h2>
+          <p>
+            Actions only write inside HTML-comment fences. Everything outside is hand-authored and immutable to actions.
+            A re-run recomputes a region's content, hashes it, and writes only if the hash differs. Hand-written prose
+            in the same file stays byte-identical.
+          </p>
+          <pre className="code-block">{`Hand-written introduction paragraph.
+
+<span class="com">&lt;!-- groundwork:auto:start research-summary --&gt;</span>
+<span class="com">&lt;!-- last_action: research · 2026-05-20T14:30:00Z --&gt;</span>
+
+(generated content — actions overwrite this block byte-for-byte on re-run)
+
+<span class="com">&lt;!-- groundwork:auto:end research-summary --&gt;</span>
+
+Hand-written follow-up.`}</pre>
+          <p className="muted">
+            See the <a href="#" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('jump-tab', { detail: 'state' })); }}>State</a> tab for the full hash-diff algorithm.
+          </p>
+        </section>
+      </>
+    );
+
+    const Actions = () => {
+      const ACTIONS = [
+        { name: 'init',                kind: 'scaffolder',  spawns: null,                desc: 'Interviews for goal + profile, drops folder skeleton + templates + .groundwork.json. Idempotent (no clobber on re-run; hand-written prose preserved via fences). One entry point that doesn\'t require an existing .groundwork.json — every other action refuses without one.' },
+        { name: 'research',            kind: 'agent-spawn', spawns: 'researcher',        desc: 'Spawns a researcher agent for external (WebSearch/WebFetch) + internal (Grep/Read) passes. Writes findings into the fenced regions in 02 + 03; the action does the writing, the agent only returns structured content. Cites every claim.' },
+        { name: 'design',              kind: 'composed',    spawns: 'design-skill',      desc: 'Profile-gated. For visual/UX-bearing work, produces ≥2 comparable mockups in designs/; user picks one; the lock becomes a Round in 04. Composes ikenga-artifact-builder / huashu-design / frontend-design — or plain HTML if none installed. Per-phase, not all upfront.' },
+        { name: 'review',              kind: 'agent-spawn', spawns: 'reviewer',          desc: 'The highest-value recurring action. Spawns a reviewer for gap analysis, appends a new "Round N" to 04 (newest first), allocates G-NN IDs, and re-syncs every doc the IDs touch — deterministic via the ID registry, not guessed. Can also target a design (design-review pass).' },
+        { name: 'clarify',             kind: 'read-only',   spawns: null,                desc: 'Lightweight readiness gate. Scans for open questions in 04, unspecified IDs in 01, missing locked designs for visual profiles, critical-path freshness, and profile-conformance. Runs as the pre-step inside orchestrate; refuses on fail.' },
+        { name: 'orchestrate',         kind: 'generator',   spawns: null,                desc: 'Generates 09-orchestration.md from 05: WP matrix, freeze gates, wave plan, intra-isolation, mock contracts, worktree-vs-branch recommendation, one self-contained brief per WP-NN. Runs clarify first; cites locked designs in the relevant WP briefs.' },
+        { name: 'refresh-board',       kind: 'composed',    spawns: 'artifact-builder',  desc: '(Re)generates artifact/board.html from current docs + .groundwork.json. Composes ikenga-artifact-builder when present; falls back to the self-contained board template at profiles/_shared/board/index.html otherwise. Shows a drift indicator off whole-file hashes.' },
+        { name: 'refresh-living-spec', kind: 'generator',   spawns: null,                desc: 'Regenerates ONLY the spec-state fence in artifact/index.html — phases (from 05-tracking.md + WP rollups), decisions (from 04-discussion.md rounds), risks (from 01-plan §Risks). Hand-authored Overview + universal tabs are never touched.' },
+        { name: 'status',              kind: 'read-only',   spawns: null,                desc: 'Read-only health report: doc freshness vs hashes, open G-NN findings, IDs in 01 missing downstream, designs locked vs pending, research stamp age, profile conformance. Three rule-based suggested next actions, prioritized.' },
+      ];
+      return (
+        <>
+          <section>
+            <span className="eyebrow"><span className="eyebrow-dot"></span>Nine stateless actions</span>
+            <h2>Verbs that operate on a plan folder</h2>
+            <p>
+              Each action is stateless: read <code>.groundwork.json</code>, do its job, write atomically. No in-memory
+              state between invocations. All writes go inside fenced regions (see the State tab). Re-running an action
+              with no other change is a byte-identical no-op.
+            </p>
+          </section>
+          <section>
+            <div className="action-grid">
+              {ACTIONS.map(a => (
+                <div key={a.name} className="action-card">
+                  <div className="action-card-head">
+                    <span className="action-card-name">{a.name}</span>
+                    <span className="action-card-kind">{a.kind.replace('-', ' ')}</span>
+                  </div>
+                  <p className="action-card-desc">{a.desc}</p>
+                  {a.spawns && (<div className="action-card-spawns">spawns <code>{a.spawns}</code> agent</div>)}
+                </div>
+              ))}
+            </div>
+          </section>
+          <section>
+            <h3>Three agent roles the actions drive</h3>
+            <table className="ikenga-table">
+              <thead><tr><th>Agent</th><th>Driven by</th><th>Returns</th></tr></thead>
+              <tbody>
+                <tr><td className="mono">researcher</td><td className="mono">research</td><td>structured findings + sources (JSON envelope; the action writes them inside fences)</td></tr>
+                <tr><td className="mono">reviewer</td><td className="mono">review</td><td>findings with kind/severity/fold/touches[] + strengths-to-defend + new-risks + out-of-scope</td></tr>
+                <tr><td className="mono">orchestrator</td><td className="mono">(kickoff brief; not orchestrate itself — that's deterministic)</td><td>seeds an orchestrator session at build kickoff; the brief instructs Task creation + wave sequencing</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </>
+      );
+    };
+
+    const Profiles = () => (
+      <>
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>Domain profiles</span>
+          <h2>The same spine, different vocabulary</h2>
+          <p>
+            Templates are parameterized by a profile chosen at <code>init</code>. The spine is constant; the profile
+            swaps the labels + optional blocks. A single <code>_shared</code> base + thin per-profile overlays — not
+            full copies — keeps maintenance honest.
+          </p>
+          <table className="ikenga-table">
+            <thead>
+              <tr>
+                <th>Profile</th>
+                <th><code>05</code> work unit</th>
+                <th><code>09</code> isolation axis</th>
+                <th>Freeze-gate noun</th>
+                <th>Produces designs?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span className="tag tag-tint">software</span></td>
+                <td>work package / PR</td>
+                <td>git repo + disjoint dirs</td>
+                <td>interface freeze</td>
+                <td><span className="tag tag-deal">yes</span></td>
+              </tr>
+              <tr>
+                <td><span className="tag tag-system">general</span></td>
+                <td>workstream / deliverable</td>
+                <td>owner + non-overlapping scope</td>
+                <td>decision lock</td>
+                <td><span className="tag">no</span></td>
+              </tr>
+              <tr>
+                <td><span className="tag">content</span></td>
+                <td>piece / asset</td>
+                <td>channel + editorial slot</td>
+                <td>brief / voice / key-art lock</td>
+                <td><span className="tag tag-deal">yes</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="muted">
+            This plan uses the <code>software</code> profile.
+          </p>
+        </section>
+
+        <section>
+          <h3>Profile format</h3>
+          <p>A profile is a folder <code>profiles/&lt;name&gt;/</code> with a <code>profile.json</code> declaring overlay shape + an optional <code>templates/</code> dir with per-doc overrides. Templates substitute <code>{'work package'}</code> placeholders.</p>
+          <pre className="code-block">{`<span class="com">// profiles/software/profile.json</span>
+{
+  <span class="key">"name"</span>: <span class="str">"software"</span>,
+  <span class="key">"extends"</span>: <span class="str">"_shared"</span>,
+  <span class="key">"spine_version"</span>: <span class="str">"1"</span>,
+  <span class="key">"labels"</span>: {
+    <span class="key">"work_unit"</span>:        <span class="str">"work package"</span>,
+    <span class="key">"isolation_axis"</span>:   <span class="str">"git repo + disjoint dirs"</span>,
+    <span class="key">"freeze_gate_noun"</span>: <span class="str">"interface freeze"</span>
+  },
+  <span class="key">"optional_blocks"</span>: [<span class="str">"schema"</span>, <span class="str">"manifest"</span>, <span class="str">"adapter_contracts"</span>, <span class="str">"critical_files"</span>],
+  <span class="key">"produces_designs"</span>: <span class="num">true</span>
+}`}</pre>
+        </section>
+      </>
+    );
+
+    const State = () => (
+      <>
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>State, identity & idempotency</span>
+          <h2>The mechanism that makes a stateless action safe</h2>
+          <p>
+            Three parts. Each is documented hermetically in the skill's reference at <code>.claude/skills/groundwork/lib/state.md</code> — every action references that file rather than reimplementing the rules.
+          </p>
+        </section>
+
+        <section>
+          <h3>1. The identity anchor</h3>
+          <p>
+            <code>.groundwork.json</code> at the folder root is what marks a directory as a groundwork plan and pins its profile (no heuristic guessing). Every action reads it first; <code>init</code> writes it; the rest update specific fields.
+          </p>
+          <pre className="code-block">{`{
+  <span class="key">"spine_version"</span>: <span class="str">"1"</span>,
+  <span class="key">"profile"</span>: <span class="str">"software"</span>,
+  <span class="key">"goal"</span>: <span class="str">"…"</span>,
+  <span class="key">"docs"</span>: {
+    <span class="key">"01-plan.md"</span>: {
+      <span class="key">"hash"</span>: <span class="str">"sha256:aa5b…"</span>,
+      <span class="key">"generated_regions"</span>: [
+        { <span class="key">"id"</span>: <span class="str">"goal"</span>, <span class="key">"hash"</span>: <span class="num">"…"</span>, <span class="key">"last_action"</span>: <span class="str">"init"</span> }
+      ]
+    }
+  },
+  <span class="key">"ids"</span>: {
+    <span class="key">"WP-01"</span>: { <span class="key">"kind"</span>: <span class="str">"work_package"</span>, <span class="key">"status"</span>: <span class="str">"done"</span> }
+  }
+}`}</pre>
+        </section>
+
+        <section>
+          <h3>2. The fence grammar</h3>
+          <p>
+            Actions write only inside <code>{'<!-- groundwork:auto:start ID -->'}</code> … <code>{'<!-- groundwork:auto:end ID -->'}</code> blocks. Inner-content hashes track region state; whole-file hashes track drift. A user editing inside a fence triggers a warn-and-skip (never a clobber).
+          </p>
+          <table className="ikenga-table">
+            <thead><tr><th>File</th><th>Reserved fence IDs</th><th>Owner action</th></tr></thead>
+            <tbody>
+              <tr><td className="mono">00-README.md</td><td className="mono">status-block, spine-index</td><td className="mono">init, subplan</td></tr>
+              <tr><td className="mono">01-plan.md</td><td className="mono">goal, ids</td><td className="mono">init, review</td></tr>
+              <tr><td className="mono">02-research-external.md</td><td className="mono">findings, sources</td><td className="mono">research</td></tr>
+              <tr><td className="mono">03-research-internal.md</td><td className="mono">findings</td><td className="mono">research</td></tr>
+              <tr><td className="mono">04-discussion.md</td><td className="mono">rounds-index</td><td className="mono">review</td></tr>
+              <tr><td className="mono">05-tracking.md</td><td className="mono">wp-matrix, wave-plan, critical-path</td><td className="mono">orchestrate</td></tr>
+              <tr><td className="mono">artifact/index.html</td><td className="mono">spec-state</td><td className="mono">refresh-living-spec</td></tr>
+              <tr><td className="mono">artifact/board.html</td><td className="mono">board-data, board-meta</td><td className="mono">refresh-board</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>3. Stable IDs — the traceability backbone</h3>
+          <p>
+            IDs thread <code>01-plan.md</code> → <code>05-tracking.md</code> → <code>09-orchestration.md</code> → board. The review action computes the affected-doc set from the ID registry + region hashes, not from guessing.
+          </p>
+          <table className="ikenga-table">
+            <thead><tr><th>ID kind</th><th>Format</th><th>Example</th><th>Where it originates</th></tr></thead>
+            <tbody>
+              <tr><td><span className="tag tag-warn">gap</span></td><td className="mono">G-NN</td><td className="mono">G-12</td><td>review pass — folded into a Round</td></tr>
+              <tr><td><span className="tag tag-tint">work package</span></td><td className="mono">WP-NN</td><td className="mono">WP-05, WP-05a</td><td>orchestrate — derived from 05 sections</td></tr>
+              <tr><td><span className="tag tag-system">freeze gate</span></td><td className="mono">G-&lt;NAME&gt;</td><td className="mono">G-SCHEMA, G-VERB</td><td>orchestrate — declared in plan §Freeze gates</td></tr>
+              <tr><td><span className="tag tag-deal">design</span></td><td className="mono">D-NN</td><td className="mono">D-01</td><td>design pass — one per <code>designs/*.html</code> produced</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </>
+    );
+
+    const Board = () => (
+      <>
+        <section>
+          <span className="eyebrow"><span className="eyebrow-dot"></span>The plan-board artifact</span>
+          <h2>A separate artifact — at <code>artifact/board.html</code></h2>
+          <p>
+            The <em>living spec</em> (this page, at <code>artifact/index.html</code>) is the conceptual walkthrough — what the plan is, how the spine works, what each action does, the phases/decisions/risks. The <em>tracking board</em> is the operational dashboard you return to during a run: dense WP table with status, freeze gates, the decisions log + design coverage + research freshness in the right rail.
+          </p>
+          <p className="muted">
+            <a href="./board.html" target="_top">Open the tracking board →</a> in a new view to see this plan's WPs on the same canonical layout the skill ships. <code>refresh-board</code> writes into its <code>board-data</code> fence; the embedded mock-data block is the fallback before the first refresh.
+          </p>
+        </section>
+
+        <section>
+          <h3>Layouts — Mission Control default + Wave Board toggle</h3>
+          <p>
+            Two layouts, same data, toggle between them. Mission Control is the default — status-first, dense WP table + right rail carrying cross-cutting state (decisions, design coverage, research freshness). Wave Board is the toggle — waves as columns, cards flow left-to-right, gates as checkpoint chips.
+          </p>
+          <table className="ikenga-table">
+            <thead><tr><th>Surface</th><th>Layout</th><th>Where</th></tr></thead>
+            <tbody>
+              <tr><td>Canonical template</td><td>Mission Control + Wave Board toggle</td><td className="mono"><code>.claude/skills/groundwork/profiles/_shared/board/index.html</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Per-WP actions</h3>
+          <table className="ikenga-table">
+            <thead><tr><th>Action</th><th>Standalone (any browser)</th><th>In Ikenga shell</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Copy brief</strong></td>
+                <td><span className="tag tag-deal">✓ copies WP brief to clipboard</span></td>
+                <td><span className="tag tag-deal">✓ same</span></td>
+              </tr>
+              <tr>
+                <td><strong>Start session</strong></td>
+                <td><span className="tag">falls back to copy</span></td>
+                <td><span className="tag tag-tint">opens the New-Session dialog pre-filled</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Composition with <code>ikenga-artifact-builder</code></h3>
+          <p>
+            The board is itself a proper Ikenga artifact (with <code>ikenga-manifest</code>, <code>capabilities</code>, mock-data fallback). <code>refresh-board</code> composes <code>ikenga-artifact-builder</code> when it's installed; otherwise it copies the self-contained fallback template and injects the live data into the fenced JSON blocks. <strong>Soft dependency, never hard.</strong>
+          </p>
+        </section>
+      </>
+    );
+
+    /* ═════════ Volatile tabs (RENDER FROM spec-state JSON FENCE) ═════════ */
+
+    const Phasing = () => {
+      const phases = SPEC_STATE.phases || [];
+      if (phases.length === 0) {
+        return (
+          <div className="empty-state">
+            <h3>No phase data yet</h3>
+            <p>Run <code>groundwork refresh-living-spec</code> to populate this tab from <code>05-tracking.md</code> + WP statuses in <code>.groundwork.json</code>.</p>
+          </div>
+        );
+      }
+      const statusTag = (p) => {
+        if (p.status === 'shipped') return <span className="tag tag-deal">shipped</span>;
+        if (p.status === 'in_progress' || p.status === 'active') return <span className="tag tag-tint">in progress</span>;
+        if (p.status === 'stretch') return <span className="tag tag-warn">stretch · active</span>;
+        if (p.status === 'queued')  return <span className="tag tag-tint">queued</span>;
+        if (p.status === 'stub')    return <span className="tag">stub</span>;
+        return <span className="tag">{p.status}</span>;
+      };
+      const statusValue = (p) => {
+        if (p.status === 'shipped')     return 'Shipped';
+        if (p.status === 'in_progress' || p.status === 'active') return 'In progress';
+        if (p.status === 'stretch')     return 'Stretch';
+        if (p.status === 'queued')      return 'Queued';
+        if (p.status === 'stub')        return 'Stub';
+        return p.status;
+      };
+      const statusDeltaClass = (p) => p.status === 'shipped' ? 'up' : '';
+      return (
+        <>
+          <section>
+            <span className="eyebrow"><span className="eyebrow-dot"></span>Phasing</span>
+            <h2>{phases.length} phases · current state</h2>
+            <p className="muted">Generated from <code>.groundwork.json</code> + <code>05-tracking.md</code> by <code>refresh-living-spec</code>. Full WP detail in <code><a href="../05-tracking.md">05-tracking.md</a></code> + <code><a href="./board.html" target="_top">board.html</a></code>.</p>
+            <div className="kpis">
+              {phases.map(p => (
+                <div key={p.id} className="kpi">
+                  <div className="kpi-label">{p.id} · {p.title}</div>
+                  <div className="kpi-value">{statusValue(p)}</div>
+                  <div className={`kpi-delta ${statusDeltaClass(p)}`}>
+                    {p.shipped_at ? `shipped ${p.shipped_at}` : p.next_pull ? `next pull · ${p.next_pull}` : '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h3>Per-phase notes</h3>
+            <table className="ikenga-table">
+              <thead><tr><th>Phase</th><th>Title</th><th>Status</th><th>Detail</th></tr></thead>
+              <tbody>
+                {phases.map(p => (
+                  <tr key={p.id}>
+                    <td className="mono">{p.id}{p.round ? <span style={{ color: 'var(--fg-faint)' }}> · R{p.round}</span> : null}</td>
+                    <td>{p.title}</td>
+                    <td>{statusTag(p)}{p.shipped_at && <div className="mono" style={{ fontSize: 11, color: 'var(--fg-faint)', marginTop: 4 }}>{p.shipped_at}</div>}{p.next_pull && <div className="mono" style={{ fontSize: 11, color: 'var(--primary)', marginTop: 4 }}>next: {p.next_pull}</div>}</td>
+                    <td style={{ color: 'var(--fg-muted)', fontSize: 'var(--text-body-sm)', lineHeight: 1.55 }}>{p.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
+      );
+    };
+
+    const Decisions = () => {
+      const rounds = SPEC_STATE.decisions || [];
+      if (rounds.length === 0) {
+        return (
+          <div className="empty-state">
+            <h3>No decisions yet</h3>
+            <p>Run <code>groundwork refresh-living-spec</code> to extract rounds from <code>04-discussion.md</code>.</p>
+          </div>
+        );
+      }
+      return (
+        <>
+          <section>
+            <span className="eyebrow"><span className="eyebrow-dot"></span>Decision log</span>
+            <h2>{rounds.length} rounds, newest first</h2>
+            <p>The full log lives in <code><a href="../04-discussion.md">04-discussion.md</a></code>. Each round's summary below is regenerated from the <code>spec-state</code> fence.</p>
+          </section>
+
+          <section>
+            {rounds.map(r => (
+              <div key={r.round} className="round-entry">
+                <div className="round-entry-head">
+                  <span className="round-entry-num">Round {r.round}</span>
+                  <span className="round-entry-title">{r.title}</span>
+                  <span className="round-entry-date">{r.date}</span>
+                </div>
+                <div className="round-entry-body">
+                  <p>{r.summary}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        </>
+      );
+    };
+
+    const Risks = () => {
+      const risks = SPEC_STATE.risks || [];
+      if (risks.length === 0) {
+        return (
+          <div className="empty-state">
+            <h3>No risks tracked yet</h3>
+            <p>Run <code>groundwork refresh-living-spec</code> to extract risks from <code>01-plan.md §Risks</code>.</p>
+          </div>
+        );
+      }
+      const renderTitle = (t) => {
+        if (!t) return null;
+        const parts = String(t).split(/(`[^`]+`)/g);
+        return parts.map((p, i) => p.startsWith('`') && p.endsWith('`')
+          ? <code key={i}>{p.slice(1, -1)}</code>
+          : <React.Fragment key={i}>{p}</React.Fragment>);
+      };
+      const sevTag = (sev) => {
+        if (sev === 'critical')  return <span className="tag tag-warn">critical</span>;
+        if (sev === 'important') return <span className="tag tag-warn">important</span>;
+        if (sev === 'nice')      return <span className="tag tag-system">nice-to-have</span>;
+        return <span className="tag">{sev || 'risk'}</span>;
+      };
+      return (
+        <>
+          <section>
+            <span className="eyebrow"><span className="eyebrow-dot"></span>Risks + mitigations</span>
+            <h2>{risks.length} tracked risks</h2>
+            <p>Pulled from <code><a href="../01-plan.md#risks--alternatives">01-plan §Risks</a></code> via the <code>spec-state</code> fence. Each carries a mitigation; <code>source</code> points to the authoring round.</p>
+          </section>
+
+          <section>
+            <div className="risk-grid">
+              {risks.map((r, i) => (
+                <div key={i} className="risk-card">
+                  <div className="risk-card-head">
+                    <span className="risk-card-title">{renderTitle(r.title)}</span>
+                    {sevTag(r.severity)}
+                  </div>
+                  <div className="risk-card-body">
+                    <p style={{ margin: '0 0 6px' }}><strong>Mitigation:</strong> {r.mitigation}</p>
+                    {r.source && <p className="mono" style={{ margin: 0, fontSize: 11, color: 'var(--fg-faint)' }}>source · {r.source}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      );
+    };
+
+    /* ═════════ App root ═════════ */
+    function App({ art }) {
+      const [tab, setTab] = useState('overview');
+      const inShell = art.inShell;
+
+      useEffect(() => { art.publishState && art.publishState('spec', { tab }); }, [tab, art]);
+
+      useEffect(() => {
+        const handler = (e) => setTab(e.detail);
+        window.addEventListener('jump-tab', handler);
+        return () => window.removeEventListener('jump-tab', handler);
+      }, []);
+
+      const RENDER = {
+        overview: <Overview />, spine: <Spine />, actions: <Actions />, profiles: <Profiles />,
+        state: <State />, board: <Board />, phasing: <Phasing />, decisions: <Decisions />, risks: <Risks />,
+      };
+
+      return (
+        <div className="shell">
+          <header className="page-head">
+            <div className="page-head-eyebrow">
+              <span className="eyebrow"><span className="eyebrow-dot"></span>plans/2026-06-05-settings-onboarding · living spec</span>
+              <span className={`host-badge ${inShell ? 'in-shell' : ''}`} style={{ marginLeft: 'auto' }}>{inShell ? 'in shell' : 'standalone'}</span>
+            </div>
+            <h1 className="plan-title">settings-onboarding</h1>
+            <p className="plan-lede">
+              Add a settings mechanism plus onboarding that captures display name and usage type (business/personal) so welcomes are personalized and business users can record business info; decide whether settings live on an authenticated web page or via WhatsApp commands.
+            </p>
+          </header>
+
+          <nav className="tabs" role="tablist">
+            {TABS.map(t => (
+              <button key={t.id} className={`tab ${tab === t.id ? 'is-on' : ''}`} onClick={() => setTab(t.id)} role="tab" aria-selected={tab === t.id}>
+                <Icon name={t.icon} size={14} />
+                {t.label}
+                {t.count != null && <span className="tab-count">{t.count}</span>}
+              </button>
+            ))}
+          </nav>
+
+          <main className="content">
+            <div className="content-inner">{RENDER[tab]}</div>
+          </main>
+
+          <footer className="page-foot">
+            <span className="chip-carve">▽▽▽</span>
+            <span>living spec · run <code>groundwork refresh-living-spec</code> to update Phasing / Decisions / Risks</span>
+            <span style={{ marginLeft: 'auto' }}>spine_version <strong>1</strong> · profile <strong>software</strong></span>
+          </footer>
+        </div>
+      );
+    }
+
+    window.__bridge__.init().then((art) =>
+      ReactDOM.createRoot(document.getElementById('root')).render(<App art={art} />));
+  })();
+  </script>
+</body>
+</html>
