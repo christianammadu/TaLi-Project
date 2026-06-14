@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TaLi — Bookkeeping over WhatsApp</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<title>TaLi — Bookkeeping over WhatsApp & Telegram</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C2562F'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
 <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
 <script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
 </head>
@@ -12,7 +12,7 @@
 {% include "_sprite.html" %}
 
 <nav><div class="wrap nav">
-  <a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <a href="{{ url_for('web.index') }}" class="wordmark sm" aria-label="TaLi home">TaLi<span class="dot">.</span></a>
   <div class="nav-links"><a href="#how">How it works</a><a href="{{ url_for('web.features') }}">Features</a><a href="#reports">Reports</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.faq') }}">FAQ</a></div>
   <div class="nav-cta">
     <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg></button>
@@ -22,29 +22,39 @@
 
 <header class="wrap hero">
   <div>
-    <span class="tag"><span class="dot"></span> Works inside WhatsApp</span>
+    <span class="tag"><span class="dot"></span> Works inside WhatsApp &amp; Telegram</span>
     <h1>Your books, kept by <span class="hl">a simple text message.</span></h1>
     <p class="lead">No apps to learn, no spreadsheets. Just message TaLi like you'd message a friend — "Sold rice 5000" — and your records, reports and stock are handled automatically.</p>
     <div class="hero-cta">
-      <a href="{{ url_for('web.register') }}" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
-      <a href="#how" class="btn btn-g">See how it works</a>
+      <a href="{{ whatsapp_url }}" class="btn btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg> Continue on WhatsApp</a>
+      <a href="{{ telegram_url }}" class="btn btn-tg"><svg class="ic"><use href="#i-telegram"/></svg> Continue on Telegram</a>
     </div>
+    <a href="#how" class="hero-sub">See how it works <svg class="ic ic-sm"><use href="#i-arrow-right"/></svg></a>
     <div class="hero-meta">
       <div><b>30 sec</b>to set up</div>
       <div><b>₦0</b>to start</div>
       <div><b>5,000+</b>traders onboard</div>
     </div>
   </div>
-  <div class="phone center-x"><div class="screen">
-    <div class="wa-top"><div class="wa-av"><svg class="ic"><use href="#i-tally"/></svg></div><div><div class="wa-name">TaLi</div><div class="wa-sub">online</div></div></div>
-    <div class="chat">
-      <div class="bub out" style="animation-delay:.2s">Sold 3 bags of rice 18k<small>9:41</small></div>
-      <div class="bub in" style="animation-delay:.7s"><b>Sale recorded</b><br>₦18,000 · Rice · Sales<br>Stock: 12 bags left<small>9:41</small></div>
-      <div class="bub out" style="animation-delay:1.3s">How much did I make this week?<small>9:42</small></div>
-      <div class="bub in" style="animation-delay:2s"><b>This week</b><br>Income ₦142,500<br>Expenses ₦61,200<br><b>Profit ₦81,300</b><small>9:42</small></div>
+  <div class="center-x">
+    <div class="hero-card">
+      <div class="hc-head">
+        <div class="hc-av"><svg class="ic"><use href="#i-tally"/></svg></div>
+        <div class="who">TaLi<span class="dot">.</span><small>Bookkeeper · online</small></div>
+        <span class="badge">Ledger</span>
+      </div>
+      <div class="hc-chat">
+        <div class="bub out" style="animation-delay:.15s">Sold 3 bags of rice 18k<small>9:41</small></div>
+        <div class="bub in" style="animation-delay:.6s"><b>Got it ✓</b> Recorded a ₦18,000 sale and took 3 bags off your rice stock.<small>9:41</small></div>
+      </div>
+      <div class="hc-seam">recorded</div>
+      <div class="hc-ledger">
+        <div class="ledger-row"><span class="lbl">Sale · Rice (3 bags)</span><span class="num">+₦18,000</span></div>
+        <div class="ledger-row"><span class="lbl">Stock · Rice</span><span class="num">12 left</span></div>
+        <div class="ledger-row total"><span class="lbl">This week · profit</span><span class="num">₦81,300</span></div>
+      </div>
     </div>
-    <div class="wa-input"><span>Type a message…</span><span class="wa-send"><svg class="ic"><use href="#i-send"/></svg></span></div>
-  </div></div>
+  </div>
 </header>
 
 <section id="how"><div class="wrap">
@@ -89,7 +99,7 @@
 </div></section>
 
 <section id="pricing"><div class="wrap">
-  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-star"/></svg> Pricing</span><h2>Start free. Upgrade when you grow.</h2><p>No card needed to begin. <a href="{{ url_for('web.pricing') }}" style="color:var(--wa)">See full pricing →</a></p></div>
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-star"/></svg> Pricing</span><h2>Start free. Upgrade when you grow.</h2><p>No card needed to begin. <a href="{{ url_for('web.pricing') }}" style="color:var(--brand)">See full pricing →</a></p></div>
   <div class="price">
     <div class="pcard"><h3>Starter</h3><div class="pr">₦0<span>/forever</span></div><p class="desc">For getting started</p>
       <ul><li><svg class="ic"><use href="#i-check"/></svg> 50 records / month</li><li><svg class="ic"><use href="#i-check"/></svg> Balance &amp; summaries</li><li><svg class="ic"><use href="#i-check"/></svg> 1 currency</li></ul><a href="{{ url_for('web.register') }}" class="btn btn-g btn-full">Start free</a></div>
@@ -102,14 +112,17 @@
 
 <div class="wrap"><div class="cta-band">
   <h2>Your first record is one message away.</h2>
-  <p>Join thousands of African businesses keeping clean books without lifting a spreadsheet.</p>
-  <a href="{{ url_for('web.register') }}" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+  <p>Join thousands of African businesses keeping clean books without lifting a spreadsheet. Pick the chat you already use.</p>
+  <div class="hero-cta" style="justify-content:center">
+    <a href="{{ whatsapp_url }}" class="btn btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg> Continue on WhatsApp</a>
+    <a href="{{ telegram_url }}" class="btn btn-tg"><svg class="ic"><use href="#i-telegram"/></svg> Continue on Telegram</a>
+  </div>
 </div></div>
 
 <footer><div class="wrap">
   <div class="foot-grid">
-    <div><a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
-      <p>Bookkeeping that lives in the chat you already use. Made for African small business.</p></div>
+    <div><a href="{{ url_for('web.index') }}" class="wordmark" aria-label="TaLi home">TaLi<span class="dot">.</span></a>
+      <p style="margin-top:16px">Bookkeeping that lives in the chat you already use. Made for African small business.</p></div>
     <div><h4>Product</h4><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="#how">How it works</a><a href="{{ url_for('web.register') }}">Log in</a></div>
     <div><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Contact</a><a href="#">Careers</a></div>
     <div><h4>Legal</h4><a href="{{ url_for('web.privacy') }}">Privacy</a><a href="{{ url_for('web.terms') }}">Terms</a><a href="{{ url_for('web.faq') }}">FAQ</a></div>

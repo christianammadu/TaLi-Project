@@ -189,26 +189,41 @@ footer{border-top:1px solid var(--bord);padding:56px 0 40px;position:relative;z-
 .cta-band h2{font-size:2.2rem;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
 .cta-band p{color:var(--ts);margin-bottom:28px;font-size:1.05rem}
 
-/* ---------- phone mock (WhatsApp UI keeps its own fixed colors) ---------- */
-.phone{width:312px;height:632px;border-radius:42px;background:#0c0c12;border:1px solid var(--bord);
-  box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 80px rgba(194,86,47,.08);padding:12px;position:relative}
-.phone::before{content:'';position:absolute;top:14px;left:50%;transform:translateX(-50%);width:104px;height:26px;background:#000;border-radius:100px;z-index:3}
-.screen{height:100%;border-radius:32px;overflow:hidden;background:#0b141a;display:flex;flex-direction:column}
-.wa-top{background:#1f2c34;padding:34px 16px 12px;display:flex;align-items:center;gap:11px}
-.wa-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-dark));display:grid;place-items:center}
-.wa-av .ic{stroke:#fff;width:20px;height:20px}
-.wa-name{font-weight:600;font-size:.92rem;color:#e9edef}.wa-sub{font-size:.7rem;color:#8696a0}
-.chat{flex:1;padding:16px 13px;display:flex;flex-direction:column;gap:9px;overflow:hidden;background:#0b141a}
-.bub{max-width:82%;padding:8px 12px;border-radius:14px;font-size:.82rem;line-height:1.4;color:#e9edef;animation:pop .5s both}
-.bub.out{align-self:flex-end;background:#005c4b;border-bottom-right-radius:4px}
-.bub.in{align-self:flex-start;background:#1f2c34;border-bottom-left-radius:4px}
-.bub small{display:block;text-align:right;font-size:.6rem;color:rgba(255,255,255,.45);margin-top:3px}
-.bub b{color:var(--brand)}
+/* ---------- chat bubbles (shared: hero + features) — on-brand, paper & ink ---------- */
+.bub{max-width:84%;padding:9px 13px;border-radius:15px;font-size:.85rem;line-height:1.45;color:var(--ink);animation:pop .5s both}
+.bub.out{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:5px}
+.bub.in{align-self:flex-start;background:var(--paper-2);color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub small{display:block;text-align:right;font-size:.6rem;opacity:.6;margin-top:3px}
+.bub.out small{color:rgba(255,255,255,.75)}
+.bub b{font-weight:700}
+.bub.in b{color:var(--brand)}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
-.wa-input{background:#1f2c34;margin:0 8px 10px;border-radius:100px;padding:9px 16px;color:#8696a0;font-size:.78rem;
-  display:flex;justify-content:space-between;align-items:center}
-.wa-send{width:30px;height:30px;border-radius:50%;background:var(--brand);display:grid;place-items:center}
-.wa-send .ic{stroke:#0b141a;width:15px;height:15px}
+
+/* ---------- hero signature motif — a chat that becomes a ledger (D-01) ---------- */
+.hero-card{width:min(430px,100%);background:var(--card);border:1px solid var(--bord);border-radius:24px;
+  box-shadow:var(--shadow),0 0 80px rgba(194,86,47,.07);padding:22px 20px;position:relative}
+.hc-head{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.hc-av{width:40px;height:40px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+  display:grid;place-items:center;box-shadow:0 4px 14px var(--glow)}
+.hc-av .ic{stroke:#fff;width:21px;height:21px}
+.hc-head .who{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:-.01em;line-height:1.1}
+.hc-head .who .dot{color:var(--brand)}
+.hc-head .who small{display:block;font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:500;font-size:.72rem;color:var(--ts);letter-spacing:0}
+.hc-head .badge{margin-left:auto;font-family:var(--mono);font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--brand);background:var(--brand-soft);border:1px solid rgba(194,86,47,.2);padding:4px 10px;border-radius:100px}
+.hc-chat{display:flex;flex-direction:column;gap:8px;padding:16px 2px 2px}
+/* the seam where chat resolves into the ledger */
+.hc-seam{display:flex;align-items:center;gap:11px;margin:16px 0 6px;color:var(--ts);
+  font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.hc-seam::before,.hc-seam::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--brand);opacity:.45}
+.hc-ledger{padding:2px}
+.ledger-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 2px;font-size:.9rem}
+.ledger-row+.ledger-row{border-top:1px solid var(--line)}
+.ledger-row .lbl{color:var(--ts)}
+.ledger-row .num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--tp);white-space:nowrap}
+.ledger-row.total{margin-top:2px;border-top:2px solid var(--brand);padding-top:11px}
+.ledger-row.total .lbl{color:var(--tp);font-weight:600}
+.ledger-row.total .num{color:var(--brand);font-size:1.05rem}
 
 /* ---------- dashboard preview ---------- */
 .dash{background:linear-gradient(180deg,var(--card),transparent);border:1px solid var(--bord);border-radius:24px;
@@ -289,6 +304,8 @@ footer{border-top:1px solid var(--bord);padding:56px 0 40px;position:relative;z-
 .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
 .hero-meta{display:flex;gap:26px;margin-top:34px;color:var(--tm);font-size:.82rem}
 .hero-meta b{color:var(--tp);font-size:1.35rem;font-weight:800;display:block;letter-spacing:-.02em}
+.hero-sub{display:inline-flex;align-items:center;gap:6px;margin-top:16px;color:var(--ts);font-weight:600;font-size:.9rem;transition:var(--fast)}
+.hero-sub:hover{color:var(--brand)}.hero-sub .ic{width:15px;height:15px}
 .center-x{justify-self:center}
 
 /* ---------- generic page header ---------- */
@@ -325,3 +342,5 @@ h1,h2,h3,h4,.shead h2,.phead h1,.hero h1{font-family:var(--display);letter-spaci
 .btn-wa:hover{background:var(--wa-strong);color:#fff;box-shadow:0 8px 24px rgba(31,170,83,.32)}
 .btn-tg{background:var(--tg);color:#fff;border:none}
 .btn-tg:hover{background:var(--tg-strong);color:#fff;box-shadow:0 8px 24px rgba(42,171,238,.32)}
+/* channel brand glyphs are filled (the rest of the icon set is stroked) */
+.btn-wa .ic,.btn-tg .ic{fill:currentColor;stroke:none}
