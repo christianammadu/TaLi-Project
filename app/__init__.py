@@ -26,4 +26,7 @@ def create_app():
     from app.web.audit_routes import audit_bp
     app.register_blueprint(audit_bp)
 
+    from app.web.telegram_routes import telegram_bp
+    app.register_blueprint(telegram_bp)
+
     return app
