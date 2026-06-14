@@ -1,0 +1,406 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-06-13T12:33:53Z",
+  "updated": "2026-06-13T13:28:50Z",
+  "goal": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail.",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:b56619477cbdc319ca4fe34ca941f4f027f76866bfb91c8efc872c068123071f",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-06-13T12:33:53Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:b1523532b9e96d4fe9de4c8ffa4ac997a0cc42d2696b5db4c4bedbcdf3135259",
+          "last_action": "init",
+          "last_written": "2026-06-13T12:33:53Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:442fd12f61cf181f193a6c208bd65777ca30cef307631e7273fbc133225e9996",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:560563b04560898453752045ee658c109a5f189a04226397301c4c456868f40c",
+          "last_action": "init",
+          "last_written": "2026-06-13T12:33:53Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:b9801d992ce98708209cd1a5ee6fa6c18599ec7901b933cb8df5e5d7c53959c6",
+          "last_action": "review",
+          "last_written": "2026-06-13T13:22:09Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:b17c28045a02ae284d1b2d9dae6e54e9a17cbc1205470384b523b4b2f6be789e",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:4930df97b88a54d91437d39fdb45a29c057af2df43caa4850cf0f0210da42441",
+          "last_action": "research",
+          "last_written": "2026-06-13T12:52:37Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:f77f512ffec4293401c0e88a8fe4d98eeb31d05272e2462f03d440bc6ab8ee12",
+          "last_action": "research",
+          "last_written": "2026-06-13T12:52:37Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:b2d3b06d671119adb3146fac6a6c2fa20032f7b85a6d6169d429a60a17a7504c",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:24f90046b026a0b7d3f3f8d721dd7aacbfef5823df33029d8ccc0f151728da1b",
+          "last_action": "research",
+          "last_written": "2026-06-13T12:52:37Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:6b6b3f9a1cf3b488ef956e1dd18781027ae4860ebfe0d2695eb1d52545e5e802",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:3522005f971a48a46f044d6177dadab5925ddc2367f8afd677f2a2ede3b6d31e",
+          "last_action": "review",
+          "last_written": "2026-06-13T13:22:08Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:356a3a3a4d79194a1a10157c774fa0d0985f8f5e4ee2cd875b28b00bb7030776",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:4639e514ff45c436c6004993968365cfc98f44e3b9d7a3d70bc91651b437cfc1",
+          "last_action": "review",
+          "last_written": "2026-06-13T13:22:09Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:5731d3a76667231cb0a12df6b187befe52293982979f6219d0d230cd8242a549",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T13:05:34Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:ba516016e72b61ba053e0b78578853bea992728a3d1e77efe8f5d3ba41a6a571",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T13:05:34Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:577c6de511f81130fdf31f3304558895bcb62f92902e479a3554f47dd7f7c304",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T13:06:25Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:0bcc21bd2cbebe083638747e255098147e9571668c63f9534ef5543920470f44",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-06-13T12:33:53Z"
+        }
+      ]
+    },
+    "artifact/board.html": {
+      "generated_regions": [
+        {
+          "id": "board-data",
+          "hash": "sha256:a578d303bb26ececa52bc3f99a0472f82b5b6056ecce781068882b6527eb35e6",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-13T13:28:50Z"
+        },
+        {
+          "id": "board-meta",
+          "hash": "sha256:7b52bbbadaec5e899fe459a3a2996244181d5b2e43a5715b87938fed7405c06c",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-13T13:07:36Z"
+        }
+      ],
+      "hash": "sha256:3d138bb3cabc043c1ff0593aa6e69ef2300584ef51c5096f2164233b730a4097"
+    }
+  },
+  "ids": {
+    "G-MODEL-ROUTER": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-01",
+      "status": "pending"
+    },
+    "G-BAND-CONTRACT": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-02",
+      "status": "pending"
+    },
+    "G-01": {
+      "doc": "04-discussion.md",
+      "round": 1,
+      "status": "folded",
+      "severity": "critical",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-02": {
+      "doc": "04-discussion.md",
+      "round": 1,
+      "status": "folded",
+      "severity": "critical",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-03": {
+      "doc": "04-discussion.md",
+      "round": 1,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-04": {
+      "doc": "04-discussion.md",
+      "round": 1,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md"
+      ]
+    },
+    "WP-01": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-MODEL-ROUTER"
+    },
+    "WP-02": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-BAND-CONTRACT"
+    },
+    "WP-03": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ]
+    },
+    "WP-04": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ]
+    },
+    "WP-05": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ]
+    },
+    "WP-06": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-03",
+        "WP-04",
+        "WP-05"
+      ]
+    },
+    "WP-07": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-04",
+        "G-MODEL-ROUTER"
+      ]
+    },
+    "WP-08": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ]
+    },
+    "WP-09": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ]
+    },
+    "WP-10": {
+      "doc": "05-tracking.md",
+      "wave": 4,
+      "status": "queued",
+      "depends_on": [
+        "WP-01",
+        "WP-09"
+      ]
+    },
+    "WP-11": {
+      "doc": "05-tracking.md",
+      "wave": 4,
+      "status": "queued",
+      "depends_on": [
+        "WP-06",
+        "WP-07",
+        "WP-08",
+        "WP-09"
+      ]
+    },
+    "G-05": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "critical",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md",
+        "09-orchestration.md"
+      ]
+    },
+    "G-06": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "critical",
+      "touches": [
+        "09-orchestration.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-07": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "critical",
+      "touches": [
+        "01-plan.md",
+        "09-orchestration.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-08": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "05-tracking.md",
+        "09-orchestration.md",
+        "01-plan.md"
+      ]
+    },
+    "G-09": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "05-tracking.md",
+        "09-orchestration.md",
+        "01-plan.md"
+      ]
+    },
+    "G-10": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "09-orchestration.md",
+        "05-tracking.md"
+      ]
+    },
+    "G-11": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "01-plan.md",
+        "05-tracking.md",
+        "09-orchestration.md"
+      ]
+    },
+    "G-12": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "05-tracking.md",
+        "09-orchestration.md",
+        "01-plan.md"
+      ]
+    },
+    "G-13": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "nice",
+      "touches": [
+        "05-tracking.md",
+        "09-orchestration.md"
+      ]
+    },
+    "G-14": {
+      "doc": "04-discussion.md",
+      "round": 2,
+      "status": "folded",
+      "severity": "important",
+      "touches": [
+        "05-tracking.md",
+        "09-orchestration.md",
+        "01-plan.md"
+      ]
+    }
+  },
+  "designs": {},
+  "subplans": {},
+  "research": {
+    "02-research-external.md": {
+      "stamped": "2026-06-13"
+    },
+    "03-research-internal.md": {
+      "stamped": "2026-06-13"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "format": "ikenga-artifact",
+  "formatVersion": "0.1",
+  "id": "2026-06-13-band-hackathon-gaps-plan",
+  "name": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail. — plan",
+  "version": "0.1.0",
+  "description": "Living spec + tracking board for the Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail. plan. index.html is the multi-tab conceptual walkthrough; board.html is the operational dashboard.",
+  "license": "Apache-2.0",
+  "icon": { "lucide": "book-open-text" },
+  "dataSources": {
+    "_comment": "Optional external data sources keyed by name. The artifact loads them at runtime via the AppBridge `sources` API. When absent or unreachable (e.g. standalone in a browser), the artifact falls through to the mock-data block declared in `fallback.dataTag`. Example: `\"board\": { \"type\": \"file\", \"path\": \"./data/board.json\", \"refresh\": { \"mode\": \"manual\" } }`."
+  },
+  "fallback": {
+    "mode": "mock",
+    "dataTag": "board-mock-data",
+    "banner": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail. — running standalone"
+  },
+  "pin": {
+    "suggested": true,
+    "section": "Planning",
+    "label": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail."
+  },
+  "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+}
