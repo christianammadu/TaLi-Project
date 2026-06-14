@@ -64,34 +64,60 @@ WhatsApp — and does the bookkeeping for them from ordinary messages.
 
 ## Architecture
 
-TaLi receives WhatsApp webhooks, authenticates the sender, then runs the message
-through a multi-agent pipeline (a lightweight pub/sub "Band SDK") before replying.
+TaLi receives WhatsApp webhooks, authenticates the sender, then drops the message into a
+**Band chat room** (band.ai / Thenvoi) where **four specialized agents coordinate by
+`@mention`** — plan → execute → **review** → **human-approve** → reply — before replying.
+Coordination is conversation-driven through Band (the active coordination layer), not
+hardcoded function calls.
 
 ```mermaid
 flowchart TD
     WA[WhatsApp Cloud API] -->|webhook| WH[web/routes.py · /webhook]
-    WH -->|verify signature + dedup| AUTH[auth.py · sessions]
-    WH --> ROUTER[agents/agent_router.py]
-    ROUTER --> A1[Intake Agent<br/>NLP parse + classify]
-    A1 -->|intake_to_ledger| A2[Ledger Agent<br/>record tx / inventory / debt]
-    A2 -->|ledger_updates| A3[CFO Agent<br/>format reply + alerts]
-    A3 -->|reply| WH
-    WH -->|send_reply| WA
+    WH -->|verify + dedup| AUTH[auth.py · sessions]
+    WH --> GW[agents/agent_router.py · Band gateway]
 
-    A1 -.-> NLP[services/nlp.py · OpenAI]
-    A2 -.-> Q[data/queries.py]
-    A3 -.-> REP[agents/reporting_agent.py]
-    Q --> DB[(MySQL)]
-    REP --> DB
-    AUTH --> DB
+    subgraph ROOM[Band room · @mention routing]
+      A1["@tali-intake<br/>NLP parse + classify"]
+      A2["@tali-ledger<br/>propose → await → commit"]
+      A4["@tali-compliance<br/>pre-commit veto"]
+      A3["@tali-cfo<br/>compose reply"]
+      HU["@tali-human<br/>approval"]
+    end
+
+    GW --> A1
+    A1 -->|@ledger| A2
+    A2 -->|proposed write| A4
+    A4 -->|approve / reject| A2
+    A2 -->|@cfo| A3
+    A1 -. confirm .-> HU
+    A3 -->|terminal reply| GW
+    GW -->|send_reply| WA
+
+    A1 -.-> MR[services/model_router.py]
+    MR -.-> P{{AI/ML · Featherless · OpenAI}}
+    A2 -.-> DB[(MySQL)]
+    GW -.-> AUD[services/audit.py · /audit/&lt;event_id&gt;]
 ```
 
-- **Intake → Ledger → CFO** agents communicate over `agents/band_sdk.py`
-  (in-process pub/sub), with `agents/event_schemas.py` (Pydantic) as the contract.
+- **Band coordination layer** — agents connect through `agents/band/band_client.py`
+  (`BAND_BACKEND=stub` for offline dev, `live` for the real platform); the gateway wires
+  them as `@mention` handlers and threads a `correlation_id` for reply collection.
+  `agents/event_schemas.py` (Pydantic) are the message bodies.
+- **Multi-provider model routing** — `services/model_router.py` `get_client(role)` routes
+  each agent role across **AI/ML API** (frontier reasoning + low-confidence escalation),
+  **Featherless** (open-source workers), and **OpenAI** (fallback on timeout / 429 / quota).
+- **Plan → execute → review** — the Ledger withholds its DB commit until the **Compliance**
+  agent approves the proposed write (two-phase commit); human approval is surfaced in-room.
+- **Unified audit trail** — reconstruct any write's lifecycle (parse → handoffs → write,
+  with model + cost + approval) via `services/audit.py` / `GET /audit/<event_id>`.
 - **Idempotency**: inbound `message_id`s are deduped via a `webhook_events` table.
-- **Data layer**: migrating from raw `mysql.connector` to **SQLAlchemy** (pooled
-  engine + ORM) with **Alembic** migrations — see
+- **Data layer**: **SQLAlchemy** (pooled engine + ORM) with **Alembic** migrations — see
   [`docs/sqlalchemy_migration.md`](docs/sqlalchemy_migration.md).
+
+> **Band of Agents Hackathon:** see [`plans/2026-06-13-band-hackathon-gaps/`](plans/2026-06-13-band-hackathon-gaps/)
+> for the gap analysis + work plan, and [`docs/demo-script.md`](docs/demo-script.md) for the
+> demo walkthrough. Fill `docs/credentials-setup.local.md` and set `BAND_BACKEND=live` to run
+> against the real platform.
 
 ## Project structure
 

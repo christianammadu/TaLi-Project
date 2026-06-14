@@ -6,7 +6,7 @@ This guide provides instructions for setting up, configuring, and testing the 3-
 
 ## 1. Prerequisites & Environment Setup
 
-The application is built using **Flask** and **MySQL**. All agents communicate internally via the **Band SDK** pub/sub event broker.
+The application is built using **Flask** and **MySQL**. The agents coordinate through a **Band chat room** (band.ai / Thenvoi) via `@mention` routing — see §4. `BAND_BACKEND=stub` (default) runs an in-process connector for offline dev; `live` uses the real platform.
 
 ### Step 1: Install Python Dependencies
 Ensure you have Python 3.10+ installed. In your terminal, run:
@@ -88,25 +88,37 @@ To connect WhatsApp to your local app:
 
 ---
 
-## 4. Internal Agent Orchestration (Band SDK)
+## 4. Agent Coordination (Band room)
 
-The agents communicate in-memory using an event pub/sub mechanism managed by `BandSDK` (`app/agents/band_sdk.py`).
+The agents coordinate through a **Band chat room** (band.ai / Thenvoi) — the active
+coordination layer — via `@mention` routing, not direct function calls. A message is
+delivered only to the agents it `@mentions`; the shared room log is the shared context
+(read via `GET /api/v1/agent/chats/{id}/context`). The connector seam lives in
+`app/agents/band/band_client.py` with two backends selected by `BAND_BACKEND`:
 
-### Event Flow Channel Configuration:
-1. **`"intake_to_ledger"`**:
-   - **Publisher**: `IntakeAgent` (`app/agents/agent_1_intake.py`) publishes parsed event schemas (`IntakePayload`).
-   - **Subscriber**: `LedgerAgent` (`app/agents/agent_2_ledger.py`) registers its `handle_intake_payload` method.
-2. **`"ledger_updates"`**:
-   - **Publisher**: `LedgerAgent` publishes successful operations using `LedgerUpdateEvent`.
-   - **Subscriber**: `CFOAgent` (`app/agents/agent_3_cfo.py`) registers `handle_ledger_update` to format responses and run stock/debt checks.
-3. **`"cfo_escalation"`**:
-   - **Publisher**: `IntakeAgent` publishes parsing failures or low-confidence requests.
-   - **Subscriber**: `CFOAgent` registers `handle_escalation` to format clarification requests to the user.
-4. **`"ledger_errors"`**:
-   - **Publisher**: `LedgerAgent` publishes transactional failures/database locks.
-   - **Subscriber**: `CFOAgent` registers `handle_ledger_error` to send database warning alerts.
+- **`stub`** (default) — an in-process, fire-and-forget connector for offline dev/tests.
+- **`live`** — the real Band platform over REST (+ WebSocket). See
+  `app/agents/band/registration.md` and `docs/credentials-setup.local.md` for agent
+  registration and credentials.
 
-All bindings are registered dynamically in `AgentRouter.route` inside `app/agents/agent_router.py` whenever an incoming message is processed.
+### Room participants + flow
+- **`@tali-intake`** (`agent_1_intake.py`) — parses the message (multi-provider model
+  router, `intake` role) and `@mention`s the Ledger; collects the final reply by
+  `correlation_id`.
+- **`@tali-ledger`** (`agent_2_ledger.py`) — on a write, emits a **proposed-write
+  envelope** to `@tali-compliance` and **withholds the DB commit** until approved
+  (two-phase commit); on success forwards a `LedgerUpdateEvent` to the CFO.
+- **`@tali-compliance`** (`compliance_agent.py`) — reviews the proposed write
+  (threshold / anomaly) and posts an approve/reject verdict **before commit**.
+- **`@tali-cfo`** (`agent_3_cfo.py`) — composes the user-facing reply from room context
+  and posts it **terminally** to `@tali-gateway`, which the gateway returns to WhatsApp.
+- **`@tali-human`** — the human approver; confirm-before-write requests + decisions are
+  surfaced in-room for the audit trail.
+
+The room is wired by the gateway (`AgentRouter` in `app/agents/agent_router.py`): one
+shared connector, agents registered as `@mention` handlers, then the inbound WhatsApp
+message is driven through Intake. Every action, handoff, model + cost, and approval is
+reconstructable via the audit trail (`app/services/audit.py`, `GET /audit/<event_id>`).
 
 ---
 
