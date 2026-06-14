@@ -37,7 +37,7 @@ G-BRAND (design lock) ──────▶ WP-06 (brand system) ─▶ WP-07/08
 ## Work-package matrix
 
 <!-- groundwork:auto:start wp-matrix -->
-<!-- last_action: orchestrate · 2026-06-13T17:59:56Z -->
+<!-- last_action: orchestrate · 2026-06-13T18:45:15Z -->
 | WP | Title | Wave | Depends on | Output |
 |---|---|---|---|---|
 | WP-01 | Channel adapter interface + WhatsApp refactor | 0 | — | `G-CHANNEL-CONTRACT`; `app/channels/{base,whatsapp}.py` |
@@ -49,20 +49,21 @@ G-BRAND (design lock) ──────▶ WP-06 (brand system) ─▶ WP-07/08
 | WP-07 | Rebranded landing + dual WA/TG CTA | 2 | WP-06 | landing + marketing/legal restyled |
 | WP-08 | Rebrand in-app templates + bot welcome | 2 | WP-06 | register/verify/error + welcome copy |
 | WP-09 | Telegram setup doc + deploy + demo | 3 | WP-03, WP-04 | `docs/telegram-setup.md` + deploy notes |
+| WP-10 | Brand the generated PDF/Excel statements | 2 | WP-06 | branded `report_renderer.py` (PDF + Excel) |
 
-Full per-WP briefs: `09-orchestration.md`. Design directions D-01..D-03 in `designs/`.
+Full per-WP briefs: `09-orchestration.md`. Design directions D-01..D-03 in `designs/`; statement designs in `designs/statements/`.
 <!-- groundwork:auto:end wp-matrix -->
 
 ## Wave plan
 
 <!-- groundwork:auto:start wave-plan -->
-<!-- last_action: orchestrate · 2026-06-13T17:59:56Z -->
-- **Wave 0 — Foundations (parallel):** WP-01 (→`G-CHANNEL-CONTRACT`), WP-02 (→`G-IDENTITY`), and the **design exploration** (3 directions → lock `G-BRAND`). All independent.
+<!-- last_action: orchestrate · 2026-06-13T18:45:15Z -->
+- **Wave 0 — Foundations (parallel):** WP-01 (→`G-CHANNEL-CONTRACT`), WP-02 (→`G-IDENTITY`), and the **design exploration** (3 directions → `G-BRAND`, **now locked: D-01**). All independent.
 - **Wave 1:** WP-03 (Telegram adapter; needs `G-CHANNEL-CONTRACT`) ‖ WP-06 (brand system; needs `G-BRAND`).
-- **Wave 2:** WP-04 (onboarding) ‖ WP-05 (wire gateway) ‖ WP-07 (landing) ‖ WP-08 (templates).
+- **Wave 2:** WP-04 (onboarding) ‖ WP-05 (wire gateway) ‖ WP-07 (landing) ‖ WP-08 (templates) ‖ WP-10 (brand the PDF/Excel statements — needs WP-06 tokens).
 - **Wave 3:** WP-09 (setup doc + deploy + demo).
 
-Two independent tracks run side by side: **channel** (WP-01/02 → 03/04 → 05) and **rebrand** (design lock → 06 → 07/08); they meet at the landing CTA + bot welcome copy.
+Two independent tracks run side by side: **channel** (WP-01/02 → 03/04 → 05) and **rebrand** (D-01 locked → 06 → 07/08/10); they meet at the landing CTA + bot welcome copy.
 <!-- groundwork:auto:end wave-plan -->
 
 ## Critical-path graph
@@ -149,6 +150,13 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 - **Repo:** tali · **Branch:** `feat/rebrand-app` · **Depends on:** WP-06
 - **Files:** `app/templates/register.html`, `verify.html`, `error.html`, `_sprite.html`; channel welcome strings.
 - **DoD:** Phase 3 verification #2 — no old palette/voice remains (grep); welcome copy matches the brand.
+
+### WP-10 — Brand the generated PDF/Excel statements
+
+- **Goal:** Restyle the generated documents to the locked brand + proper accounting structure. Three statement types (Income Statement / Statement of Account / Cashflow) as branded PDFs; Excel workbook with a Summary (P&L) sheet + a Transactions ledger sheet. Spec: `designs/statements/statement-render-spec.md`; mockups: `designs/statements/*.html`.
+- **Repo:** tali · **Branch:** `feat/brand-statements` · **Depends on:** WP-06 (brand tokens/fonts)
+- **Files:** `app/services/report_renderer.py` (ReportLab + openpyxl styling, `format_money`, `Brand` constants), `app/agents/statement_agent.py` (route `report_type`/`format`), `app/services/nlp.py` (+`income_statement` report_type), `app/static/fonts/` (Fraunces + Hanken TTFs).
+- **DoD:** a June statement renders as a print-correct branded PDF (white paper, terracotta rules, COGS→gross→net) and as an Excel workbook with frozen header, `"₦"#,##0.00` format, and live `=SUM()` totals — matching the mockups.
 
 ## Phase 4 — Setup + polish
 

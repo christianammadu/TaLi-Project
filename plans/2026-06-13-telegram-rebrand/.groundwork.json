@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T17:05:20Z",
-  "updated": "2026-06-13T18:29:29Z",
+  "updated": "2026-06-13T18:45:16Z",
   "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
   "docs": {
     "00-README.md": {
@@ -79,7 +79,7 @@
       ]
     },
     "05-tracking.md": {
-      "hash": "sha256:c42ce1048f7c2f3ffea3b681f61a77a46bb36813af2cb38f86da8fcf3dfd0358",
+      "hash": "sha256:f21ec5889ebe48bc3cc51a82a692b52eb8e4e28fdb0748507132f1fa11d106db",
       "generated_regions": [
         {
           "id": "round-fold",
@@ -89,15 +89,15 @@
         },
         {
           "id": "wp-matrix",
-          "hash": "sha256:9e8a8d5a44c38706ab52e2a8e8359236b8f9e8adff77dc16f2bede305da081b1",
+          "hash": "sha256:4287891345c3c83884c2f2fcd8e64268eb2254b9c4a92acc1ae71802bf39edfb",
           "last_action": "orchestrate",
-          "last_written": "2026-06-13T17:59:56Z"
+          "last_written": "2026-06-13T18:45:15Z"
         },
         {
           "id": "wave-plan",
-          "hash": "sha256:7192ba24ae90dd609550c404c75b3602de22a63bb5c57fdffc74c8785653b484",
+          "hash": "sha256:ff1c3cf616b73390a5e3a505e8331431fe1cc4b61132bccdcb92210b277667c3",
           "last_action": "orchestrate",
-          "last_written": "2026-06-13T17:59:56Z"
+          "last_written": "2026-06-13T18:45:15Z"
         },
         {
           "id": "critical-path",
@@ -122,9 +122,9 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:570920b23a82cbd2a08cdcfc0e18fd471d81b8153f2262184f02a3cd70e01a16",
+          "hash": "sha256:299ad0a07685b813e4828eebf4e391012371a664deced04dac786fb1c79f2351",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T18:29:29Z"
+          "last_written": "2026-06-13T18:45:16Z"
         },
         {
           "id": "board-meta",
@@ -133,7 +133,7 @@
           "last_written": "2026-06-13T18:03:09Z"
         }
       ],
-      "hash": "sha256:a87cef8112292c12f2052d535d78c1ee5ffc936aaef4600fbd1e65b2baec8374"
+      "hash": "sha256:7cf552696291e69d8881e61a7c953acd400cb9d1527cecaf3a851e761e9ed3be"
     }
   },
   "ids": {
@@ -227,6 +227,14 @@
       "depends_on": [
         "WP-03",
         "WP-04"
+      ]
+    },
+    "WP-10": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
       ]
     }
   },
