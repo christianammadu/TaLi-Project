@@ -36,8 +36,10 @@ class _Provider:
 
 
 PROVIDERS = {
-    "aiml": _Provider("aiml", "AIML_BASE_URL", "https://api.aimlapi.com/v1", "AIML_API_KEY", 0.0, 0.0),
-    "featherless": _Provider("featherless", "FEATHERLESS_BASE_URL", "https://api.featherless.ai/v1", "FEATHERLESS_API_KEY", 0.0, 0.0),
+    # cost defaults (USD per 1M input/output tokens) are best-effort estimates for the
+    # FinOps view (WP-10); override per provider with <PROVIDER>_INPUT/OUTPUT_COST_PER_MILLION.
+    "aiml": _Provider("aiml", "AIML_BASE_URL", "https://api.aimlapi.com/v1", "AIML_API_KEY", 2.5, 10.0),
+    "featherless": _Provider("featherless", "FEATHERLESS_BASE_URL", "https://api.featherless.ai/v1", "FEATHERLESS_API_KEY", 0.10, 0.10),
     "openai": _Provider("openai", "", "", "OPENAI_API_KEY", 0.150, 0.600),
 }
 
@@ -59,6 +61,46 @@ DEFAULT_ROLE = "intake"
 
 # Cumulative best-effort spend this process; gated by MODEL_ROUTER_SPEND_CEILING_USD.
 _spent_usd = 0.0
+
+# Per-(provider, model) spend accumulator for the FinOps view (WP-10). Process-scoped.
+_spend = {}
+
+
+def _record_spend(provider, model, cost, prompt_tokens, completion_tokens):
+    key = (provider, model)
+    s = _spend.setdefault(key, {"calls": 0, "cost": 0.0, "prompt_tokens": 0, "completion_tokens": 0})
+    s["calls"] += 1
+    s["cost"] += cost
+    s["prompt_tokens"] += prompt_tokens
+    s["completion_tokens"] += completion_tokens
+
+
+def reset_spend():
+    """Clear the spend accumulator (e.g. at the start of a billed session)."""
+    _spend.clear()
+
+
+def spend_report():
+    """The FinOps view (WP-10): spend split by provider+model this process, plus rollups.
+
+    Returns ``{rows: [{provider, model, calls, cost, prompt_tokens, completion_tokens}],
+    by_provider: {provider: {calls, cost}}, total_cost, total_calls}``."""
+    rows, by_provider = [], {}
+    for (provider, model), s in sorted(_spend.items()):
+        rows.append({"provider": provider, "model": model, "calls": s["calls"],
+                     "cost": round(s["cost"], 6), "prompt_tokens": s["prompt_tokens"],
+                     "completion_tokens": s["completion_tokens"]})
+        bp = by_provider.setdefault(provider, {"calls": 0, "cost": 0.0})
+        bp["calls"] += s["calls"]
+        bp["cost"] += s["cost"]
+    for bp in by_provider.values():
+        bp["cost"] = round(bp["cost"], 6)
+    return {
+        "rows": rows,
+        "by_provider": by_provider,
+        "total_cost": round(sum(s["cost"] for s in _spend.values()), 6),
+        "total_calls": sum(s["calls"] for s in _spend.values()),
+    }
 
 
 def _cfg(key, default=""):
@@ -100,11 +142,11 @@ def _ceiling():
         return 0.0
 
 
-def _estimate_cost(provider_name, usage):
+def _estimate_cost(provider_name, prompt_tokens, completion_tokens):
     prov = PROVIDERS[provider_name]
-    pt = getattr(usage, "prompt_tokens", 0) or 0
-    ct = getattr(usage, "completion_tokens", 0) or 0
-    return pt * prov.input_cost / 1_000_000 + ct * prov.output_cost / 1_000_000
+    i = float(os.getenv(f"{provider_name.upper()}_INPUT_COST_PER_MILLION", prov.input_cost) or prov.input_cost)
+    o = float(os.getenv(f"{provider_name.upper()}_OUTPUT_COST_PER_MILLION", prov.output_cost) or prov.output_cost)
+    return prompt_tokens * i / 1_000_000 + completion_tokens * o / 1_000_000
 
 
 def chat_completion(role, messages, **params):
@@ -130,17 +172,17 @@ def chat_completion(role, messages, **params):
             client = get_client(provider_name)
             resp = client.chat.completions.create(model=model, messages=messages, **params)
             usage = getattr(resp, "usage", None)
-            est = _estimate_cost(provider_name, usage)
+            pt = getattr(usage, "prompt_tokens", 0) or 0
+            ct = getattr(usage, "completion_tokens", 0) or 0
+            est = _estimate_cost(provider_name, pt, ct)
             _spent_usd += est
+            _record_spend(provider_name, model, est, pt, ct)
             return {
                 "content": resp.choices[0].message.content,
                 "provider": provider_name,
                 "model": model,
-                "usage": {
-                    "prompt_tokens": getattr(usage, "prompt_tokens", 0) or 0,
-                    "completion_tokens": getattr(usage, "completion_tokens", 0) or 0,
-                    "total_tokens": getattr(usage, "total_tokens", 0) or 0,
-                },
+                "usage": {"prompt_tokens": pt, "completion_tokens": ct,
+                          "total_tokens": getattr(usage, "total_tokens", 0) or 0},
                 "estimated_cost": est,
                 "attempts": len(errors) + 1,
             }
