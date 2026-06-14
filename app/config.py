@@ -81,3 +81,11 @@ class Config:
     # --- Multi-channel identity (WP-02 / G-IDENTITY) ---
     # TTL (minutes) for single-use deep-link binding tokens (Telegram onboarding + Path B /link).
     BINDING_TOKEN_TTL_MIN = int(os.getenv("BINDING_TOKEN_TTL_MIN", "15"))
+
+    # --- Telegram channel (WP-03/04) ---
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "")   # without @ ; feeds the deep-link
+    TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    TELEGRAM_API_BASE = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
+    # Public WhatsApp number for the wa.me Path-B deep-link (the display number, not PHONE_NUMBER_ID).
+    WHATSAPP_PUBLIC_NUMBER = os.getenv("WHATSAPP_PUBLIC_NUMBER", "")
