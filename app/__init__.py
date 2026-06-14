@@ -23,4 +23,7 @@ def create_app():
     from app.web.web_routes import web_bp
     app.register_blueprint(web_bp)
 
+    from app.web.audit_routes import audit_bp
+    app.register_blueprint(audit_bp)
+
     return app
