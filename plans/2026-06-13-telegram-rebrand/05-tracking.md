@@ -114,12 +114,13 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 - **Files:** create `app/channels/telegram.py`; touch `app/web/routes.py`, `app/config.py`, `.env.example`.
 - **DoD:** a posted Telegram update parses to an `InboundMessage`; `send_text`/`send_document` hit the Bot API (mocked in tests); secret-token verify rejects forgeries.
 
-### WP-04 — Telegram deep-link onboarding
+### WP-04 — Telegram onboarding + cross-channel linking (Path B)
 
-- **Goal:** Web register issues a short-lived binding token + renders the `t.me/<bot>?start=<token>` link; the bot's `/start <token>` resolves it → binds `tg:<chat_id>` to the user (in `channel_accounts`) + opens a session. No phone/OTP.
+- **Goal:** (a) **Onboarding:** web register issues a short-lived binding token + `t.me/<bot>?start=<token>`; the bot's `/start <token>` binds `tg:<chat_id>` to the user (in `channel_accounts`) + opens a session — no phone/OTP. (b) **Cross-channel link (Path B, locked):** a `/link <other>` command, **from inside whichever channel the user is already on**, issues a one-time token and hands back the *other* channel's deep-link, redeeming it onto the **same `user_id`**.
 - **Repo:** tali · **Branch:** `feat/telegram-onboarding` · **Depends on:** `G-IDENTITY`, WP-03
-- **Files:** `app/web/web_routes.py` (issue token + CTA), `app/auth.py` (resolve token + bind + session), `app/channels/telegram.py` (`/start` handling).
-- **DoD:** Phase 2 verification #1–2 — unbound chat gets the deep-link prompt; binding via token links the chat + opens a session; a write records and replies in Telegram.
+- **Token redemption is symmetric:** Telegram redeems via `/start <token>`; WhatsApp redeems a prefilled `LINK-<token>` first-message (the channel adapters detect the token and route it to `auth.redeem_binding_token` *before* normal message processing). The currently-bound channel is the auth anchor.
+- **Files:** `app/web/web_routes.py` (issue token + CTA), `app/auth.py` (issue/resolve token, bind, session, `/link` handler), `app/channels/telegram.py` (`/start` + `/link`), `app/channels/whatsapp.py` (`LINK-<token>` redemption + `/link`).
+- **DoD:** Phase 2 verification #1–2 (onboarding) **plus**: from a WhatsApp-bound account, `/link telegram` → tap → both channels resolve to one `user_id` and one ledger; and the reverse from Telegram. Unlinking one keeps the other working.
 
 ### WP-05 — Wire both channels into the gateway
 

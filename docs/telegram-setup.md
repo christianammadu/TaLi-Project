@@ -57,6 +57,26 @@ Web /register  ──issues──▶  binding_tokens(token, user_id, expires_at)
 - An **unbound** chat (any stranger messaging the bot) only ever gets the deep-link prompt; the
   gateway requires a bound session before it processes anything.
 
+## 3a. Linking a second channel — Path B (from inside the chat)
+
+A user who already uses one channel adds the other **without touching the web** — the
+channel they're already on is the auth anchor:
+
+```
+On Telegram, want to add WhatsApp:
+   /link whatsapp  → bot replies:  "Add WhatsApp →  wa.me/<tali-number>?text=LINK-<token>"
+   tap → WhatsApp opens with a prefilled "LINK-<token>" → Send
+   → WhatsApp webhook detects LINK-<token>, redeems it → channel_accounts(whatsapp:<phone>) → same user_id
+
+On WhatsApp, want to add Telegram:
+   /link telegram  → bot replies:  "Add Telegram →  t.me/<bot>?start=<token>"
+   tap → Start → /start <token> redeemed → channel_accounts(telegram:<chat_id>) → same user_id
+```
+
+Both channels now point at one `user_id`, so they share one ledger (record on WhatsApp,
+pull a statement on Telegram). Same token rules as §3 (single-use, short-TTL). `/unlink <channel>`
+removes that one row; the other keeps working. A web "Connected channels" page is optional.
+
 ## 4. Sending replies
 
 The Telegram `Channel` adapter implements the same surface as WhatsApp:

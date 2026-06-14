@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T17:05:20Z",
-  "updated": "2026-06-13T18:45:16Z",
+  "updated": "2026-06-13T19:02:11Z",
   "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
   "docs": {
     "00-README.md": {
@@ -122,9 +122,9 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:299ad0a07685b813e4828eebf4e391012371a664deced04dac786fb1c79f2351",
+          "hash": "sha256:8dcf58c86715b9b80dc29636ee24f2a1713b9d5c04faaabbe7b610481b276f11",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T18:45:16Z"
+          "last_written": "2026-06-13T19:02:11Z"
         },
         {
           "id": "board-meta",
@@ -133,7 +133,7 @@
           "last_written": "2026-06-13T18:03:09Z"
         }
       ],
-      "hash": "sha256:7cf552696291e69d8881e61a7c953acd400cb9d1527cecaf3a851e761e9ed3be"
+      "hash": "sha256:6da91fa1fd3a39e4314906b21ad5c3e04d947c2cd35bad52c3291298d98a754b"
     }
   },
   "ids": {
