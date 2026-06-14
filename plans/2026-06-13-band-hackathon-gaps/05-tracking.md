@@ -179,6 +179,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-08 — Human-in-the-loop approval in the room
 
+- **Status:** `[x]` **done** (2026-06-14, against the stub) — `_store_pending`/`_apply_confirmation` now post `@tali-human` `approval_request` + `human_decision` events into the room so the approval is visible + auditable; the durable gate stays `pending_confirmations`; resilient (post failures swallowed); 3/3 tests green. Live mode adds the human as a formal Band participant (`thenvoi_add_participant`).
 - **Goal:** Route confirm-before-write (`_store_pending`) + `review_queue` as a human-participant approval inside the Band room.
 - **Repo:** tali · **Branch:** `feat/human-in-loop`
 - **Depends on:** WP-06
@@ -187,6 +188,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-09 — Unified audit-trail surfacing (Regulated track)
 
+- **Status:** `[x]` **done** (2026-06-14) — `app/services/audit.py`: pure `assemble_trail` + `lifecycle_for(event_id)` reconstructing parse→handoffs→write (model + cost + agents) from the durable `event_id` spine (`processed_events`/`transactions` + `ai_logs` join), with `room_events` merging the Compliance verdict + human approval; token-guarded read-only `/audit/<event_id>` route wired in; 4/4 assembler tests green. Note: keyed off `event_id` (the persisted spine), not the in-flight band correlation_id; verdict/approval persistence is a follow-up (live = Band's room trail).
 - **Goal:** Join `ai_logs`/`processed_events`/`correlation_id` to Band's unified audit trail; expose a lifecycle/traceability view keyed by `correlation_id`.
 - **Repo:** tali · **Branch:** `feat/audit-trail`
 - **Depends on:** WP-06
