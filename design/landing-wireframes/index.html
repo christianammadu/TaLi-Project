@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookkeeper — Landing Page · 3 Directions</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📗</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0c0d11;color:#eef0f3;min-height:100vh}
+header{padding:26px 32px 20px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:rgba(12,13,17,.9);backdrop-filter:blur(14px);z-index:10}
+.htop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
+h1 span{color:#25D366}
+.sub{color:#9097a3;font-size:.9rem;margin-top:4px;max-width:620px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.controls button{font-family:inherit;font-size:.84rem;font-weight:600;color:#c9cdd4;background:#171922;border:1px solid rgba(255,255,255,.1);padding:9px 16px;border-radius:9px;cursor:pointer;transition:.15s}
+.controls button:hover{border-color:rgba(255,255,255,.25)}
+.controls button.active{background:#25D366;color:#06120b;border-color:#25D366}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:22px 32px 60px;align-items:start}
+.grid.focus-mode{grid-template-columns:1fr;max-width:1280px;margin:0 auto}
+.col{display:none;flex-direction:column}
+.col.show{display:flex}
+.grid:not(.focus-mode) .col{display:flex}
+.card{background:#13151c;border:1px solid rgba(255,255,255,.09);border-radius:16px;overflow:hidden}
+.cap{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.cap .badge{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
+.cap.a .badge{background:rgba(37,211,102,.12);color:#25D366}
+.cap.b .badge{background:rgba(200,97,46,.15);color:#e08a52}
+.cap.c .badge{background:rgba(182,255,61,.12);color:#b6ff3d}
+.cap h2{font-size:1.05rem;font-weight:700;margin:9px 0 5px}
+.cap p{font-size:.82rem;color:#9097a3;line-height:1.5}
+.cap .meta{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.cap .meta span{font-size:.68rem;color:#7a808c;background:#1c1f29;border:1px solid rgba(255,255,255,.07);padding:3px 8px;border-radius:5px}
+.frame-wrap{position:relative;background:#000}
+.frame-wrap iframe{width:100%;border:none;display:block;background:#fff}
+.open{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;font-size:.82rem;font-weight:600;color:#c9cdd4;text-decoration:none;border-top:1px solid rgba(255,255,255,.08)}
+.open:hover{color:#25D366}
+.hint{padding:0 32px 30px;color:#6b7280;font-size:.82rem;max-width:720px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div>
+      <h1>📗 Bookkeeper — Landing Page · <span>3 Directions</span></h1>
+      <p class="sub">Three differentiated visual directions for the marketing site. Each page is a full scroll: hero · how-it-works · features · dashboard/report preview · pricing. Compare side by side, then open any one full-screen.</p>
+    </div>
+    <div class="controls">
+      <button class="active" data-view="all">Compare all</button>
+      <button data-view="a">A · Conversation</button>
+      <button data-view="b">B · Ledger</button>
+      <button data-view="c">C · Numbers</button>
+    </div>
+  </div>
+</header>
+
+<div class="grid" id="grid">
+  <div class="col" data-col="a">
+    <div class="card">
+      <div class="cap a"><span class="badge">Direction A</span><h2>The Conversation</h2>
+        <p>Conversion-classic. Keeps your exact dark-glass brand; hero is a live WhatsApp chat mock. The safe, on-brand choice.</p>
+        <div class="meta"><span>Dark glass</span><span>WhatsApp green</span><span>Inter</span><span>SaaS-classic</span></div>
+      </div>
+      <div class="frame-wrap"><iframe src="A-the-conversation.html" loading="lazy"></iframe></div>
+      <a class="open" href="A-the-conversation.html" target="_blank">Open full ↗</a>
+    </div>
+  </div>
+  <div class="col" data-col="b">
+    <div class="card">
+      <div class="cap b"><span class="badge">Direction B</span><h2>The Ledger</h2>
+        <p>Editorial &amp; human. Warm cream, deep-green ink, terracotta accent, serif display, photography-led — trust &amp; local-business storytelling. The bold reframe.</p>
+        <div class="meta"><span>Warm light</span><span>Fraunces serif</span><span>Photo-led</span><span>Editorial</span></div>
+      </div>
+      <div class="frame-wrap"><iframe src="B-the-ledger.html" loading="lazy"></iframe></div>
+      <a class="open" href="B-the-ledger.html" target="_blank">Open full ↗</a>
+    </div>
+  </div>
+  <div class="col" data-col="c">
+    <div class="card">
+      <div class="cap c"><span class="badge">Direction C</span><h2>The Numbers</h2>
+        <p>Data-forward bento. Near-black, electric green/lime, mono numerals, live-stat tiles — outcome-led "see your business in numbers." The modern/dashboard choice.</p>
+        <div class="meta"><span>Bento grid</span><span>Mono numerals</span><span>Data viz</span><span>Bold</span></div>
+      </div>
+      <div class="frame-wrap"><iframe src="C-the-numbers.html" loading="lazy"></iframe></div>
+      <a class="open" href="C-the-numbers.html" target="_blank">Open full ↗</a>
+    </div>
+  </div>
+</div>
+
+<p class="hint">Tip: scroll inside any panel to walk through that direction's full page. Use the buttons above to focus one direction at a larger width. These are hi-fi wireframes — copy, photos and numbers are realistic placeholders to judge direction, not final content.</p>
+
+<script>
+const grid=document.getElementById('grid');
+const cols=[...document.querySelectorAll('.col')];
+const iframes=[...document.querySelectorAll('iframe')];
+function setHeights(){
+  const focus=grid.classList.contains('focus-mode');
+  iframes.forEach(f=>f.style.height=(focus?Math.round(window.innerHeight*0.82):620)+'px');
+}
+document.querySelectorAll('.controls button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.controls button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const v=btn.dataset.view;
+    if(v==='all'){grid.classList.remove('focus-mode');cols.forEach(c=>c.classList.remove('show'));}
+    else{grid.classList.add('focus-mode');cols.forEach(c=>c.classList.toggle('show',c.dataset.col===v));}
+    setHeights();
+  });
+});
+window.addEventListener('resize',setHeights);
+setHeights();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookkeeper — Direction C · The Numbers</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📗</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --bg:#08090c; --panel:#0f1116; --panel2:#14171e; --bord:rgba(255,255,255,.07); --bord2:rgba(255,255,255,.12);
+  --green:#25D366; --lime:#b6ff3d; --cyan:#4de8ff; --amber:#ffb84d; --pink:#ff6b81;
+  --tp:#f3f5f7; --ts:#8b909c; --tm:#565b66;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tp);line-height:1.5;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(var(--bord) 1px,transparent 1px),linear-gradient(90deg,var(--bord) 1px,transparent 1px);
+  background-size:64px 64px;mask:radial-gradient(ellipse 80% 60% at 50% 0%,#000,transparent 75%)}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 28px}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono)}
+.pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;color:var(--lime);
+  background:rgba(182,255,61,.06);border:1px solid rgba(182,255,61,.2);padding:6px 13px;border-radius:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);animation:bl 1.6s infinite}
+@keyframes bl{50%{opacity:.3}}
+.btn{display:inline-flex;align-items:center;gap:9px;font-family:inherit;font-weight:600;font-size:.93rem;padding:13px 24px;border-radius:9px;cursor:pointer;border:none;transition:.2s}
+.btn-p{background:var(--lime);color:#0a1400;box-shadow:0 0 24px rgba(182,255,61,.25)}.btn-p:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(182,255,61,.45)}
+.btn-g{background:var(--panel2);border:1px solid var(--bord2);color:var(--tp)}.btn-g:hover{border-color:var(--lime)}
+
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);background:rgba(8,9,12,.75);border-bottom:1px solid var(--bord)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;letter-spacing:-.02em}
+.logo .mark{width:32px;height:32px;border-radius:9px;background:var(--lime);color:#0a1400;display:grid;place-items:center;font-size:17px}
+.nav-links{display:flex;gap:30px;font-size:.88rem;color:var(--ts);font-weight:500}.nav-links a:hover{color:var(--tp)}
+.nav-cta{display:flex;gap:10px;align-items:center}
+
+/* HERO */
+.hero{padding:64px 0 30px;text-align:center}
+.hero h1{font-size:clamp(2.5rem,5.5vw,4.2rem);font-weight:800;letter-spacing:-.04em;line-height:1.02;margin:24px auto 18px;max-width:880px}
+.hero h1 .g{color:var(--lime)}
+.hero h1 .num{font-family:var(--mono);color:var(--cyan)}
+.hero .lead{font-size:1.12rem;color:var(--ts);max-width:560px;margin:0 auto 30px}
+.hero-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap}
+
+/* BENTO HERO GRID */
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:130px;gap:14px;margin-top:56px}
+.tile{background:var(--panel);border:1px solid var(--bord);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:.25s}
+.tile:hover{border-color:var(--bord2);transform:translateY(-3px)}
+.tile .lab{font-size:.72rem;color:var(--ts);letter-spacing:.04em;text-transform:uppercase}
+.tile .big{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1}
+.tile .sub{font-size:.78rem;color:var(--tm);margin-top:auto}
+.tile.col2{grid-column:span 2}.tile.row2{grid-row:span 2}
+.t-profit{grid-column:span 2;grid-row:span 2;background:linear-gradient(150deg,rgba(182,255,61,.1),var(--panel));border-color:rgba(182,255,61,.25);display:flex;flex-direction:column}
+.t-profit .big{font-size:3.2rem;color:var(--lime);margin:10px 0}
+.t-profit .delta{font-family:var(--mono);font-size:.85rem;color:var(--lime)}
+.spark{display:flex;align-items:flex-end;gap:5px;height:46px;margin-top:auto}
+.spark i{flex:1;background:var(--lime);border-radius:3px 3px 0 0;opacity:.85}
+.t-msg{grid-column:span 2;display:flex;flex-direction:column;justify-content:center;gap:9px}
+.msgline{font-family:var(--mono);font-size:.82rem}.msgline.u{color:var(--ts)}.msgline.u::before{content:'› ';color:var(--cyan)}
+.msgline.b{color:var(--lime)}.msgline.b::before{content:'✓ '}
+.tile .big.cyan{color:var(--cyan)}.tile .big.amber{color:var(--amber)}.tile .big.pink{color:var(--pink)}
+.tile.flexcol{display:flex;flex-direction:column}
+
+section{padding:80px 0;position:relative;z-index:1}
+.shead{text-align:center;max-width:640px;margin:0 auto 50px}
+.shead h2{font-size:clamp(1.9rem,3.4vw,2.6rem);font-weight:800;letter-spacing:-.03em;margin:14px 0 12px}
+.shead p{color:var(--ts);font-size:1.04rem}
+
+/* HOW — terminal steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:var(--panel);border:1px solid var(--bord);border-radius:14px;overflow:hidden}
+.step .bar{display:flex;gap:6px;padding:12px 16px;border-bottom:1px solid var(--bord);align-items:center}
+.step .bar i{width:10px;height:10px;border-radius:50%;background:var(--tm)}
+.step .bar span{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:var(--tm)}
+.step .body{padding:22px 18px}
+.step h3{font-size:1.1rem;font-weight:700;margin-bottom:7px}.step p{color:var(--ts);font-size:.88rem;margin-bottom:14px}
+.step .cmd{font-family:var(--mono);font-size:.8rem;background:#000;border:1px solid var(--bord);border-radius:8px;padding:11px 13px}
+.step .cmd .u{color:var(--cyan)}.step .cmd .r{color:var(--lime);display:block;margin-top:6px}
+
+/* FEATURES bento */
+.fbento{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.fcard{background:var(--panel);border:1px solid var(--bord);border-radius:14px;padding:24px;transition:.25s}
+.fcard:hover{border-color:rgba(182,255,61,.3)}
+.fcard .ic{font-size:1.5rem;margin-bottom:14px;display:inline-grid;place-items:center;width:44px;height:44px;background:var(--panel2);border-radius:10px;border:1px solid var(--bord)}
+.fcard h3{font-size:1.02rem;font-weight:700;margin-bottom:6px}.fcard p{color:var(--ts);font-size:.86rem}
+
+/* DASH big preview */
+.dashbig{background:var(--panel);border:1px solid var(--bord);border-radius:20px;padding:28px;display:grid;grid-template-columns:1.3fr 1fr;gap:22px}
+.dpanel{background:#000;border:1px solid var(--bord);border-radius:14px;padding:22px}
+.dpanel .ch{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:18px;font-family:var(--mono)}
+.bars{display:flex;align-items:flex-end;gap:9px;height:170px}
+.bars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;height:100%}
+.bars .col i{width:100%;border-radius:3px}
+.bars .col .inc{background:var(--lime)}.bars .col .exp{background:rgba(255,107,129,.55)}
+.bars .col span{font-family:var(--mono);font-size:.62rem;color:var(--tm);text-align:center;margin-top:5px}
+.statcol{display:flex;flex-direction:column;gap:14px}
+.stat{background:#000;border:1px solid var(--bord);border-radius:12px;padding:16px 18px}
+.stat .l{font-size:.74rem;color:var(--ts);text-transform:uppercase;letter-spacing:.05em}
+.stat .v{font-family:var(--mono);font-size:1.7rem;font-weight:700;margin-top:5px}
+.stat .v.g{color:var(--lime)}.stat .v.p{color:var(--pink)}.stat .v.c{color:var(--cyan)}
+
+/* PRICING */
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.pcard{background:var(--panel);border:1px solid var(--bord);border-radius:16px;padding:30px 26px;display:flex;flex-direction:column}
+.pcard.hot{border-color:var(--lime);box-shadow:0 0 40px rgba(182,255,61,.1)}
+.pcard h3{font-family:var(--mono);font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ts)}
+.pcard .pr{font-family:var(--mono);font-size:2.4rem;font-weight:700;margin:12px 0 2px}
+.pcard .pr span{font-size:.85rem;color:var(--tm);font-family:'Inter'}
+.pcard ul{list-style:none;margin:20px 0 24px;flex:1;display:flex;flex-direction:column;gap:11px}
+.pcard li{font-size:.88rem;color:var(--ts);display:flex;gap:9px}.pcard li::before{content:'+';color:var(--lime);font-family:var(--mono);font-weight:700}
+
+.cta-band{text-align:center;border:1px solid rgba(182,255,61,.2);border-radius:24px;padding:62px 30px;margin:24px 0;
+  background:radial-gradient(ellipse 60% 100% at 50% 0%,rgba(182,255,61,.08),transparent)}
+.cta-band h2{font-size:2.3rem;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
+.cta-band p{color:var(--ts);margin-bottom:26px;font-size:1.05rem}
+
+footer{border-top:1px solid var(--bord);padding:44px 0;position:relative;z-index:1}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;color:var(--tm);font-size:.84rem}
+
+@media(max-width:900px){.bento{grid-template-columns:repeat(2,1fr)}.steps,.fbento,.price{grid-template-columns:1fr}.dashbig{grid-template-columns:1fr}.nav-links{display:none}
+  .t-profit,.t-msg,.tile.col2{grid-column:span 2}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap nav">
+  <div class="logo"><span class="mark">📗</span>Bookkeeper</div>
+  <div class="nav-links"><a href="#how">How</a><a href="#features">Features</a><a href="#dash">Dashboard</a><a href="#pricing">Pricing</a></div>
+  <div class="nav-cta"><a href="#" class="btn btn-g">Log in</a><a href="#" class="btn btn-p">Start free</a></div>
+</div></nav>
+
+<header class="wrap hero">
+  <span class="pill"><span class="dot"></span> LIVE · 5,000+ businesses tracking now</span>
+  <h1>Run your business <span class="g">by the numbers</span> — from one <span class="num">WhatsApp</span> chat.</h1>
+  <p class="lead">Bookkeeper turns plain messages into live financial data. Sales, costs, stock and profit — measured the moment they happen.</p>
+  <div class="hero-cta"><a href="#" class="btn btn-p">Start free on WhatsApp →</a><a href="#dash" class="btn btn-g">See the dashboard</a></div>
+
+  <div class="bento">
+    <div class="tile t-profit"><div class="lab">Profit · this month</div><div class="big" id="profit">₦324,250</div><div class="delta">▲ 18.4% vs May</div>
+      <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:38%"></i><i style="height:70%"></i><i style="height:52%"></i><i style="height:85%"></i><i style="height:100%"></i></div></div>
+    <div class="tile t-msg"><div class="msgline u">Sold 3 bags rice 18k</div><div class="msgline b">₦18,000 logged · Sales · stock −3</div><div class="msgline u">Bought fuel 2k</div><div class="msgline b">₦2,000 logged · Fuel</div></div>
+    <div class="tile flexcol"><div class="lab">Today's sales</div><div class="big cyan" style="font-size:1.8rem;margin-top:8px">₦27,500</div><div class="sub">14 transactions</div></div>
+    <div class="tile flexcol"><div class="lab">Top item</div><div class="big amber" style="font-size:1.5rem;margin-top:8px">Rice</div><div class="sub">₦142k this month</div></div>
+    <div class="tile col2 flexcol"><div class="lab">Low stock alert</div><div class="big pink" style="font-size:1.5rem;margin-top:8px">Sugar · 4 bags left</div><div class="sub">below your 10-bag threshold</div></div>
+    <div class="tile flexcol"><div class="lab">Currencies</div><div class="big" style="font-size:1.6rem;margin-top:8px">₦ $ £</div><div class="sub">3 tracked</div></div>
+    <div class="tile flexcol"><div class="lab">Records</div><div class="big" style="font-size:1.8rem;margin-top:8px">1,204</div><div class="sub">all-time</div></div>
+  </div>
+</header>
+
+<section id="how"><div class="wrap">
+  <div class="shead"><span class="pill">How it works</span><h2>Type it. Track it. Done.</h2><p>Every message becomes a data point in your live ledger.</p></div>
+  <div class="steps">
+    <div class="step"><div class="bar"><i></i><i></i><i></i><span>whatsapp</span></div><div class="body"><h3>1 · Message</h3><p>Say what happened in everyday language.</p><div class="cmd"><span class="u">Sold rice 5000</span></div></div></div>
+    <div class="step"><div class="bar"><i></i><i></i><i></i><span>parsing</span></div><div class="body"><h3>2 · Parse</h3><p>AI extracts amount, type, item and date.</p><div class="cmd">{ type: "income",<br>&nbsp;&nbsp;amount: <span class="u">5000</span>, item: "rice" }<span class="r">✓ validated</span></div></div></div>
+    <div class="step"><div class="bar"><i></i><i></i><i></i><span>ledger</span></div><div class="body"><h3>3 · Track</h3><p>Your dashboard updates instantly.</p><div class="cmd"><span class="u">profit this week?</span><span class="r">₦81,300 ▲</span></div></div></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="shead"><span class="pill">Features</span><h2>A finance team in your pocket</h2><p>Everything measured, nothing to install.</p></div>
+  <div class="fbento">
+    <div class="fcard"><div class="ic">💸</div><h3>Income & expenses</h3><p>Auto-categorised the instant you send them.</p></div>
+    <div class="fcard"><div class="ic">📈</div><h3>Live reports</h3><p>Profit, balance and trends, always current.</p></div>
+    <div class="fcard"><div class="ic">📦</div><h3>Inventory</h3><p>Real-time stock with low-stock alerts.</p></div>
+    <div class="fcard"><div class="ic">🌍</div><h3>Multi-currency</h3><p>₦ $ £ tracked side by side, never mixed up.</p></div>
+    <div class="fcard"><div class="ic">⚡</div><h3>Instant queries</h3><p>Ask in words, get exact figures back.</p></div>
+    <div class="fcard"><div class="ic">🔐</div><h3>Secure</h3><p>Locked to your number, encrypted end to end.</p></div>
+  </div>
+</div></section>
+
+<section id="dash"><div class="wrap">
+  <div class="shead"><span class="pill">Dashboard</span><h2>The whole business, on one screen</h2><p>A view you can pull up any time — no spreadsheet required.</p></div>
+  <div class="dashbig">
+    <div class="dpanel"><div class="ch">Income vs expenses · last 6 months</div>
+      <div class="bars">
+        <div class="col"><i class="inc" style="height:48%"></i><i class="exp" style="height:30%"></i><span>JAN</span></div>
+        <div class="col"><i class="inc" style="height:62%"></i><i class="exp" style="height:34%"></i><span>FEB</span></div>
+        <div class="col"><i class="inc" style="height:54%"></i><i class="exp" style="height:40%"></i><span>MAR</span></div>
+        <div class="col"><i class="inc" style="height:78%"></i><i class="exp" style="height:44%"></i><span>APR</span></div>
+        <div class="col"><i class="inc" style="height:70%"></i><i class="exp" style="height:38%"></i><span>MAY</span></div>
+        <div class="col"><i class="inc" style="height:100%"></i><i class="exp" style="height:47%"></i><span>JUN</span></div>
+      </div>
+    </div>
+    <div class="statcol">
+      <div class="stat"><div class="l">Income · June</div><div class="v g">₦612,400</div></div>
+      <div class="stat"><div class="l">Expenses · June</div><div class="v p">₦288,150</div></div>
+      <div class="stat"><div class="l">Net profit · June</div><div class="v c">₦324,250</div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="shead"><span class="pill">Pricing</span><h2>Free to start. Scales with you.</h2></div>
+  <div class="price">
+    <div class="pcard"><h3>Starter</h3><div class="pr">₦0<span> /forever</span></div>
+      <ul><li>50 records / month</li><li>Balance & summaries</li><li>1 currency</li></ul><a href="#" class="btn btn-g">Start free</a></div>
+    <div class="pcard hot"><h3>Pro</h3><div class="pr">₦2,500<span> /month</span></div>
+      <ul><li>Unlimited records</li><li>Inventory tracking</li><li>Multi-currency</li><li>Monthly reports</li></ul><a href="#" class="btn btn-p">Go Pro</a></div>
+    <div class="pcard"><h3>Business</h3><div class="pr">₦7,500<span> /month</span></div>
+      <ul><li>Everything in Pro</li><li>Up to 5 staff</li><li>Exports & backups</li><li>Priority support</li></ul><a href="#" class="btn btn-g">Contact us</a></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="cta-band">
+  <h2>Start measuring your business today.</h2>
+  <p>One message. Live numbers. Zero setup.</p>
+  <a href="#" class="btn btn-p">Start free on WhatsApp →</a>
+</div></div>
+
+<footer><div class="wrap foot">
+  <div class="logo"><span class="mark">📗</span>Bookkeeper</div>
+  <div class="mono">© 2026 BOOKKEEPER · BUILT FOR AFRICAN SMB</div>
+</div></footer>
+
+<script>
+// gentle count-up on the hero profit figure
+(function(){
+  const el=document.getElementById('profit'); if(!el)return;
+  const target=324250; let cur=0; const dur=1100, t0=performance.now();
+  function tick(now){const p=Math.min(1,(now-t0)/dur);const v=Math.floor((1-Math.pow(1-p,3))*target);
+    el.textContent='₦'+v.toLocaleString(); if(p<1)requestAnimationFrame(tick);}
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

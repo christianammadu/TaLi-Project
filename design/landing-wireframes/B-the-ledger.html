@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookkeeper — Direction B · The Ledger</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📗</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..600&family=Inter:wght@400;500;600;700&display=swap');
+:root{
+  --paper:#F7F2E9; --paper2:#EFE7D8; --ink:#1B2E24; --ink2:#3d4f44;
+  --green:#1f6b46; --green-d:#15523a; --ochre:#C8612E; --ochre-soft:#e89a6a;
+  --line:#d9cdb8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+.serif{font-family:'Fraunces',serif}
+.wrap{max-width:1140px;margin:0 auto;padding:0 32px}
+a{color:inherit;text-decoration:none}
+.eyebrow{font-size:.74rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ochre)}
+.btn{display:inline-flex;align-items:center;gap:9px;font-family:inherit;font-weight:600;font-size:.95rem;padding:14px 28px;border-radius:6px;cursor:pointer;border:none;transition:.2s}
+.btn-p{background:var(--green);color:var(--paper)}.btn-p:hover{background:var(--green-d)}
+.btn-o{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}.btn-o:hover{background:var(--ink);color:var(--paper)}
+
+/* texture */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")}
+.wrap,nav,footer{position:relative;z-index:1}
+
+/* NAV */
+nav{border-bottom:1px solid var(--line);background:rgba(247,242,233,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50}
+.nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo{display:flex;align-items:center;gap:11px;font-weight:600;font-size:1.3rem;letter-spacing:-.01em}
+.logo .mark{width:36px;height:36px;border-radius:8px;background:var(--green);color:var(--paper);display:grid;place-items:center;font-size:18px}
+.nav-links{display:flex;gap:34px;font-size:.92rem;color:var(--ink2);font-weight:500}
+.nav-links a:hover{color:var(--ink)}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;padding:80px 0 70px}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(2.8rem,5.4vw,4.4rem);font-weight:600;line-height:1.02;letter-spacing:-.02em;margin:20px 0 24px}
+.hero h1 em{font-style:italic;color:var(--ochre)}
+.hero .lead{font-size:1.18rem;color:var(--ink2);max-width:500px;margin-bottom:32px}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.hero-note{font-size:.86rem;color:var(--ink2);margin-top:22px;display:flex;align-items:center;gap:8px}
+.hero-art{position:relative}
+.photo{aspect-ratio:4/5;border-radius:10px;background:linear-gradient(160deg,var(--paper2),#e0d3bb);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink2);text-align:center;padding:24px;overflow:hidden;position:relative;box-shadow:0 20px 50px rgba(27,46,36,.12)}
+.photo .ph-label{font-size:.78rem;letter-spacing:.04em;opacity:.65;font-style:italic;font-family:'Fraunces',serif}
+.photo .ph-ic{font-size:3rem;margin-bottom:10px;opacity:.4}
+.recpt{position:absolute;bottom:-26px;right:-22px;width:230px;background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  padding:18px 18px 16px;box-shadow:0 18px 40px rgba(27,46,36,.16);transform:rotate(3deg)}
+.recpt .rh{font-family:'Fraunces',serif;font-weight:600;font-size:.95rem;border-bottom:1px dashed var(--line);padding-bottom:9px;margin-bottom:9px}
+.recpt .rr{display:flex;justify-content:space-between;font-size:.8rem;color:var(--ink2);padding:3px 0}
+.recpt .rr.tot{font-weight:700;color:var(--green);border-top:1px dashed var(--line);margin-top:7px;padding-top:8px}
+
+/* RULE divider */
+.rule{height:1px;background:var(--line);margin:0}
+section{padding:78px 0;position:relative;z-index:1}
+.shead{max-width:640px;margin-bottom:50px}
+.shead.center{margin:0 auto 50px;text-align:center}
+.shead h2{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2rem,3.6vw,3rem);line-height:1.08;letter-spacing:-.02em;margin:14px 0 14px}
+.shead p{color:var(--ink2);font-size:1.08rem}
+
+/* STEPS — editorial numbered list */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.step{padding:34px 28px;border-left:1px solid var(--line)}
+.step:first-child{padding-left:0;border-left:none}
+.step .n{font-family:'Fraunces',serif;font-size:3rem;font-weight:500;color:var(--ochre);line-height:1;margin-bottom:14px}
+.step h3{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;margin-bottom:8px}
+.step p{color:var(--ink2);font-size:.95rem}
+.step .ex{margin-top:14px;font-size:.85rem;color:var(--green);font-style:italic;font-family:'Fraunces',serif}
+
+/* QUOTE */
+.quote{background:var(--ink);color:var(--paper);border-radius:14px;padding:64px 56px;text-align:center;position:relative;overflow:hidden}
+.quote q{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(1.5rem,3vw,2.3rem);line-height:1.3;quotes:none;display:block;max-width:760px;margin:0 auto 26px}
+.quote q em{font-style:italic;color:var(--ochre-soft)}
+.quote .who{display:flex;align-items:center;justify-content:center;gap:13px;font-size:.92rem;color:#cfc4ad}
+.quote .who .av{width:42px;height:42px;border-radius:50%;background:var(--green);display:grid;place-items:center}
+
+/* FEATURES — list with rules */
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:0 56px}
+.frow{display:flex;gap:18px;padding:26px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.frow .ic{font-size:1.6rem;flex-shrink:0;width:48px;height:48px;background:var(--paper2);border-radius:8px;display:grid;place-items:center}
+.frow h3{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600;margin-bottom:4px}
+.frow p{color:var(--ink2);font-size:.92rem}
+
+/* DASHBOARD / ledger preview */
+.ledger{background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ledger-top{padding:22px 30px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.ledger-top h3{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600}
+.ledger-top .prof{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--green);font-weight:600}
+.ledger-body{display:grid;grid-template-columns:1fr 1fr}
+.lcol{padding:26px 30px}.lcol:first-child{border-right:1px solid var(--line)}
+.lcol .ch{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:14px}
+.lrow{display:flex;justify-content:space-between;padding:9px 0;font-size:.92rem;border-bottom:1px dotted var(--line)}
+.lrow b{font-variant-numeric:tabular-nums}
+.lrow .in{color:var(--green)}.lrow .ex{color:var(--ochre)}
+
+/* PRICING — clean lined */
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:36px 30px;background:var(--paper);display:flex;flex-direction:column}
+.pcard.hot{border:2px solid var(--green);background:var(--paper2)}
+.pcard h3{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600}
+.pcard .pr{font-family:'Fraunces',serif;font-size:2.8rem;font-weight:600;margin:12px 0 2px}
+.pcard .pr span{font-family:'Inter';font-size:.95rem;color:var(--ink2);font-weight:500}
+.pcard ul{list-style:none;margin:24px 0;flex:1;display:flex;flex-direction:column;gap:13px}
+.pcard li{font-size:.92rem;color:var(--ink2);display:flex;gap:10px}.pcard li::before{content:'—';color:var(--ochre)}
+
+.cta-band{text-align:center;padding:90px 0}
+.cta-band h2{font-family:'Fraunces',serif;font-size:clamp(2.2rem,4.4vw,3.4rem);font-weight:600;line-height:1.1;margin-bottom:18px;letter-spacing:-.02em}
+.cta-band p{color:var(--ink2);font-size:1.1rem;margin-bottom:30px}
+
+footer{border-top:1px solid var(--line);padding:46px 0}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;color:var(--ink2);font-size:.88rem}
+
+@media(max-width:900px){.hero{grid-template-columns:1fr}.recpt{display:none}.steps,.feat,.price{grid-template-columns:1fr}
+  .step{border-left:none;padding-left:0;border-bottom:1px solid var(--line)}.ledger-body{grid-template-columns:1fr}.lcol:first-child{border-right:none;border-bottom:1px solid var(--line)}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap nav">
+  <div class="logo"><span class="mark">📗</span><span class="serif">Bookkeeper</span></div>
+  <div class="nav-links"><a href="#how">How it works</a><a href="#story">Stories</a><a href="#features">Features</a><a href="#pricing">Pricing</a></div>
+  <a href="#" class="btn btn-p">Start free</a>
+</div></nav>
+
+<header class="wrap hero">
+  <div>
+    <span class="eyebrow">Bookkeeping over WhatsApp</span>
+    <h1 class="serif">The honest books <em>every</em> trader deserves.</h1>
+    <p class="lead">Bookkeeper turns the messages you already send into clean, reliable records. No app to download, no jargon — just your business, finally written down.</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-p">Start free on WhatsApp →</a>
+      <a href="#how" class="btn btn-o">How it works</a>
+    </div>
+    <div class="hero-note">✦ Trusted by 5,000+ small businesses across Africa</div>
+  </div>
+  <div class="hero-art">
+    <div class="photo">
+      <div class="ph-ic">🧺</div>
+      <div class="ph-label">[ photo: market trader at her stall,<br>warm morning light ]</div>
+    </div>
+    <div class="recpt">
+      <div class="rh">Today · Adaeze Stores</div>
+      <div class="rr"><span>Rice (3 bags)</span><span>₦18,000</span></div>
+      <div class="rr"><span>Transport</span><span>−₦2,000</span></div>
+      <div class="rr"><span>Palm oil sold</span><span>₦9,500</span></div>
+      <div class="rr tot"><span>Net today</span><span>₦25,500</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="rule"></div>
+
+<section id="how"><div class="wrap">
+  <div class="shead"><span class="eyebrow">How it works</span><h2 class="serif">As simple as telling someone what happened.</h2></div>
+  <div class="steps">
+    <div class="step"><div class="n">01</div><h3>You say it</h3><p>Message Bookkeeper the way you'd tell a partner about your day's trade.</p><div class="ex">"Sold rice 5000"</div></div>
+    <div class="step"><div class="n">02</div><h3>It writes it</h3><p>Your words become a proper entry — amount, category and date, all in order.</p><div class="ex">Recorded: ₦5,000 income · Sales</div></div>
+    <div class="step"><div class="n">03</div><h3>You see it</h3><p>Ask for your profit, balance or a monthly summary, and read it back plainly.</p><div class="ex">"What did I make this month?"</div></div>
+  </div>
+</div></section>
+
+<section id="story"><div class="wrap">
+  <div class="quote">
+    <q>I used to keep everything in my head and a torn notebook. Now I just <em>message</em> Bookkeeper — and for the first time I actually know if I'm making money.</q>
+    <div class="who"><span class="av">A</span><div><b>Amaka O.</b> · Provisions store, Enugu</div></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="shead center"><span class="eyebrow">Features</span><h2 class="serif">Quietly powerful. Never complicated.</h2></div>
+  <div class="feat">
+    <div class="frow"><div class="ic">💸</div><div><h3>Income & expenses</h3><p>Every sale and cost, captured in a sentence and sorted for you.</p></div></div>
+    <div class="frow"><div class="ic">📊</div><div><h3>Reports on demand</h3><p>Daily, weekly and monthly summaries with real profit — not guesswork.</p></div></div>
+    <div class="frow"><div class="ic">📦</div><div><h3>Inventory</h3><p>Track stock as you trade and get a nudge before you run out.</p></div></div>
+    <div class="frow"><div class="ic">🌍</div><div><h3>Multi-currency</h3><p>Naira, dollars and more, each kept in its own clean column.</p></div></div>
+    <div class="frow"><div class="ic">🔍</div><div><h3>Just ask</h3><p>Plain-language questions, exact answers — no menus to learn.</p></div></div>
+    <div class="frow"><div class="ic">🔐</div><div><h3>Yours alone</h3><p>Locked to your number. Your records stay private and secure.</p></div></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="shead center"><span class="eyebrow">Your monthly summary</span><h2 class="serif">A clear page, every month.</h2></div>
+  <div class="ledger">
+    <div class="ledger-top"><h3 class="serif">June 2026</h3><div>Net profit <span class="prof">₦324,250</span></div></div>
+    <div class="ledger-body">
+      <div class="lcol"><div class="ch">Money in</div>
+        <div class="lrow"><span>Sales</span><b class="in">₦548,000</b></div>
+        <div class="lrow"><span>Other income</span><b class="in">₦64,400</b></div>
+        <div class="lrow"><span>Total</span><b class="in">₦612,400</b></div></div>
+      <div class="lcol"><div class="ch">Money out</div>
+        <div class="lrow"><span>Inventory</span><b class="ex">₦196,000</b></div>
+        <div class="lrow"><span>Transport & fuel</span><b class="ex">₦52,150</b></div>
+        <div class="lrow"><span>Rent & utilities</span><b class="ex">₦40,000</b></div>
+        <div class="lrow"><span>Total</span><b class="ex">₦288,150</b></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="shead center"><span class="eyebrow">Pricing</span><h2 class="serif">Fair, like good bookkeeping.</h2></div>
+  <div class="price">
+    <div class="pcard"><h3 class="serif">Starter</h3><div class="pr">₦0<span> /forever</span></div>
+      <ul><li>50 records a month</li><li>Balance & summaries</li><li>One currency</li></ul><a href="#" class="btn btn-o">Start free</a></div>
+    <div class="pcard hot"><h3 class="serif">Pro</h3><div class="pr">₦2,500<span> /month</span></div>
+      <ul><li>Unlimited records</li><li>Inventory tracking</li><li>Multi-currency</li><li>Monthly reports</li></ul><a href="#" class="btn btn-p">Go Pro</a></div>
+    <div class="pcard"><h3 class="serif">Business</h3><div class="pr">₦7,500<span> /month</span></div>
+      <ul><li>Everything in Pro</li><li>Up to 5 staff</li><li>Exports & backups</li><li>Priority support</li></ul><a href="#" class="btn btn-o">Contact us</a></div>
+  </div>
+</div></section>
+
+<div class="rule"></div>
+<div class="wrap"><div class="cta-band">
+  <h2 class="serif">Write your business down.<br>Starting with one message.</h2>
+  <p>It takes thirty seconds and it's free to begin.</p>
+  <a href="#" class="btn btn-p">Start free on WhatsApp →</a>
+</div></div>
+
+<footer><div class="wrap foot">
+  <div class="logo"><span class="mark">📗</span><span class="serif">Bookkeeper</span></div>
+  <div>© 2026 · Made for African small business</div>
+</div></footer>
+
+</body>
+</html>

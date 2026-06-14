@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookkeeper — Direction A · The Conversation</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📗</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --wa:#25D366; --wa-dark:#1DA851; --glow:rgba(37,211,102,.35);
+  --bg:#0a0a0f; --bg2:#12121a; --card:rgba(255,255,255,.04); --bord:rgba(255,255,255,.09);
+  --tp:#f0f0f5; --ts:#9a9ab0; --tm:#5c5c72;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tp);line-height:1.5;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:-50%;width:200%;height:200%;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 700px 600px at 20% 10%,rgba(37,211,102,.07),transparent 70%),
+             radial-gradient(ellipse 600px 500px at 85% 60%,rgba(37,211,102,.05),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
+a{color:inherit;text-decoration:none}
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--wa);background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.18);padding:6px 13px;border-radius:100px}
+.btn{display:inline-flex;align-items:center;gap:9px;font-family:inherit;font-weight:600;font-size:.95rem;padding:14px 26px;border-radius:12px;cursor:pointer;border:none;transition:.2s}
+.btn-p{background:linear-gradient(135deg,var(--wa),var(--wa-dark));color:#fff;box-shadow:0 4px 20px var(--glow)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(37,211,102,.45)}
+.btn-g{background:var(--card);border:1px solid var(--bord);color:var(--tp)}
+.btn-g:hover{background:rgba(255,255,255,.07)}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);background:rgba(10,10,15,.7);border-bottom:1px solid var(--bord)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.15rem;letter-spacing:-.02em}
+.logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--wa),var(--wa-dark));display:grid;place-items:center;font-size:18px;box-shadow:0 4px 14px var(--glow)}
+.nav-links{display:flex;gap:32px;font-size:.9rem;color:var(--ts);font-weight:500}
+.nav-links a:hover{color:var(--tp)}
+.nav-cta{display:flex;gap:12px;align-items:center}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:78px 0 90px}
+.hero h1{font-size:clamp(2.4rem,4.6vw,3.6rem);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:22px 0 20px}
+.hero h1 .hl{background:linear-gradient(120deg,var(--wa),#7af0a8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{font-size:1.12rem;color:var(--ts);max-width:480px;margin-bottom:30px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.hero-meta{display:flex;gap:26px;margin-top:34px;color:var(--tm);font-size:.82rem}
+.hero-meta b{color:var(--tp);font-size:1.35rem;font-weight:800;display:block;letter-spacing:-.02em}
+
+/* PHONE */
+.phone{justify-self:center;width:312px;height:632px;border-radius:42px;background:#0c0c12;border:1px solid var(--bord);
+  box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 80px rgba(37,211,102,.08);padding:12px;position:relative}
+.phone::before{content:'';position:absolute;top:14px;left:50%;transform:translateX(-50%);width:104px;height:26px;background:#000;border-radius:100px;z-index:3}
+.screen{height:100%;border-radius:32px;overflow:hidden;background:#0b141a;display:flex;flex-direction:column}
+.wa-top{background:#1f2c34;padding:34px 16px 12px;display:flex;align-items:center;gap:11px}
+.wa-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--wa),var(--wa-dark));display:grid;place-items:center;font-size:18px}
+.wa-name{font-weight:600;font-size:.92rem}.wa-sub{font-size:.7rem;color:#8696a0}
+.chat{flex:1;padding:16px 13px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
+  background:#0b141a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='1' fill='%23ffffff08'/%3E%3C/svg%3E")}
+.bub{max-width:80%;padding:8px 12px;border-radius:14px;font-size:.82rem;line-height:1.4;animation:pop .5s both}
+.out{align-self:flex-end;background:#005c4b;border-bottom-right-radius:4px}
+.in{align-self:flex-start;background:#1f2c34;border-bottom-left-radius:4px}
+.bub small{display:block;text-align:right;font-size:.6rem;color:rgba(255,255,255,.45);margin-top:3px}
+.in b{color:var(--wa)}
+.bub:nth-child(1){animation-delay:.2s}.bub:nth-child(2){animation-delay:.7s}
+.bub:nth-child(3){animation-delay:1.3s}.bub:nth-child(4){animation-delay:2s}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+.wa-input{background:#1f2c34;margin:0 8px 10px;border-radius:100px;padding:10px 16px;color:#8696a0;font-size:.78rem;display:flex;justify-content:space-between;align-items:center}
+.wa-send{width:30px;height:30px;border-radius:50%;background:var(--wa);display:grid;place-items:center;color:#0b141a;font-size:14px}
+
+/* SECTION SHELL */
+section{padding:84px 0;position:relative;z-index:1}
+.shead{text-align:center;max-width:620px;margin:0 auto 54px}
+.shead h2{font-size:clamp(1.8rem,3.2vw,2.5rem);font-weight:800;letter-spacing:-.03em;margin:16px 0 12px}
+.shead p{color:var(--ts);font-size:1.05rem}
+
+/* STEPS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.step{background:var(--card);border:1px solid var(--bord);border-radius:20px;padding:30px 26px;position:relative}
+.step .n{width:40px;height:40px;border-radius:12px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.2);color:var(--wa);display:grid;place-items:center;font-weight:800;margin-bottom:18px}
+.step h3{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+.step p{color:var(--ts);font-size:.92rem}
+.step .ex{margin-top:14px;font-family:ui-monospace,monospace;font-size:.78rem;color:var(--wa);background:rgba(37,211,102,.06);border:1px dashed rgba(37,211,102,.25);padding:9px 12px;border-radius:9px}
+
+/* FEATURES */
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.fcard{background:var(--card);border:1px solid var(--bord);border-radius:18px;padding:26px;transition:.25s}
+.fcard:hover{border-color:rgba(37,211,102,.3);transform:translateY(-4px)}
+.fcard .ic{width:46px;height:46px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;font-size:22px;margin-bottom:16px;border:1px solid var(--bord)}
+.fcard h3{font-size:1.05rem;font-weight:700;margin-bottom:7px}
+.fcard p{color:var(--ts);font-size:.88rem}
+
+/* DASHBOARD PREVIEW */
+.dash{background:linear-gradient(180deg,var(--card),transparent);border:1px solid var(--bord);border-radius:24px;padding:34px;display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+.dash-card{background:var(--bg2);border:1px solid var(--bord);border-radius:18px;padding:24px}
+.dash-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--bord);font-size:.9rem}
+.dash-row:last-child{border:none;font-weight:700}
+.dash-row .amt.in{color:var(--wa)}.dash-row .amt.ex{color:#ff6b81}
+.bars{display:flex;align-items:flex-end;gap:10px;height:120px;margin-top:18px}
+.bar{flex:1;background:linear-gradient(180deg,var(--wa),var(--wa-dark));border-radius:6px 6px 0 0;opacity:.85}
+.dash h2{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
+.dash ul{list-style:none;margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.dash li{display:flex;gap:11px;align-items:flex-start;color:var(--ts);font-size:.95rem}
+.dash li::before{content:'✓';color:var(--wa);font-weight:800}
+
+/* PRICING */
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+.pcard{background:var(--card);border:1px solid var(--bord);border-radius:22px;padding:34px 28px;display:flex;flex-direction:column}
+.pcard.hot{border-color:var(--wa);box-shadow:0 0 50px rgba(37,211,102,.12);position:relative}
+.pcard.hot::before{content:'Most popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--wa);color:#06120b;font-size:.7rem;font-weight:800;padding:5px 14px;border-radius:100px;letter-spacing:.04em}
+.pcard h3{font-size:1rem;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.06em}
+.pcard .pr{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;margin:14px 0 4px}
+.pcard .pr span{font-size:.95rem;color:var(--tm);font-weight:500}
+.pcard ul{list-style:none;margin:22px 0 26px;display:flex;flex-direction:column;gap:12px;flex:1}
+.pcard li{color:var(--ts);font-size:.9rem;display:flex;gap:10px}.pcard li::before{content:'✓';color:var(--wa);font-weight:800}
+
+/* FOOTER */
+footer{border-top:1px solid var(--bord);padding:48px 0;position:relative;z-index:1}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;color:var(--tm);font-size:.85rem}
+.cta-band{text-align:center;background:linear-gradient(135deg,rgba(37,211,102,.1),rgba(37,211,102,.02));border:1px solid rgba(37,211,102,.2);border-radius:28px;padding:60px 30px;margin:30px 0}
+.cta-band h2{font-size:2.2rem;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
+.cta-band p{color:var(--ts);margin-bottom:28px;font-size:1.05rem}
+
+@media(max-width:900px){.hero{grid-template-columns:1fr;text-align:center}.hero p.lead,.hero-cta{margin-left:auto;margin-right:auto}.hero-meta{justify-content:center}
+  .steps,.feat,.price{grid-template-columns:1fr}.dash{grid-template-columns:1fr}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap nav">
+  <div class="logo"><span class="mark">📗</span>Bookkeeper</div>
+  <div class="nav-links"><a href="#how">How it works</a><a href="#features">Features</a><a href="#dash">Reports</a><a href="#pricing">Pricing</a></div>
+  <div class="nav-cta"><a href="#" class="btn btn-g">Log in</a><a href="#" class="btn btn-p">Start free</a></div>
+</div></nav>
+
+<header class="wrap hero">
+  <div>
+    <span class="tag">● Works inside WhatsApp</span>
+    <h1>Your books, kept by <span class="hl">a simple text message.</span></h1>
+    <p class="lead">No apps to learn, no spreadsheets. Just message Bookkeeper like you'd message a friend — "Sold rice 5000" — and your records, reports and stock are handled automatically.</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-p">Start free on WhatsApp →</a>
+      <a href="#how" class="btn btn-g">See how it works</a>
+    </div>
+    <div class="hero-meta">
+      <div><b>30 sec</b>to set up</div>
+      <div><b>₦0</b>to start</div>
+      <div><b>5,000+</b>traders onboard</div>
+    </div>
+  </div>
+  <div class="phone"><div class="screen">
+    <div class="wa-top"><div class="wa-av">📗</div><div><div class="wa-name">Bookkeeper</div><div class="wa-sub">online</div></div></div>
+    <div class="chat">
+      <div class="bub out">Sold 3 bags of rice 18k<small>9:41 ✓✓</small></div>
+      <div class="bub in">✅ <b>Sale recorded</b><br>₦18,000 · Rice · Sales<br>Stock: 12 bags left<small>9:41</small></div>
+      <div class="bub out">How much did I make this week?<small>9:42 ✓✓</small></div>
+      <div class="bub in">📊 <b>This week</b><br>Income ₦142,500<br>Expenses ₦61,200<br><b>Profit ₦81,300</b> 📈<small>9:42</small></div>
+    </div>
+    <div class="wa-input"><span>Type a message…</span><span class="wa-send">➤</span></div>
+  </div></div>
+</header>
+
+<section id="how"><div class="wrap">
+  <div class="shead"><span class="tag">How it works</span><h2>Three steps. No learning curve.</h2><p>If you can send a WhatsApp message, you can run your books.</p></div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Message it</h3><p>Type what happened in plain language — buying, selling, paying, anytime of day.</p><div class="ex">"Bought fuel 2k"</div></div>
+    <div class="step"><div class="n">2</div><h3>AI records it</h3><p>Bookkeeper understands the amount, category and date, and files it instantly.</p><div class="ex">💸 Expense · Fuel · ₦2,000</div></div>
+    <div class="step"><div class="n">3</div><h3>Ask anything</h3><p>Get balances, summaries and reports back in seconds — just by asking.</p><div class="ex">"What's my profit this month?"</div></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="shead"><span class="tag">Features</span><h2>Everything a small business needs</h2><p>Built for market traders, shop owners and side hustlers — not accountants.</p></div>
+  <div class="feat">
+    <div class="fcard"><div class="ic">💸</div><h3>Income & expenses</h3><p>Record every sale and cost in seconds, with smart auto-categorisation.</p></div>
+    <div class="fcard"><div class="ic">📊</div><h3>Instant reports</h3><p>Daily, weekly and monthly summaries with profit, all on demand.</p></div>
+    <div class="fcard"><div class="ic">📦</div><h3>Inventory tracking</h3><p>"Added 20 bags of rice" — stock levels update and warn you when low.</p></div>
+    <div class="fcard"><div class="ic">🌍</div><h3>Multi-currency</h3><p>Naira, dollars, pounds — mix currencies and Bookkeeper keeps them straight.</p></div>
+    <div class="fcard"><div class="ic">🔍</div><h3>Natural queries</h3><p>"How much on transport last week?" Ask like a human, get exact numbers.</p></div>
+    <div class="fcard"><div class="ic">🔐</div><h3>Private & secure</h3><p>Linked to your number, locked to your account. Your books, only yours.</p></div>
+  </div>
+</div></section>
+
+<section id="dash"><div class="wrap">
+  <div class="shead"><span class="tag">Reports</span><h2>See your business clearly</h2><p>The numbers you used to guess at, now a message away.</p></div>
+  <div class="dash">
+    <div>
+      <h2>June at a glance</h2>
+      <ul><li>Know your true profit, not just cash in pocket</li><li>Spot your best-selling items and biggest costs</li><li>Export-ready monthly summaries for loans & records</li></ul>
+    </div>
+    <div class="dash-card">
+      <div class="dash-row"><span>Income</span><span class="amt in">₦612,400</span></div>
+      <div class="dash-row"><span>Expenses</span><span class="amt ex">₦288,150</span></div>
+      <div class="dash-row"><span>Net profit</span><span class="amt in">₦324,250</span></div>
+      <div class="bars"><div class="bar" style="height:55%"></div><div class="bar" style="height:72%"></div><div class="bar" style="height:48%"></div><div class="bar" style="height:90%"></div><div class="bar" style="height:66%"></div><div class="bar" style="height:100%"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="shead"><span class="tag">Pricing</span><h2>Start free. Upgrade when you grow.</h2><p>No card needed to begin.</p></div>
+  <div class="price">
+    <div class="pcard"><h3>Starter</h3><div class="pr">₦0<span>/forever</span></div><p style="color:var(--ts);font-size:.9rem">For getting started</p>
+      <ul><li>50 records / month</li><li>Balance & summaries</li><li>1 currency</li></ul><a href="#" class="btn btn-g">Start free</a></div>
+    <div class="pcard hot"><h3>Pro</h3><div class="pr">₦2,500<span>/month</span></div><p style="color:var(--ts);font-size:.9rem">For growing traders</p>
+      <ul><li>Unlimited records</li><li>Inventory tracking</li><li>Multi-currency</li><li>Monthly reports</li></ul><a href="#" class="btn btn-p">Go Pro</a></div>
+    <div class="pcard"><h3>Business</h3><div class="pr">₦7,500<span>/month</span></div><p style="color:var(--ts);font-size:.9rem">For multiple shops</p>
+      <ul><li>Everything in Pro</li><li>Up to 5 staff</li><li>Exports & backups</li><li>Priority support</li></ul><a href="#" class="btn btn-g">Contact us</a></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="cta-band">
+  <h2>Your first record is one message away.</h2>
+  <p>Join thousands of African businesses keeping clean books without lifting a spreadsheet.</p>
+  <a href="#" class="btn btn-p">Start free on WhatsApp →</a>
+</div></div>
+
+<footer><div class="wrap foot">
+  <div class="logo"><span class="mark">📗</span>Bookkeeper</div>
+  <div>© 2026 Bookkeeper · Made for African small business</div>
+</div></footer>
+
+</body>
+</html>
