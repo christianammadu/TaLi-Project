@@ -30,7 +30,7 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T20:00:47Z -->
+<!-- last_action: refresh-board · 2026-06-13T20:25:43Z -->
 {
   "plan": {
     "title": "Telegram channel + dual-CTA landing + total rebrand — TaLi",
@@ -85,7 +85,7 @@
       "deps": [
         "G-CHANNEL-CONTRACT"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "repo": "tali",
       "brief": "See 09 §WP-03. app/channels/telegram.py over the Bot API (sendMessage/sendDocument, update parsing, secret-token verify); /webhook/telegram; setWebhook helper. DoD: update parses; send (mocked) hits Bot API; forged secret rejected."
@@ -98,7 +98,7 @@
         "G-IDENTITY",
         "WP-03"
       ],
-      "status": "queued",
+      "status": "in_progress",
       "gate": null,
       "repo": "tali",
       "brief": "See 09/05 §WP-04. (a) Onboarding: web token + t.me/<bot>?start=<token> binds tg:<chat_id>, no phone/OTP. (b) Path B cross-channel link: /link <other> from inside the channel you're on issues a one-time token; Telegram redeems via /start, WhatsApp via a prefilled LINK-<token> first message; both resolve to the SAME user_id. DoD: WhatsApp-bound account links Telegram (and reverse) onto one ledger; unlink keeps the other working."

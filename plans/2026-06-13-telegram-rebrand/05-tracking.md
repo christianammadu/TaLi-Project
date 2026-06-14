@@ -111,6 +111,7 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 
 ### WP-03 — Telegram channel adapter
 
+- **Status:** `[x]` **done** (2026-06-14, branch `feat/channel-foundations`) — `app/channels/telegram.py` (Bot API `sendMessage`/`sendDocument`, `parse_update`, secret-token `verify`, `set_webhook`); `/webhook/telegram` blueprint registered; `wa:`/`tg:` parity via shared `parse_command`. 6/6 tests; 0 regressions. (Built on the frozen `G-CHANNEL-CONTRACT`.)
 - **Goal:** `app/channels/telegram.py` implementing `Channel` over the Bot API (`sendMessage`, `sendDocument`, update parsing, `verify` via `X-Telegram-Bot-Api-Secret-Token`); `/webhook/telegram` route; `setWebhook` helper.
 - **Repo:** tali · **Branch:** `feat/telegram-adapter` · **Depends on:** `G-CHANNEL-CONTRACT`
 - **Files:** create `app/channels/telegram.py`; touch `app/web/routes.py`, `app/config.py`, `.env.example`.
@@ -118,6 +119,7 @@ Longest chain (channel track): `WP-01 → WP-03 → WP-05 → WP-09` (and `WP-02
 
 ### WP-04 — Telegram onboarding + cross-channel linking (Path B)
 
+- **Status:** `[~]` **in progress** (2026-06-14) — **done:** `onboarding.handle_command` (redeem/link/unlink) + deep-link builders; symmetric redemption (Telegram `/start <token>`, WhatsApp `LINK-<token>`); the Telegram webhook handles commands, prompts unbound chats, and routes bound users through the gateway with session auto-renew; 6/6 tests. **Remaining:** web-first token issuance on `/register` (for users with *no* channel yet — Path B only adds a *second*), and live end-to-end (needs DB + a real bot + creds, per `docs/telegram-setup.md`).
 - **Goal:** (a) **Onboarding:** web register issues a short-lived binding token + `t.me/<bot>?start=<token>`; the bot's `/start <token>` binds `tg:<chat_id>` to the user (in `channel_accounts`) + opens a session — no phone/OTP. (b) **Cross-channel link (Path B, locked):** a `/link <other>` command, **from inside whichever channel the user is already on**, issues a one-time token and hands back the *other* channel's deep-link, redeeming it onto the **same `user_id`**.
 - **Repo:** tali · **Branch:** `feat/telegram-onboarding` · **Depends on:** `G-IDENTITY`, WP-03
 - **Token redemption is symmetric:** Telegram redeems via `/start <token>`; WhatsApp redeems a prefilled `LINK-<token>` first-message (the channel adapters detect the token and route it to `auth.redeem_binding_token` *before* normal message processing). The currently-bound channel is the auth anchor.
