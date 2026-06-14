@@ -11,7 +11,7 @@ from datetime import date
 from app.data.queries import query_statement, query_cashflow
 from app.services.report_renderer import render
 from app.services.formatter import _format_period, format_statement_chat, format_cashflow_chat
-from app.web.whatsapp import send_document
+from app.channels.registry import send_document   # routes to the originating channel (WP-05)
 
 
 _ACTION_LABELS = {'purchase': 'Purchases', 'sale': 'Sales', 'expense': 'Expenses', 'income': 'Income'}

@@ -1,40 +1,17 @@
 import requests
 from flask import current_app
 
-from app.channels.whatsapp import WhatsAppChannel
+from app.channels import registry
 
-# Single WhatsApp transport implementation lives in the channel adapter now (WP-01);
-# these module functions stay as thin wrappers that add the messages-history logging,
-# so existing callers (routes.py) are unchanged.
-_wa = WhatsAppChannel()
+# WhatsApp transport lives in app/channels/whatsapp.py (WP-01); reply/document dispatch
+# + history logging is centralized in the channel registry (WP-05). These wrappers keep
+# the legacy signatures so routes.py is unchanged, and now route by the recipient's
+# namespace — a bare phone resolves to WhatsApp, a tg:<id> to Telegram.
 
 
 def send_reply(recipient, message_text):
-    response = _wa.send_text(recipient, message_text)
-
-    # Log outgoing message to messages history table
-    try:
-        from app.data.database import get_db_connection
-        from app.auth import get_active_session
-        session = get_active_session(recipient)
-        user_id = session['user_id'] if session else None
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO messages (user_id, sender_id, direction, message_text) "
-            "VALUES (%s, %s, 'outgoing', %s)",
-            (user_id, recipient, message_text)
-        )
-        conn.commit()
-    except Exception as e:
-        print(f"[log_outgoing_message Error] {e}")
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-    return response.json() if response is not None else None
+    resp = registry.send_text(recipient, message_text)
+    return resp.json() if resp is not None else None
 
 
 def _post_message(url, headers, payload, label):
@@ -67,30 +44,7 @@ def send_document(recipient, file_path, filename, caption=None):
 
     Returns (success: bool, detail: str).
     """
-    success, detail = _wa.send_document(recipient, file_path, filename, caption)
-
-    # Log to messages history (best-effort)
-    try:
-        from app.data.database import get_db_connection
-        from app.auth import get_active_session
-        session = get_active_session(recipient)
-        user_id = session['user_id'] if session else None
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO messages (user_id, sender_id, direction, message_text) "
-            "VALUES (%s, %s, 'outgoing', %s)",
-            (user_id, recipient, f"[document] {filename} ({'ok' if success else 'FAILED'})")
-        )
-        conn.commit()
-    except Exception as e:
-        print(f"[log_outgoing_document Error] {e}")
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-    return success, detail
+    return registry.send_document(recipient, file_path, filename, caption)
 
 
 def send_otp_template(recipient, code):
