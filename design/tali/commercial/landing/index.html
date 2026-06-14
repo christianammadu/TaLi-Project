@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — Bookkeeping over WhatsApp</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<link rel="stylesheet" href="../../shared/tali.css">
+<script>(function(){try{var u=new URLSearchParams(location.search).get('theme');var t=u||localStorage.getItem('tali-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+<symbol id="i-tally" viewBox="0 0 24 24"><line x1="7" y1="6" x2="7" y2="18"/><line x1="10.5" y1="6" x2="10.5" y2="18"/><line x1="14" y1="6" x2="14" y2="18"/><line x1="17.5" y1="6" x2="17.5" y2="18"/><line x1="5" y1="18.5" x2="19.5" y2="5.5"/></symbol>
+<symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-trending" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/><path d="m7.5 4.27 9 5.15"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+</svg>
+
+<nav><div class="wrap nav">
+  <a href="../landing/index.html" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <div class="nav-links"><a href="#how">How it works</a><a href="../features/index.html">Features</a><a href="#reports">Reports</a><a href="../pricing/index.html">Pricing</a><a href="../../legal/faq/index.html">FAQ</a></div>
+  <div class="nav-cta">
+    <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg></button>
+    <a href="../../auth/index.html" class="btn btn-g btn-sm">Log in</a><a href="../../auth/index.html" class="btn btn-p btn-sm">Start free</a>
+  </div>
+</div></nav>
+
+<header class="wrap hero">
+  <div>
+    <span class="tag"><span class="dot"></span> Works inside WhatsApp</span>
+    <h1>Your books, kept by <span class="hl">a simple text message.</span></h1>
+    <p class="lead">No apps to learn, no spreadsheets. Just message TaLi like you'd message a friend — "Sold rice 5000" — and your records, reports and stock are handled automatically.</p>
+    <div class="hero-cta">
+      <a href="../../auth/index.html" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+      <a href="#how" class="btn btn-g">See how it works</a>
+    </div>
+    <div class="hero-meta">
+      <div><b>30 sec</b>to set up</div>
+      <div><b>₦0</b>to start</div>
+      <div><b>5,000+</b>traders onboard</div>
+    </div>
+  </div>
+  <div class="phone center-x"><div class="screen">
+    <div class="wa-top"><div class="wa-av"><svg class="ic"><use href="#i-tally"/></svg></div><div><div class="wa-name">TaLi</div><div class="wa-sub">online</div></div></div>
+    <div class="chat">
+      <div class="bub out" style="animation-delay:.2s">Sold 3 bags of rice 18k<small>9:41</small></div>
+      <div class="bub in" style="animation-delay:.7s"><b>Sale recorded</b><br>₦18,000 · Rice · Sales<br>Stock: 12 bags left<small>9:41</small></div>
+      <div class="bub out" style="animation-delay:1.3s">How much did I make this week?<small>9:42</small></div>
+      <div class="bub in" style="animation-delay:2s"><b>This week</b><br>Income ₦142,500<br>Expenses ₦61,200<br><b>Profit ₦81,300</b><small>9:42</small></div>
+    </div>
+    <div class="wa-input"><span>Type a message…</span><span class="wa-send"><svg class="ic"><use href="#i-send"/></svg></span></div>
+  </div></div>
+</header>
+
+<section id="how"><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-sparkles"/></svg> How it works</span><h2>Three steps. No learning curve.</h2><p>If you can send a WhatsApp message, you can run your books.</p></div>
+  <div class="grid-3">
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-message"/></svg></div><h3>1 · Message it</h3><p>Type what happened in plain language — buying, selling, paying, any time of day.</p><div class="ex">"Bought fuel 2k"</div></div>
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-zap"/></svg></div><h3>2 · AI records it</h3><p>TaLi understands the amount, category and date, and files it instantly.</p><div class="ex">Expense · Fuel · ₦2,000</div></div>
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-search"/></svg></div><h3>3 · Ask anything</h3><p>Get balances, summaries and reports back in seconds — just by asking.</p><div class="ex">"What's my profit this month?"</div></div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-layers"/></svg> Features</span><h2>Everything a small business needs</h2><p>Built for market traders, shop owners and side hustlers — not accountants.</p></div>
+  <div class="grid-3">
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-wallet"/></svg></div><h3>Income &amp; expenses</h3><p>Record every sale and cost in seconds, with smart auto-categorisation.</p></div>
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-trending"/></svg></div><h3>Instant reports</h3><p>Daily, weekly and monthly summaries with real profit, all on demand.</p></div>
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-package"/></svg></div><h3>Inventory tracking</h3><p>"Added 20 bags of rice" — stock levels update and warn you when low.</p></div>
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-globe"/></svg></div><h3>Multi-currency</h3><p>Naira, dollars, pounds — mix currencies and TaLi keeps them straight.</p></div>
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-search"/></svg></div><h3>Natural queries</h3><p>"How much on transport last week?" Ask like a human, get exact numbers.</p></div>
+    <div class="fcard"><div class="ico"><svg class="ic"><use href="#i-shield"/></svg></div><h3>Private &amp; secure</h3><p>Linked to your number, locked to your account. Your books, only yours.</p></div>
+  </div>
+</div></section>
+
+<section id="reports"><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-chart"/></svg> Reports</span><h2>See your business clearly</h2><p>The numbers you used to guess at, now a message away.</p></div>
+  <div class="dash">
+    <div>
+      <h2>June at a glance</h2>
+      <ul>
+        <li><svg class="ic"><use href="#i-check"/></svg> Know your true profit, not just cash in pocket</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Spot your best-selling items and biggest costs</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Export-ready monthly summaries for loans &amp; records</li>
+      </ul>
+    </div>
+    <div class="dash-card">
+      <div class="dash-row"><span>Income</span><span class="amt in">₦612,400</span></div>
+      <div class="dash-row"><span>Expenses</span><span class="amt ex">₦288,150</span></div>
+      <div class="dash-row"><span>Net profit</span><span class="amt in">₦324,250</span></div>
+      <div class="bars"><div class="bar" style="height:55%"></div><div class="bar" style="height:72%"></div><div class="bar" style="height:48%"></div><div class="bar" style="height:90%"></div><div class="bar" style="height:66%"></div><div class="bar" style="height:100%"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-star"/></svg> Pricing</span><h2>Start free. Upgrade when you grow.</h2><p>No card needed to begin. <a href="../pricing/index.html" style="color:var(--wa)">See full pricing →</a></p></div>
+  <div class="price">
+    <div class="pcard"><h3>Starter</h3><div class="pr">₦0<span>/forever</span></div><p class="desc">For getting started</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> 50 records / month</li><li><svg class="ic"><use href="#i-check"/></svg> Balance &amp; summaries</li><li><svg class="ic"><use href="#i-check"/></svg> 1 currency</li></ul><a href="../../auth/index.html" class="btn btn-g btn-full">Start free</a></div>
+    <div class="pcard hot"><h3>Pro</h3><div class="pr">₦2,500<span>/month</span></div><p class="desc">For growing traders</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> Unlimited records</li><li><svg class="ic"><use href="#i-check"/></svg> Inventory tracking</li><li><svg class="ic"><use href="#i-check"/></svg> Multi-currency</li><li><svg class="ic"><use href="#i-check"/></svg> Monthly reports</li></ul><a href="../../auth/index.html" class="btn btn-p btn-full">Go Pro</a></div>
+    <div class="pcard"><h3>Business</h3><div class="pr">₦7,500<span>/month</span></div><p class="desc">For multiple shops</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> Everything in Pro</li><li><svg class="ic"><use href="#i-check"/></svg> Up to 5 staff</li><li><svg class="ic"><use href="#i-check"/></svg> Exports &amp; backups</li><li><svg class="ic"><use href="#i-check"/></svg> Priority support</li></ul><a href="../pricing/index.html" class="btn btn-g btn-full">Contact us</a></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="cta-band">
+  <h2>Your first record is one message away.</h2>
+  <p>Join thousands of African businesses keeping clean books without lifting a spreadsheet.</p>
+  <a href="../../auth/index.html" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+</div></div>
+
+<footer><div class="wrap">
+  <div class="foot-grid">
+    <div><a href="../landing/index.html" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+      <p>Bookkeeping that lives in the chat you already use. Made for African small business.</p></div>
+    <div><h4>Product</h4><a href="../features/index.html">Features</a><a href="../pricing/index.html">Pricing</a><a href="#how">How it works</a><a href="../../auth/index.html">Log in</a></div>
+    <div><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Contact</a><a href="#">Careers</a></div>
+    <div><h4>Legal</h4><a href="../../legal/privacy/index.html">Privacy</a><a href="../../legal/terms/index.html">Terms</a><a href="../../legal/faq/index.html">FAQ</a></div>
+  </div>
+  <div class="foot-bottom"><span>© 2026 TaLi · Made for African small business</span><span>Tally, simplified.</span></div>
+</div></footer>
+
+<script>function taliTheme(){var r=document.documentElement,t=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',t);try{localStorage.setItem('tali-theme',t);}catch(e){}}</script>
+</body>
+</html>
