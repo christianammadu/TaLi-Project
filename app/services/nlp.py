@@ -1,12 +1,15 @@
 import json
 from datetime import date, timedelta
-from openai import OpenAI
-from flask import current_app
+from app.services import model_router
 
 
 def get_openai_client():
-    """Create an OpenAI client using the configured API key."""
-    return OpenAI(api_key=current_app.config['OPENAI_API_KEY'])
+    """Legacy shim — the OpenAI *fallback* client via the model router.
+
+    Prefer ``model_router.chat_completion(role, ...)`` in new code so provider
+    routing + fallback apply. Kept for backward compatibility with older callers.
+    """
+    return model_router.get_client("openai")
 
 
 def build_system_prompt(categories):
@@ -189,12 +192,14 @@ def parse_message(text, user_id):
     and 'item' fields for granular transaction classification.
     """
     try:
-        client = get_openai_client()
         categories = get_categories_for_user(user_id)
         system_prompt = build_system_prompt(categories)
 
-        response = client.chat.completions.create(
-            model=current_app.config['OPENAI_MODEL'],
+        # Route through the multi-provider model router (WP-01): the "intake" role runs
+        # on Featherless with an automatic OpenAI fallback. The router reports the
+        # provider/model actually used and a best-effort cost estimate.
+        result = model_router.chat_completion(
+            "intake",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": text}
@@ -204,17 +209,15 @@ def parse_message(text, user_id):
             max_tokens=700,
         )
 
-        content = response.choices[0].message.content
-        parsed = json.loads(content)
+        parsed = json.loads(result["content"])
+        parsed['_usage'] = result["usage"]
+        parsed['_meta'] = {
+            'provider': result["provider"],
+            'model': result["model"],
+            'estimated_cost': result["estimated_cost"],
+        }
 
-        if hasattr(response, 'usage') and response.usage:
-            parsed['_usage'] = {
-                'prompt_tokens': response.usage.prompt_tokens,
-                'completion_tokens': response.usage.completion_tokens,
-                'total_tokens': response.usage.total_tokens
-            }
-
-        print(f"NLP Parse Result: {parsed}")
+        print(f"NLP Parse Result ({result['provider']}/{result['model']}): {parsed}")
         return parsed
 
     except json.JSONDecodeError as e:
