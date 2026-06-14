@@ -198,7 +198,7 @@
     "WP-06": {
       "doc": "05-tracking.md",
       "wave": 1,
-      "status": "queued",
+      "status": "done",
       "depends_on": [
         "G-BRAND"
       ],
