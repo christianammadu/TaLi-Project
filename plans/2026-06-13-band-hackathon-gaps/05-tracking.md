@@ -197,6 +197,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-10 — FinOps per-model cost attribution
 
+- **Status:** `[x]` **done** (2026-06-14) — model router carries per-provider cost rates (env-overridable) + a process-scoped spend accumulator (`spend_report()`/`reset_spend()`); `ai_logs` now records the **real** model + per-provider cost (WP-01 follow-up); the FinOps report appends a live **spend-by-provider/model** view; 3/3 tests green.
 - **Goal:** Extend cost logging across the three providers; per-agent / per-model spend view (proves deliberate credit optimization).
 - **Repo:** tali · **Branch:** `feat/finops`
 - **Depends on:** WP-01, WP-09
@@ -207,6 +208,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-11 — Deploy, public repo, 5-min demo video
 
+- **Status:** `[~]` **scaffolding done** (2026-06-14) — `docs/agent_setup.md` rewritten off the in-memory-broker description (G-13); README architecture updated to the Band room + router + audit; `docs/demo-script.md` (<5-min shot-by-shot) added. **Still on the user:** deploy + live URL, public repo, MIT `LICENSE`, and recording the video — all needing the WP-02 live creds + a deployed DB.
 - **Goal:** Deploy the Band-integrated build; make the repo public; record a <5-min demo around the live Band room (plan→execute→review→human-approve→audit). MIT licence added by the user.
 - **Repo:** tali · **Branch:** `chore/submission`
 - **Depends on:** WP-06 (must-ship); WP-07/08/09 (differentiators, include if landed)
