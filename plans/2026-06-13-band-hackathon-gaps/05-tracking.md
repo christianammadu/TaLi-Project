@@ -97,6 +97,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-01 — Multi-provider model router (`get_client(role)`)
 
+- **Status:** `[x]` **done** (2026-06-14) — `model_router.py` + routed `nlp.py`; 8/8 router tests green. `G-MODEL-ROUTER` frozen. Follow-up: `ai_logs.model_name` still hard-coded in `agent_1_intake.py` (fixed in WP-03).
 - **Goal:** Generalize `get_openai_client()` into a role-keyed factory that routes across AI/ML API (frontier), Featherless (OS workers), and OpenAI (fallback). Freezes `G-MODEL-ROUTER`.
 - **Repo:** tali
 - **Branch:** `feat/model-router`
@@ -108,6 +109,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-02 — Band integration spike + connector contract
 
+- **Status:** `[~]` **in progress** — connector seam + fire-and-forget **stub** done; 6/6 stub tests green; WS-vs-REST decision recorded (REST default). **Live round-trip pending** Band creds + identity confirmation (open question #1) — see `docs/credentials-setup.local.md`.
 - **Goal:** Stand up `band-sdk`, register 3 remote agents on `app.band.ai` (Pro), create a room, and prove a **reply round-trips** (not just a one-way message). Decide persistent-WS vs request-scoped REST. Freezes `G-BAND-CONTRACT` incl. the **reply-collection seam** (G-05).
 - **Repo:** tali
 - **Branch:** `feat/band-connector`

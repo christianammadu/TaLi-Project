@@ -30,52 +30,244 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T13:28:50Z -->
+<!-- last_action: refresh-board · 2026-06-13T14:23:02Z -->
 {
-  "plan": { "title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS", "profile": "software", "goal": "Make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan→execute→review loop, and surface a regulated-track audit trail." },
+  "plan": {
+    "title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS",
+    "profile": "software",
+    "goal": "Make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan→execute→review loop, and surface a regulated-track audit trail."
+  },
   "gates": [
-    { "id": "G-MODEL-ROUTER", "wp": "WP-01", "label": "Model-router contract frozen (fallback on timeout + 429/quota)", "status": "pending" },
-    { "id": "G-BAND-CONTRACT", "wp": "WP-02", "label": "Band connector seam frozen — incl. reply-collection", "status": "pending" }
+    {
+      "id": "G-MODEL-ROUTER",
+      "wp": "WP-01",
+      "label": "Model-router contract frozen (fallback on timeout + 429/quota)",
+      "status": "passed"
+    },
+    {
+      "id": "G-BAND-CONTRACT",
+      "wp": "WP-02",
+      "label": "Band connector seam frozen — incl. reply-collection",
+      "status": "in_progress"
+    }
   ],
   "wps": [
-    { "id": "WP-01", "title": "Multi-provider model router", "repo": "tali", "wave": 0, "deps": [], "status": "queued", "gate": "G-MODEL-ROUTER", "brief": "See 09 §WP-01. Generalize get_openai_client() into get_client(role): Featherless workers · AI/ML frontier+escalation · OpenAI fallback (on timeout AND 429/quota). Add a per-session spend ceiling. DoD: role routing + forced-fallback unit test green; ai_logs records the real provider+model+cost." },
-    { "id": "WP-02", "title": "Band integration spike + connector contract", "repo": "tali", "wave": 0, "deps": [], "status": "queued", "gate": "G-BAND-CONTRACT", "brief": "See 09 §WP-02. Add band-sdk, register 3 agents on app.band.ai (Pro), create a room, and round-trip a REPLY (not just a one-way message); freeze the reply-collection seam (Band send is fire-and-forget). TIME-BOX: EOD day 2. Default fallback = request-scoped REST posting + blocking read_context poll on correlation_id (keeps Flask sync). DoD: reply collected back to a synchronous caller; WS-vs-REST decision recorded in 04." },
-    { "id": "WP-03", "title": "Port Intake onto Band", "repo": "tali", "wave": 1, "deps": ["G-BAND-CONTRACT", "G-MODEL-ROUTER"], "status": "queued", "gate": null, "brief": "See 09 §WP-03. Replace BandSDK.publish with Band send/@mention; adopt get_client(intake). DoD: Intake posts as a room participant; no BandSDK import; the patched test seam is re-pointed to band_client and green." },
-    { "id": "WP-04", "title": "Port Ledger + two-phase proposed-write", "repo": "tali", "wave": 1, "deps": ["G-BAND-CONTRACT", "G-MODEL-ROUTER"], "status": "queued", "gate": null, "brief": "See 09 §WP-04. Port off ledger_updates/ledger_errors; split inline commit into propose → (await Compliance review) → commit over the async room (re-entrant, keyed by correlation_id) so a reject PREVENTS the commit. DoD: envelope published, DB commit withheld until approval; test seam re-pointed + green." },
-    { "id": "WP-05", "title": "Port CFO onto Band", "repo": "tali", "wave": 1, "deps": ["G-BAND-CONTRACT", "G-MODEL-ROUTER"], "status": "queued", "gate": null, "brief": "See 09 §WP-05. Port off the subscriptions onto room handlers; get_client(cfo) for synthesis. Decide reply ownership with WP-02 (gateway-collected vs agent send_reply; mind the dead-letter + statement out-of-band paths). DoD: reply composed from room context; no BandSDK import; test seam green." },
-    { "id": "WP-06", "title": "Webhook→room gateway; delete broker", "repo": "tali", "wave": 2, "deps": ["WP-03", "WP-04", "WP-05"], "status": "queued", "gate": null, "brief": "See 09 §WP-06. Gateway drops the inbound WhatsApp message into the room; delete band_sdk.py. GREP-CLEAN both BandSDK importers AND AgentRouter callers (transaction_agent.py:31-33 is the hidden dependent). DoD: a sale works end-to-end with the broker gone; reply arrives over WhatsApp; 3 participants; migrated test suite GREEN; rollback via BAND_BACKEND=stub." },
-    { "id": "WP-07", "title": "Compliance/Reviewer agent (review leg)", "repo": "tali", "wave": 2, "deps": ["WP-04", "G-MODEL-ROUTER"], "status": "queued", "gate": null, "brief": "See 09 §WP-07. 4th agent (Featherless) reviews the proposed-write envelope before commit (dup/threshold/anomaly, reusing _get_evaluated_thresholds); approve/reject/escalate. Depends on WP-04's two-phase commit so the reject actually blocks the write. DoD: a flagged write rejected pre-commit, visible in the room." },
-    { "id": "WP-08", "title": "Human-in-the-loop approval in room", "repo": "tali", "wave": 3, "deps": ["WP-06"], "status": "queued", "gate": null, "brief": "See 09 §WP-08. Route confirm-before-write + review_queue as a human-participant approval inside the room. NOTE: re-touches agent_1_intake.py — merge after WP-03 (G-10). DoD: a human approve/reject gates a pending write." },
-    { "id": "WP-09", "title": "Unified audit-trail surfacing", "repo": "tali", "wave": 3, "deps": ["WP-06"], "status": "queued", "gate": null, "brief": "See 09 §WP-09. Join ai_logs/processed_events/correlation_id to Band's unified audit trail; lifecycle view keyed by correlation_id. DoD: reconstruct one transaction's full lifecycle end-to-end." },
-    { "id": "WP-10", "title": "FinOps per-model cost attribution", "repo": "tali", "wave": 4, "deps": ["WP-01", "WP-09"], "status": "queued", "gate": null, "brief": "See 09 §WP-10. Extend cost logging across the three providers; per-agent/per-model spend view. DoD: spend split by provider+agent for a session." },
-    { "id": "WP-11", "title": "Deploy, public repo, demo video", "repo": "tali", "wave": 4, "deps": ["WP-06", "WP-07", "WP-08", "WP-09"], "status": "queued", "gate": null, "brief": "See 09 §WP-11. Deploy (REST path runs inside Flask; WS path needs a worker/supervisor process model — G-12); rewrite docs/agent_setup.md off the in-memory-broker description (G-13); public repo; <5-min demo of plan→execute→review→human-approve→audit. MIT licence by user. DoD: live URL + repo + video submitted on lablab.ai." }
+    {
+      "id": "WP-01",
+      "title": "Multi-provider model router",
+      "repo": "tali",
+      "wave": 0,
+      "deps": [],
+      "status": "done",
+      "gate": "G-MODEL-ROUTER",
+      "brief": "See 09 §WP-01. Generalize get_openai_client() into get_client(role): Featherless workers · AI/ML frontier+escalation · OpenAI fallback (on timeout AND 429/quota). Add a per-session spend ceiling. DoD: role routing + forced-fallback unit test green; ai_logs records the real provider+model+cost."
+    },
+    {
+      "id": "WP-02",
+      "title": "Band integration spike + connector contract",
+      "repo": "tali",
+      "wave": 0,
+      "deps": [],
+      "status": "in_progress",
+      "gate": "G-BAND-CONTRACT",
+      "brief": "See 09 §WP-02. Add band-sdk, register 3 agents on app.band.ai (Pro), create a room, and round-trip a REPLY (not just a one-way message); freeze the reply-collection seam (Band send is fire-and-forget). TIME-BOX: EOD day 2. Default fallback = request-scoped REST posting + blocking read_context poll on correlation_id (keeps Flask sync). DoD: reply collected back to a synchronous caller; WS-vs-REST decision recorded in 04."
+    },
+    {
+      "id": "WP-03",
+      "title": "Port Intake onto Band",
+      "repo": "tali",
+      "wave": 1,
+      "deps": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-03. Replace BandSDK.publish with Band send/@mention; adopt get_client(intake). DoD: Intake posts as a room participant; no BandSDK import; the patched test seam is re-pointed to band_client and green."
+    },
+    {
+      "id": "WP-04",
+      "title": "Port Ledger + two-phase proposed-write",
+      "repo": "tali",
+      "wave": 1,
+      "deps": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-04. Port off ledger_updates/ledger_errors; split inline commit into propose → (await Compliance review) → commit over the async room (re-entrant, keyed by correlation_id) so a reject PREVENTS the commit. DoD: envelope published, DB commit withheld until approval; test seam re-pointed + green."
+    },
+    {
+      "id": "WP-05",
+      "title": "Port CFO onto Band",
+      "repo": "tali",
+      "wave": 1,
+      "deps": [
+        "G-BAND-CONTRACT",
+        "G-MODEL-ROUTER"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-05. Port off the subscriptions onto room handlers; get_client(cfo) for synthesis. Decide reply ownership with WP-02 (gateway-collected vs agent send_reply; mind the dead-letter + statement out-of-band paths). DoD: reply composed from room context; no BandSDK import; test seam green."
+    },
+    {
+      "id": "WP-06",
+      "title": "Webhook→room gateway; delete broker",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "WP-03",
+        "WP-04",
+        "WP-05"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-06. Gateway drops the inbound WhatsApp message into the room; delete band_sdk.py. GREP-CLEAN both BandSDK importers AND AgentRouter callers (transaction_agent.py:31-33 is the hidden dependent). DoD: a sale works end-to-end with the broker gone; reply arrives over WhatsApp; 3 participants; migrated test suite GREEN; rollback via BAND_BACKEND=stub."
+    },
+    {
+      "id": "WP-07",
+      "title": "Compliance/Reviewer agent (review leg)",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "WP-04",
+        "G-MODEL-ROUTER"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-07. 4th agent (Featherless) reviews the proposed-write envelope before commit (dup/threshold/anomaly, reusing _get_evaluated_thresholds); approve/reject/escalate. Depends on WP-04's two-phase commit so the reject actually blocks the write. DoD: a flagged write rejected pre-commit, visible in the room."
+    },
+    {
+      "id": "WP-08",
+      "title": "Human-in-the-loop approval in room",
+      "repo": "tali",
+      "wave": 3,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-08. Route confirm-before-write + review_queue as a human-participant approval inside the room. NOTE: re-touches agent_1_intake.py — merge after WP-03 (G-10). DoD: a human approve/reject gates a pending write."
+    },
+    {
+      "id": "WP-09",
+      "title": "Unified audit-trail surfacing",
+      "repo": "tali",
+      "wave": 3,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-09. Join ai_logs/processed_events/correlation_id to Band's unified audit trail; lifecycle view keyed by correlation_id. DoD: reconstruct one transaction's full lifecycle end-to-end."
+    },
+    {
+      "id": "WP-10",
+      "title": "FinOps per-model cost attribution",
+      "repo": "tali",
+      "wave": 4,
+      "deps": [
+        "WP-01",
+        "WP-09"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-10. Extend cost logging across the three providers; per-agent/per-model spend view. DoD: spend split by provider+agent for a session."
+    },
+    {
+      "id": "WP-11",
+      "title": "Deploy, public repo, demo video",
+      "repo": "tali",
+      "wave": 4,
+      "deps": [
+        "WP-06",
+        "WP-07",
+        "WP-08",
+        "WP-09"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-11. Deploy (REST path runs inside Flask; WS path needs a worker/supervisor process model — G-12); rewrite docs/agent_setup.md off the in-memory-broker description (G-13); public repo; <5-min demo of plan→execute→review→human-approve→audit. MIT licence by user. DoD: live URL + repo + video submitted on lablab.ai."
+    }
   ],
   "waves": [
-    { "n": 0, "label": "Wave 0 · Freeze gates", "sub": "parallel" },
-    { "n": 1, "label": "Wave 1 · Port agents", "sub": "parallel" },
-    { "n": 2, "label": "Wave 2 · Gateway + Compliance", "sub": "parallel" },
-    { "n": 3, "label": "Wave 3 · Human-in-loop + Audit", "sub": "parallel" },
-    { "n": 4, "label": "Wave 4 · FinOps + Submission", "sub": "sequential" }
+    {
+      "n": 0,
+      "label": "Wave 0 · Freeze gates",
+      "sub": "parallel"
+    },
+    {
+      "n": 1,
+      "label": "Wave 1 · Port agents",
+      "sub": "parallel"
+    },
+    {
+      "n": 2,
+      "label": "Wave 2 · Gateway + Compliance",
+      "sub": "parallel"
+    },
+    {
+      "n": 3,
+      "label": "Wave 3 · Human-in-loop + Audit",
+      "sub": "parallel"
+    },
+    {
+      "n": 4,
+      "label": "Wave 4 · FinOps + Submission",
+      "sub": "sequential"
+    }
   ],
   "decisions": [
-    { "round": 2, "n": 3, "note": "WP-02 = vertical reply round-trip, time-boxed EOD day 2; REST posting is the default fallback" },
-    { "round": 2, "n": 2, "note": "Reply-collection seam added to G-BAND-CONTRACT (Band send is fire-and-forget)" },
-    { "round": 2, "n": 1, "note": "Green-test gate + two-phase Ledger commit so Compliance can reject pre-commit" },
-    { "round": 1, "n": 4, "note": "MVP-first: real Band + router (Waves 0–2) clears the disqualifying gap; Waves 3–4 droppable" },
-    { "round": 1, "n": 3, "note": "Shared context via room log + REST context endpoint (Memory API is Enterprise-only; user has Pro)" },
-    { "round": 1, "n": 2, "note": "Model routing: Featherless workers · AI/ML frontier+escalation · OpenAI fallback" },
-    { "round": 1, "n": 1, "note": "Target the Regulated & High-Stakes Workflows track" }
+    {
+      "round": 2,
+      "n": 3,
+      "note": "WP-02 = vertical reply round-trip, time-boxed EOD day 2; REST posting is the default fallback"
+    },
+    {
+      "round": 2,
+      "n": 2,
+      "note": "Reply-collection seam added to G-BAND-CONTRACT (Band send is fire-and-forget)"
+    },
+    {
+      "round": 2,
+      "n": 1,
+      "note": "Green-test gate + two-phase Ledger commit so Compliance can reject pre-commit"
+    },
+    {
+      "round": 1,
+      "n": 4,
+      "note": "MVP-first: real Band + router (Waves 0–2) clears the disqualifying gap; Waves 3–4 droppable"
+    },
+    {
+      "round": 1,
+      "n": 3,
+      "note": "Shared context via room log + REST context endpoint (Memory API is Enterprise-only; user has Pro)"
+    },
+    {
+      "round": 1,
+      "n": 2,
+      "note": "Model routing: Featherless workers · AI/ML frontier+escalation · OpenAI fallback"
+    },
+    {
+      "round": 1,
+      "n": 1,
+      "note": "Target the Regulated & High-Stakes Workflows track"
+    }
   ],
   "coverage": [],
-  "research": { "external_stamped": "2026-06-13", "internal_stamped": "2026-06-13" }
+  "research": {
+    "external_stamped": "2026-06-13",
+    "internal_stamped": "2026-06-13"
+  }
 }
   <!-- groundwork:auto:end board-data -->
   </script>
 
   <script type="application/json" id="board-meta">
   <!-- groundwork:auto:start board-meta -->
-<!-- last_action: refresh-board · 2026-06-13T13:07:36Z -->
-{ "title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS", "profile": "software", "plan_folder": "plans/2026-06-13-band-hackathon-gaps", "plan_slug": "2026-06-13-band-hackathon-gaps", "goal": "Make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan→execute→review loop, and surface a regulated-track audit trail.", "refreshed": "2026-06-13" }
+<!-- last_action: refresh-board · 2026-06-13T14:23:02Z -->
+{"title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS", "profile": "software", "plan_folder": "plans/2026-06-13-band-hackathon-gaps", "plan_slug": "2026-06-13-band-hackathon-gaps", "goal": "Make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan→execute→review loop, and surface a regulated-track audit trail.", "refreshed": "2026-06-14"}
   <!-- groundwork:auto:end board-meta -->
   </script>
 

@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T12:33:53Z",
-  "updated": "2026-06-13T13:28:50Z",
+  "updated": "2026-06-13T14:23:02Z",
   "goal": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail.",
   "docs": {
     "00-README.md": {
@@ -122,18 +122,18 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:a578d303bb26ececa52bc3f99a0472f82b5b6056ecce781068882b6527eb35e6",
+          "hash": "sha256:191ced002f9fe764a3c1a69456c35492344af28dad036f3ad59044d406b26a7f",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T13:28:50Z"
+          "last_written": "2026-06-13T14:23:02Z"
         },
         {
           "id": "board-meta",
-          "hash": "sha256:7b52bbbadaec5e899fe459a3a2996244181d5b2e43a5715b87938fed7405c06c",
+          "hash": "sha256:5da118e837b5271638743fa6dfbf87dcfdfbee08e41a3785e7aa0c34f802bee6",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T13:07:36Z"
+          "last_written": "2026-06-13T14:23:02Z"
         }
       ],
-      "hash": "sha256:3d138bb3cabc043c1ff0593aa6e69ef2300584ef51c5096f2164233b730a4097"
+      "hash": "sha256:041c323486dc7fa43af5e44505dc7df709f52b874ac9b34177eac51e63fbee10"
     }
   },
   "ids": {
@@ -141,13 +141,13 @@
       "doc": "01-plan.md",
       "kind": "freeze_gate",
       "wp": "WP-01",
-      "status": "pending"
+      "status": "passed"
     },
     "G-BAND-CONTRACT": {
       "doc": "01-plan.md",
       "kind": "freeze_gate",
       "wp": "WP-02",
-      "status": "pending"
+      "status": "in_progress"
     },
     "G-01": {
       "doc": "04-discussion.md",
@@ -192,14 +192,14 @@
     "WP-01": {
       "doc": "05-tracking.md",
       "wave": 0,
-      "status": "queued",
+      "status": "done",
       "depends_on": [],
       "gate": "G-MODEL-ROUTER"
     },
     "WP-02": {
       "doc": "05-tracking.md",
       "wave": 0,
-      "status": "queued",
+      "status": "in_progress",
       "depends_on": [],
       "gate": "G-BAND-CONTRACT"
     },
