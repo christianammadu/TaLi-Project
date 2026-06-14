@@ -1,26 +1,16 @@
 import requests
 from flask import current_app
 
+from app.channels.whatsapp import WhatsAppChannel
+
+# Single WhatsApp transport implementation lives in the channel adapter now (WP-01);
+# these module functions stay as thin wrappers that add the messages-history logging,
+# so existing callers (routes.py) are unchanged.
+_wa = WhatsAppChannel()
+
+
 def send_reply(recipient, message_text):
-    phone_number_id = current_app.config['PHONE_NUMBER_ID']
-    access_token = current_app.config['ACCESS_TOKEN']
-    url = f"https://graph.facebook.com/v22.0/{phone_number_id}/messages"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": recipient,
-        "type": "text",
-        "text": {"body": message_text}
-    }
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=15)
-        print(f"Meta Response: {response.status_code} - {response.text}")
-    except requests.RequestException as e:
-        print(f"Meta send_reply failed: {e}")
-        response = None
+    response = _wa.send_text(recipient, message_text)
 
     # Log outgoing message to messages history table
     try:
@@ -77,47 +67,7 @@ def send_document(recipient, file_path, filename, caption=None):
 
     Returns (success: bool, detail: str).
     """
-    import mimetypes
-
-    phone_number_id = current_app.config['PHONE_NUMBER_ID']
-    access_token = current_app.config['ACCESS_TOKEN']
-    base = f"https://graph.facebook.com/v22.0/{phone_number_id}"
-    auth = {"Authorization": f"Bearer {access_token}"}
-
-    mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-
-    # 1. Upload media
-    media_id = None
-    try:
-        with open(file_path, "rb") as fh:
-            r = requests.post(
-                f"{base}/media",
-                headers=auth,
-                data={"messaging_product": "whatsapp", "type": mime},
-                files={"file": (filename, fh, mime)},
-                timeout=60,
-            )
-        print(f"Meta Media-Upload Response: {r.status_code} - {r.text}")
-        if 200 <= r.status_code < 300:
-            media_id = r.json().get("id")
-        if not media_id:
-            return False, f"upload failed: {r.text}"
-    except Exception as e:
-        print(f"Meta media upload failed: {e}")
-        return False, str(e)
-
-    # 2. Send document message
-    document = {"id": media_id, "filename": filename}
-    if caption:
-        document["caption"] = caption
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": recipient,
-        "type": "document",
-        "document": document,
-    }
-    headers = {**auth, "Content-Type": "application/json"}
-    success, detail = _post_message(f"{base}/messages", headers, payload, "Document")
+    success, detail = _wa.send_document(recipient, file_path, filename, caption)
 
     # Log to messages history (best-effort)
     try:
