@@ -1,0 +1,243 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-06-13T17:05:20Z",
+  "updated": "2026-06-13T18:03:09Z",
+  "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:715c54269a9ee5b204f0a4e0961d260fccc4c818c41678eba1716ad52444e2b6",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-06-13T17:05:20Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:b1523532b9e96d4fe9de4c8ffa4ac997a0cc42d2696b5db4c4bedbcdf3135259",
+          "last_action": "init",
+          "last_written": "2026-06-13T17:05:20Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:9d11b78bc5c2d70d0161b2c7ddab7c03ca6f7828b2e76b1ceb5dc19939a0bf3b",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:1e6562c9130162ce1bff013fe99a7084d3574ce7254c33ba20961682488f837f",
+          "last_action": "init",
+          "last_written": "2026-06-13T17:05:20Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:b1735a8decbf76f46f19ba0df291ffda6eeb2ae39285ff2dbb5e8e8299b99cff",
+          "last_action": "review",
+          "last_written": "2026-06-13T17:59:55Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:dbd9d12044e7ff243a1b6bf1d45d5415f5c4c9fcd17d26496dc72ce2d7d222d5",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:a6ce73353ab73c1b2d868e664a1d3b4d267d8940ae13d92b6462c5abfc7e01d2",
+          "last_action": "research",
+          "last_written": "2026-06-13T17:59:55Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:b00ffff4c6fae530d04799c5b7fedf1784faa59d0cd086303ecb896f35d9165c",
+          "last_action": "research",
+          "last_written": "2026-06-13T17:59:55Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:56b65b79f4c440a0772d48ce78bc5ad66c86c968a017c93384d14710119a4734",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:c83f16359956146c72235b97c0813499e9b32ecc9a16aee9529901de4022c8f8",
+          "last_action": "research",
+          "last_written": "2026-06-13T17:59:55Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:9d33086b101d1ee0bb90975622caab3dd9c20a544d9ec4bef85f4a10f9bfab0a",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-06-13T17:05:20Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:c42ce1048f7c2f3ffea3b681f61a77a46bb36813af2cb38f86da8fcf3dfd0358",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:9c7cdada98acd86f5ef76212ffd4aecd737de522b0249c21626abf5a163a731d",
+          "last_action": "review",
+          "last_written": "2026-06-13T17:59:56Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:9e8a8d5a44c38706ab52e2a8e8359236b8f9e8adff77dc16f2bede305da081b1",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T17:59:56Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:7192ba24ae90dd609550c404c75b3602de22a63bb5c57fdffc74c8785653b484",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T17:59:56Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:0cc397f0ff4b7eae76ecf38bb33d3fe9179c5c6b0cea1e0759de2126e5719741",
+          "last_action": "orchestrate",
+          "last_written": "2026-06-13T17:59:56Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:b61e1e066df504afc290a3f3d0e904e679319b21e071eefc8141c86ad996b67a",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-06-13T17:05:20Z"
+        }
+      ]
+    },
+    "artifact/board.html": {
+      "generated_regions": [
+        {
+          "id": "board-data",
+          "hash": "sha256:ac8d1d06997760a065a2f1abecfb49b7efd1372138865f02e6dec52c5071e5b3",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-13T18:03:09Z"
+        },
+        {
+          "id": "board-meta",
+          "hash": "sha256:76bd260528a866446980a920f61d34ef020be0346b1c2f2937a38fdf556577b8",
+          "last_action": "refresh-board",
+          "last_written": "2026-06-13T18:03:09Z"
+        }
+      ],
+      "hash": "sha256:406485bacf017d64448120318d7a1f61d56024ed68456a2df95dafc83e3f7dd0"
+    }
+  },
+  "ids": {
+    "G-CHANNEL-CONTRACT": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-01",
+      "status": "pending"
+    },
+    "G-IDENTITY": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-02",
+      "status": "pending"
+    },
+    "G-BRAND": {
+      "doc": "01-plan.md",
+      "kind": "freeze_gate",
+      "wp": "WP-06",
+      "status": "pending"
+    },
+    "WP-01": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-CHANNEL-CONTRACT"
+    },
+    "WP-02": {
+      "doc": "05-tracking.md",
+      "wave": 0,
+      "status": "queued",
+      "depends_on": [],
+      "gate": "G-IDENTITY"
+    },
+    "WP-03": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "G-CHANNEL-CONTRACT"
+      ]
+    },
+    "WP-04": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "G-IDENTITY",
+        "WP-03"
+      ]
+    },
+    "WP-05": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-01",
+        "WP-03"
+      ]
+    },
+    "WP-06": {
+      "doc": "05-tracking.md",
+      "wave": 1,
+      "status": "queued",
+      "depends_on": [
+        "G-BRAND"
+      ],
+      "gate": "G-BRAND"
+    },
+    "WP-07": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ]
+    },
+    "WP-08": {
+      "doc": "05-tracking.md",
+      "wave": 2,
+      "status": "queued",
+      "depends_on": [
+        "WP-06"
+      ]
+    },
+    "WP-09": {
+      "doc": "05-tracking.md",
+      "wave": 3,
+      "status": "queued",
+      "depends_on": [
+        "WP-03",
+        "WP-04"
+      ]
+    }
+  },
+  "designs": {},
+  "subplans": {},
+  "research": {
+    "02-research-external.md": {
+      "stamped": "2026-06-13"
+    },
+    "03-research-internal.md": {
+      "stamped": "2026-06-13"
+    }
+  }
+}
