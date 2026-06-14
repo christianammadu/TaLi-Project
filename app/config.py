@@ -77,3 +77,7 @@ class Config:
     BAND_CFO_API_KEY = os.getenv("BAND_CFO_API_KEY", "")
     BAND_COMPLIANCE_AGENT_ID = os.getenv("BAND_COMPLIANCE_AGENT_ID", "")
     BAND_COMPLIANCE_API_KEY = os.getenv("BAND_COMPLIANCE_API_KEY", "")
+
+    # --- Multi-channel identity (WP-02 / G-IDENTITY) ---
+    # TTL (minutes) for single-use deep-link binding tokens (Telegram onboarding + Path B /link).
+    BINDING_TOKEN_TTL_MIN = int(os.getenv("BINDING_TOKEN_TTL_MIN", "15"))
