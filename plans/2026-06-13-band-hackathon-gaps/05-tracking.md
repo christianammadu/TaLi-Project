@@ -124,6 +124,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-03 — Port Intake agent onto Band
 
+- **Status:** `[x]` **done** (2026-06-14, against the stub) — Intake sends via the connector (`@tali-ledger`/`@tali-cfo`) + reply-collection seam; `BandSDK` gone; 3/3 tests green. In-app round-trip completes once WP-06 wires the gateway.
 - **Goal:** Replace `BandSDK.publish("intake_to_ledger"/"cfo_escalation")` with Band send/@mention; adopt `get_client("intake")`.
 - **Repo:** tali · **Branch:** `feat/band-intake`
 - **Depends on:** `G-BAND-CONTRACT`, `G-MODEL-ROUTER`
@@ -134,6 +135,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-04 — Port Ledger agent onto Band + emit "proposed write" envelope
 
+- **Status:** `[x]` **done** (2026-06-14, against the stub) — all 6 publish sites → connector emit; `BandSDK` gone; **two-phase `_review_gate`** (propose→verdict→commit, reject rolls back) at both commit points, default-allow pre-WP-07 (`BAND_REVIEW_DEFAULT`); 6/6 tests green. Live reviewer arrives in WP-07.
 - **Goal:** Port Ledger off `BandSDK.publish("ledger_updates"/"ledger_errors")`; emit a pre-commit "proposed write" envelope for the Compliance review (WP-07).
 - **Repo:** tali · **Branch:** `feat/band-ledger`
 - **Depends on:** `G-BAND-CONTRACT`, `G-MODEL-ROUTER`
@@ -145,6 +147,7 @@ Longest chains (tie): `WP-02 → WP-04 → WP-06 → WP-09 → WP-10 → WP-11` 
 
 ### WP-05 — Port CFO agent onto Band
 
+- **Status:** `[x]` **done** (2026-06-14, against the stub) — `on_room_message` composes the reply from room context and posts it **terminally** to `@tali-gateway` (reply ownership = gateway seam, G-11); optional AI/ML `cfo` synthesis behind `CFO_LLM_SYNTHESIS`; 5/5 tests green incl. an end-to-end collectable round-trip.
 - **Goal:** Port CFO off the `ledger_updates`/`cfo_escalation`/`ledger_errors` subscriptions onto room handlers; adopt `get_client("cfo")` for synthesis.
 - **Repo:** tali · **Branch:** `feat/band-cfo`
 - **Depends on:** `G-BAND-CONTRACT`, `G-MODEL-ROUTER`

@@ -30,7 +30,7 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T14:23:02Z -->
+<!-- last_action: refresh-board · 2026-06-13T14:51:51Z -->
 {
   "plan": {
     "title": "Bridge the Band of Agents hackathon gaps — TaLi WhatsApp FOS",
@@ -81,7 +81,7 @@
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "brief": "See 09 §WP-03. Replace BandSDK.publish with Band send/@mention; adopt get_client(intake). DoD: Intake posts as a room participant; no BandSDK import; the patched test seam is re-pointed to band_client and green."
     },
@@ -94,7 +94,7 @@
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "brief": "See 09 §WP-04. Port off ledger_updates/ledger_errors; split inline commit into propose → (await Compliance review) → commit over the async room (re-entrant, keyed by correlation_id) so a reject PREVENTS the commit. DoD: envelope published, DB commit withheld until approval; test seam re-pointed + green."
     },
@@ -107,7 +107,7 @@
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
       ],
-      "status": "queued",
+      "status": "done",
       "gate": null,
       "brief": "See 09 §WP-05. Port off the subscriptions onto room handlers; get_client(cfo) for synthesis. Decide reply ownership with WP-02 (gateway-collected vs agent send_reply; mind the dead-letter + statement out-of-band paths). DoD: reply composed from room context; no BandSDK import; test seam green."
     },

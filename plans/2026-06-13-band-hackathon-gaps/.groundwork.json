@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T12:33:53Z",
-  "updated": "2026-06-13T14:23:02Z",
+  "updated": "2026-06-13T14:51:51Z",
   "goal": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail.",
   "docs": {
     "00-README.md": {
@@ -122,9 +122,9 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:191ced002f9fe764a3c1a69456c35492344af28dad036f3ad59044d406b26a7f",
+          "hash": "sha256:9ed210bc5e24be899424522c4238540f8ec8b6ebcade5ba3a147f05a4dab7614",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T14:23:02Z"
+          "last_written": "2026-06-13T14:51:51Z"
         },
         {
           "id": "board-meta",
@@ -133,7 +133,7 @@
           "last_written": "2026-06-13T14:23:02Z"
         }
       ],
-      "hash": "sha256:041c323486dc7fa43af5e44505dc7df709f52b874ac9b34177eac51e63fbee10"
+      "hash": "sha256:3e7a85f8c1bff979b744a803482ec47b10aff6f8be0be7155e90a754a4268d02"
     }
   },
   "ids": {
@@ -206,7 +206,7 @@
     "WP-03": {
       "doc": "05-tracking.md",
       "wave": 1,
-      "status": "queued",
+      "status": "done",
       "depends_on": [
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
@@ -215,7 +215,7 @@
     "WP-04": {
       "doc": "05-tracking.md",
       "wave": 1,
-      "status": "queued",
+      "status": "done",
       "depends_on": [
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
@@ -224,7 +224,7 @@
     "WP-05": {
       "doc": "05-tracking.md",
       "wave": 1,
-      "status": "queued",
+      "status": "done",
       "depends_on": [
         "G-BAND-CONTRACT",
         "G-MODEL-ROUTER"
