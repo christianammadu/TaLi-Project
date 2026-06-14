@@ -30,40 +30,198 @@
   <!-- ─── Live data (written by `groundwork refresh-board` inside fences) ─── -->
   <script type="application/json" id="board-data">
   <!-- groundwork:auto:start board-data -->
-<!-- last_action: refresh-board · 2026-06-13T18:03:09Z -->
+<!-- last_action: refresh-board · 2026-06-13T18:29:29Z -->
 {
-  "plan": { "title": "Telegram channel + dual-CTA landing + total rebrand — TaLi", "profile": "software", "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + bot + web deep-link onboarding), dual WhatsApp/Telegram CTA landing, and a total visual rebrand (keep the TaLi name)." },
+  "plan": {
+    "title": "Telegram channel + dual-CTA landing + total rebrand — TaLi",
+    "profile": "software",
+    "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + bot + web deep-link onboarding), dual WhatsApp/Telegram CTA landing, and a total visual rebrand (keep the TaLi name)."
+  },
   "gates": [
-    { "id": "G-CHANNEL-CONTRACT", "wp": "WP-01", "label": "Channel interface frozen", "status": "pending" },
-    { "id": "G-IDENTITY", "wp": "WP-02", "label": "Multi-channel identity frozen", "status": "pending" },
-    { "id": "G-BRAND", "wp": "WP-06", "label": "Rebrand direction locked", "status": "pending" }
+    {
+      "id": "G-CHANNEL-CONTRACT",
+      "wp": "WP-01",
+      "label": "Channel interface frozen",
+      "status": "pending"
+    },
+    {
+      "id": "G-IDENTITY",
+      "wp": "WP-02",
+      "label": "Multi-channel identity frozen",
+      "status": "pending"
+    },
+    {
+      "id": "G-BRAND",
+      "wp": "WP-06",
+      "label": "Rebrand direction locked",
+      "status": "passed"
+    }
   ],
   "wps": [
-    { "id": "WP-01", "title": "Channel adapter interface + WhatsApp refactor", "repo": "tali", "wave": 0, "deps": [], "status": "queued", "gate": "G-CHANNEL-CONTRACT", "brief": "See 09 §WP-01. Define app/channels/base.py (Channel + InboundMessage); lift WhatsApp send/verify into app/channels/whatsapp.py; namespace sender wa:<phone>. DoD: interface frozen; WhatsApp parse_inbound->send_text round-trips; existing flow unchanged." },
-    { "id": "WP-02", "title": "Multi-channel identity + binding tokens", "repo": "tali", "wave": 0, "deps": [], "status": "queued", "gate": "G-IDENTITY", "brief": "See 09 §WP-02. 0005 migration for channel_accounts + binding_tokens; channel-scoped session lookup with WhatsApp back-compat. DoD: migration clean; existing wa: user resolves; (channel,id) lookup works." },
-    { "id": "WP-03", "title": "Telegram channel adapter", "repo": "tali", "wave": 1, "deps": ["G-CHANNEL-CONTRACT"], "status": "queued", "gate": null, "brief": "See 09 §WP-03. app/channels/telegram.py over the Bot API (sendMessage/sendDocument, update parsing, secret-token verify); /webhook/telegram; setWebhook helper. DoD: update parses; send (mocked) hits Bot API; forged secret rejected." },
-    { "id": "WP-04", "title": "Telegram deep-link onboarding", "repo": "tali", "wave": 2, "deps": ["G-IDENTITY", "WP-03"], "status": "queued", "gate": null, "brief": "See 09 §WP-04. Web register issues a binding token + t.me/<bot>?start=<token>; bot /start <token> binds tg:<chat_id> + opens a session. No phone/OTP. DoD: unbound chat -> deep-link prompt; bind -> session; a write records + replies in Telegram." },
-    { "id": "WP-05", "title": "Wire both channels into the gateway", "repo": "tali", "wave": 2, "deps": ["WP-01", "WP-03"], "status": "queued", "gate": null, "brief": "See 09 §WP-05. Channel-aware /webhook; gateway on the namespaced sender; reply (text + documents) via the originating channel. DoD: WhatsApp + Telegram both round-trip one gateway, replying on their own channel." },
-    { "id": "WP-06", "title": "Rebrand design system", "repo": "tali", "wave": 1, "deps": ["G-BRAND"], "status": "queued", "gate": "G-BRAND", "brief": "See 09 §WP-06. Implement the locked direction as tokens (palette/type/radii/logo/motion/voice) in tali.css + static. DoD: tokens + logo land; sample renders on the new brand; old tokens grep-clean." },
-    { "id": "WP-07", "title": "Rebranded landing + dual WA/TG CTA", "repo": "tali", "wave": 2, "deps": ["WP-06"], "status": "queued", "gate": null, "brief": "See 09 §WP-07. Rebuild landing on the new brand with Continue-on-WhatsApp + Continue-on-Telegram; scroll narrative where it fits; update marketing/legal. DoD: both CTAs deep-link correctly; page on the new brand." },
-    { "id": "WP-08", "title": "Rebrand in-app templates + bot welcome", "repo": "tali", "wave": 2, "deps": ["WP-06"], "status": "queued", "gate": null, "brief": "See 09 §WP-08. Restyle register/verify/error; update WhatsApp + Telegram welcome/onboarding copy + voice. DoD: no old palette/voice (grep); welcome matches brand." },
-    { "id": "WP-09", "title": "Telegram setup doc + deploy + demo", "repo": "tali", "wave": 3, "deps": ["WP-03", "WP-04"], "status": "queued", "gate": null, "brief": "See 09 §WP-09. Finalise docs/telegram-setup.md (BotFather, token, webhook, deep-link), .env/config, deploy notes (setWebhook), update demo for both channels. DoD: a new dev stands the bot up from the doc." }
+    {
+      "id": "WP-01",
+      "title": "Channel adapter interface + WhatsApp refactor",
+      "repo": "tali",
+      "wave": 0,
+      "deps": [],
+      "status": "queued",
+      "gate": "G-CHANNEL-CONTRACT",
+      "brief": "See 09 §WP-01. Define app/channels/base.py (Channel + InboundMessage); lift WhatsApp send/verify into app/channels/whatsapp.py; namespace sender wa:<phone>. DoD: interface frozen; WhatsApp parse_inbound->send_text round-trips; existing flow unchanged."
+    },
+    {
+      "id": "WP-02",
+      "title": "Multi-channel identity + binding tokens",
+      "repo": "tali",
+      "wave": 0,
+      "deps": [],
+      "status": "queued",
+      "gate": "G-IDENTITY",
+      "brief": "See 09 §WP-02. 0005 migration for channel_accounts + binding_tokens; channel-scoped session lookup with WhatsApp back-compat. DoD: migration clean; existing wa: user resolves; (channel,id) lookup works."
+    },
+    {
+      "id": "WP-03",
+      "title": "Telegram channel adapter",
+      "repo": "tali",
+      "wave": 1,
+      "deps": [
+        "G-CHANNEL-CONTRACT"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-03. app/channels/telegram.py over the Bot API (sendMessage/sendDocument, update parsing, secret-token verify); /webhook/telegram; setWebhook helper. DoD: update parses; send (mocked) hits Bot API; forged secret rejected."
+    },
+    {
+      "id": "WP-04",
+      "title": "Telegram deep-link onboarding",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "G-IDENTITY",
+        "WP-03"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-04. Web register issues a binding token + t.me/<bot>?start=<token>; bot /start <token> binds tg:<chat_id> + opens a session. No phone/OTP. DoD: unbound chat -> deep-link prompt; bind -> session; a write records + replies in Telegram."
+    },
+    {
+      "id": "WP-05",
+      "title": "Wire both channels into the gateway",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "WP-01",
+        "WP-03"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-05. Channel-aware /webhook; gateway on the namespaced sender; reply (text + documents) via the originating channel. DoD: WhatsApp + Telegram both round-trip one gateway, replying on their own channel."
+    },
+    {
+      "id": "WP-06",
+      "title": "Rebrand design system",
+      "repo": "tali",
+      "wave": 1,
+      "deps": [
+        "G-BRAND"
+      ],
+      "status": "queued",
+      "gate": "G-BRAND",
+      "brief": "See 09 §WP-06. Implement the locked direction as tokens (palette/type/radii/logo/motion/voice) in tali.css + static. DoD: tokens + logo land; sample renders on the new brand; old tokens grep-clean."
+    },
+    {
+      "id": "WP-07",
+      "title": "Rebranded landing + dual WA/TG CTA",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-07. Rebuild landing on the new brand with Continue-on-WhatsApp + Continue-on-Telegram; scroll narrative where it fits; update marketing/legal. DoD: both CTAs deep-link correctly; page on the new brand."
+    },
+    {
+      "id": "WP-08",
+      "title": "Rebrand in-app templates + bot welcome",
+      "repo": "tali",
+      "wave": 2,
+      "deps": [
+        "WP-06"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-08. Restyle register/verify/error; update WhatsApp + Telegram welcome/onboarding copy + voice. DoD: no old palette/voice (grep); welcome matches brand."
+    },
+    {
+      "id": "WP-09",
+      "title": "Telegram setup doc + deploy + demo",
+      "repo": "tali",
+      "wave": 3,
+      "deps": [
+        "WP-03",
+        "WP-04"
+      ],
+      "status": "queued",
+      "gate": null,
+      "brief": "See 09 §WP-09. Finalise docs/telegram-setup.md (BotFather, token, webhook, deep-link), .env/config, deploy notes (setWebhook), update demo for both channels. DoD: a new dev stands the bot up from the doc."
+    }
   ],
   "waves": [
-    { "n": 0, "label": "Wave 0 · Foundations + design lock", "sub": "parallel" },
-    { "n": 1, "label": "Wave 1 · Telegram adapter + brand system", "sub": "parallel" },
-    { "n": 2, "label": "Wave 2 · Onboarding · gateway · landing · templates", "sub": "parallel" },
-    { "n": 3, "label": "Wave 3 · Setup + deploy", "sub": "sequential" }
+    {
+      "n": 0,
+      "label": "Wave 0 · Foundations + design lock",
+      "sub": "parallel"
+    },
+    {
+      "n": 1,
+      "label": "Wave 1 · Telegram adapter + brand system",
+      "sub": "parallel"
+    },
+    {
+      "n": 2,
+      "label": "Wave 2 · Onboarding · gateway · landing · templates",
+      "sub": "parallel"
+    },
+    {
+      "n": 3,
+      "label": "Wave 3 · Setup + deploy",
+      "sub": "sequential"
+    }
   ],
   "decisions": [
-    { "round": 0, "n": 3, "note": "Explore 3 rebrand directions (designs/D-01..D-03), then lock one as G-BRAND" },
-    { "round": 0, "n": 2, "note": "Telegram onboarding via web deep-link token — no phone/OTP in Telegram" },
-    { "round": 0, "n": 1, "note": "Keep the 'TaLi' name; total *visual* rebrand only" }
+    {
+      "round": 0,
+      "n": 4,
+      "note": "LOCKED D-01 'Market Ledger' (warm) as G-BRAND — see designs/brand-spec.md"
+    },
+    {
+      "round": 0,
+      "n": 3,
+      "note": "Explore 3 rebrand directions (designs/D-01..D-03), then lock one as G-BRAND"
+    },
+    {
+      "round": 0,
+      "n": 2,
+      "note": "Telegram onboarding via web deep-link token — no phone/OTP in Telegram"
+    },
+    {
+      "round": 0,
+      "n": 1,
+      "note": "Keep the 'TaLi' name; total *visual* rebrand only"
+    }
   ],
   "coverage": [
-    { "phase": "Rebrand", "designs": 0, "of": 1, "ok": false }
+    {
+      "phase": "Rebrand",
+      "designs": 1,
+      "of": 1,
+      "ok": true
+    }
   ],
-  "research": { "external_stamped": "2026-06-13", "internal_stamped": "2026-06-13" }
+  "research": {
+    "external_stamped": "2026-06-13",
+    "internal_stamped": "2026-06-13"
+  }
 }
   <!-- groundwork:auto:end board-data -->
   </script>

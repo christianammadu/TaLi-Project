@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T17:05:20Z",
-  "updated": "2026-06-13T18:03:09Z",
+  "updated": "2026-06-13T18:29:29Z",
   "goal": "Add Telegram as a second channel alongside WhatsApp (channel abstraction + Telegram bot + web deep-link onboarding), update the landing to dual WhatsApp/Telegram CTAs, and execute a total visual rebrand (keeping the TaLi name).",
   "docs": {
     "00-README.md": {
@@ -122,9 +122,9 @@
       "generated_regions": [
         {
           "id": "board-data",
-          "hash": "sha256:ac8d1d06997760a065a2f1abecfb49b7efd1372138865f02e6dec52c5071e5b3",
+          "hash": "sha256:570920b23a82cbd2a08cdcfc0e18fd471d81b8153f2262184f02a3cd70e01a16",
           "last_action": "refresh-board",
-          "last_written": "2026-06-13T18:03:09Z"
+          "last_written": "2026-06-13T18:29:29Z"
         },
         {
           "id": "board-meta",
@@ -133,7 +133,7 @@
           "last_written": "2026-06-13T18:03:09Z"
         }
       ],
-      "hash": "sha256:406485bacf017d64448120318d7a1f61d56024ed68456a2df95dafc83e3f7dd0"
+      "hash": "sha256:a87cef8112292c12f2052d535d78c1ee5ffc936aaef4600fbd1e65b2baec8374"
     }
   },
   "ids": {
@@ -153,7 +153,7 @@
       "doc": "01-plan.md",
       "kind": "freeze_gate",
       "wp": "WP-06",
-      "status": "pending"
+      "status": "passed"
     },
     "WP-01": {
       "doc": "05-tracking.md",
