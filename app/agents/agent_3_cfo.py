@@ -4,16 +4,67 @@ Listens continuously to ledger updates, executes alert queries, generates snapsh
 """
 
 import json
+import os
 from app.agents.reporting_agent import ReportingAgent
 from app.agents.snapshot_agent import SnapshotAgent
+from app.agents.band import get_band_client
+
+# Band room handles (WP-05). CFO is the terminal participant: it composes the final
+# user-facing reply from room context and posts it back for the gateway to collect.
+CFO_HANDLE = "@tali-cfo"
+GATEWAY_HANDLE = "@tali-gateway"
 
 
 class CFOAgent:
     """Agent 3 — CFO & Escalation. Formats final message replies and executes reporting queries."""
 
-    def __init__(self, user_id, sender_id):
+    def __init__(self, user_id, sender_id, band=None):
         self.user_id = user_id
         self.sender_id = sender_id
+        # Band connector (WP-05); injectable for tests. One room per sender for now.
+        self.band = band if band is not None else get_band_client()
+        self.room_id = os.getenv("BAND_ROOM_ID") or f"tali-{sender_id}"
+
+    def on_room_message(self, msg):
+        """Band room handler (wired by WP-06): compose the final user-facing reply from the
+        room event and post it terminally so the gateway/Intake collects it. Reply ownership
+        lives with this CFO→gateway seam (G-11), not the out-of-band send_reply path."""
+        body = msg.get("body") or {}
+        reply = self._synthesize(self._compose_reply(body))
+        self.band.send(self.room_id, [GATEWAY_HANDLE], reply,
+                       correlation_id=msg.get("correlation_id"), sender=CFO_HANDLE, terminal=True)
+        return reply
+
+    def _compose_reply(self, body):
+        """Route a room event to the right formatter and return user-facing text."""
+        payload = body.get("payload") or {}
+        if body.get("source_agent") == "IntakeAgent":      # low-confidence escalation
+            return self.handle_escalation(body)
+        status = payload.get("status")
+        if status == "rejected":                           # Compliance veto (WP-07)
+            reason = payload.get("error_reason") or "compliance hold"
+            return f"🛑 Not recorded — {reason}."
+        if status == "error":                              # dead-letter / DB failure
+            return ("⚠️ I understood your request, but saving it failed (a temporary issue). "
+                    "Please try again.")
+        return self.handle_ledger_update(body)
+
+    def _synthesize(self, reply):
+        """Optional AI/ML ('cfo' role) rephrase of the final wording. Off by default —
+        deterministic formatting is the source of truth; enable with CFO_LLM_SYNTHESIS=true."""
+        if os.getenv("CFO_LLM_SYNTHESIS", "false").lower() != "true":
+            return reply
+        try:
+            from app.services import model_router
+            res = model_router.chat_completion("cfo", messages=[
+                {"role": "system", "content": "Rephrase this WhatsApp bookkeeping reply to be "
+                 "concise and friendly. Keep every figure, emoji and fact identical."},
+                {"role": "user", "content": reply},
+            ], temperature=0.2, max_tokens=300)
+            return res.get("content") or reply
+        except Exception as e:
+            print(f"[CFOAgent synthesis fallback] {e}")
+            return reply
 
     def handle_ledger_update(self, payload):
         """Processes database updates and formats user response alerts."""
