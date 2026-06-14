@@ -384,14 +384,17 @@ class IntakeAgent:
                 "reply": "⚠️ The intelligence service is temporarily unavailable."
             }
 
+        # Prefer the router's accurate per-provider cost (WP-10); fall back to OpenAI rates.
         from flask import current_app
-        input_rate = current_app.config.get('OPENAI_INPUT_COST_PER_MILLION', 0.15)
-        output_rate = current_app.config.get('OPENAI_OUTPUT_COST_PER_MILLION', 0.60)
-        
-        usage = parsed.get('_usage', {})
-        prompt_tokens = usage.get('prompt_tokens', 0)
-        completion_tokens = usage.get('completion_tokens', 0)
-        estimated_cost = (prompt_tokens * input_rate / 1_000_000) + (completion_tokens * output_rate / 1_000_000)
+        meta = parsed.get('_meta') or {}
+        if meta.get('estimated_cost') is not None:
+            estimated_cost = float(meta['estimated_cost'])
+        else:
+            input_rate = current_app.config.get('OPENAI_INPUT_COST_PER_MILLION', 0.15)
+            output_rate = current_app.config.get('OPENAI_OUTPUT_COST_PER_MILLION', 0.60)
+            usage = parsed.get('_usage', {})
+            estimated_cost = (usage.get('prompt_tokens', 0) * input_rate / 1_000_000) + \
+                             (usage.get('completion_tokens', 0) * output_rate / 1_000_000)
 
         self._log_ai_interaction(text, parsed, processing_time_ms, estimated_cost)
 
@@ -651,6 +654,9 @@ class IntakeAgent:
             
             parsed_clean = parsed.copy()
             parsed_clean.pop('_usage', None)
+            parsed_clean.pop('_meta', None)
+            # Record the model the router actually used (WP-10), not a hardcoded one.
+            model_used = (parsed.get('_meta') or {}).get('model') or 'gpt-4o-mini'
 
             cursor.execute(
                 "INSERT INTO ai_logs (user_id, business_id, source_agent, model_name, original_message, parsed_intent, parsed_json, confidence_score, estimated_cost, processing_time_ms) "
@@ -659,7 +665,7 @@ class IntakeAgent:
                     user_id_bin,
                     business_id,
                     "IntakeAgent",
-                    "gpt-4o-mini",
+                    model_used,
                     text,
                     intent,
                     json.dumps(parsed_clean),
