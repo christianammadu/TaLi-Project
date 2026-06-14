@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaLi — Error</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+  <script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
+</head>
+<body>
+{% include "_sprite.html" %}
+
+<button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme">
+  <svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg>
+</button>
+
+<div class="container">
+  <div class="acard center">
+
+    <span class="err-icon"><svg class="ic"><use href="#i-x"/></svg></span>
+
+    <div class="brand" style="margin-bottom:22px">
+      <h1>Oops!</h1>
+      <p>Something went wrong</p>
+    </div>
+
+    <p class="err-msg">{{ message }}</p>
+
+    <div class="wa-hint"><svg class="ic"><use href="#i-message"/></svg><span>Type <code>login</code> in WhatsApp to try again</span></div>
+
+    <a href="{{ url_for('web.register') }}" class="btn btn-g">
+      <svg class="ic"><use href="#i-refresh"/></svg>
+      <span class="btn-text">Try again</span>
+    </a>
+
+  </div>
+
+  <p class="foot-note"><svg class="ic"><use href="#i-lock"/></svg> Secured with end-to-end encryption</p>
+</div>
+
+<script>
+function taliTheme(){var o=['dark','light','system'],c;try{c=localStorage.getItem('tali-theme')||'system';}catch(e){c='dark';}var n=o[(o.indexOf(c)+1)%3];try{localStorage.setItem('tali-theme',n);}catch(e){}if(window.taliApply)window.taliApply(n);}
+</script>
+</body>
+</html>

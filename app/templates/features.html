@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — Features &amp; How it works</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+<script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
+<style>
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:48px 0;border-bottom:1px solid var(--bord)}
+  .split:last-child{border:none}
+  .split.rev .text{order:2}
+  .split .text h2{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;margin:14px 0 12px}
+  .split .text p{color:var(--ts);font-size:1rem;margin-bottom:18px}
+  .split .text ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .split .text li{display:flex;gap:10px;color:var(--ts);font-size:.95rem}
+  .split .text li .ic{color:var(--wa);width:18px;height:18px;margin-top:2px}
+  .visual{background:var(--card);border:1px solid var(--bord);border-radius:20px;padding:28px;min-height:240px}
+  .chatlite{display:flex;flex-direction:column;gap:10px}
+  .chatlite .bub{max-width:85%;padding:10px 14px;border-radius:14px;font-size:.88rem}
+  .usecases{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .uc{background:var(--card);border:1px solid var(--bord);border-radius:16px;padding:22px;text-align:center}
+  .uc .ico{width:46px;height:46px;border-radius:12px;background:var(--bg2);border:1px solid var(--bord);display:inline-grid;place-items:center;color:var(--wa);margin-bottom:12px}
+  .uc h3{font-size:.98rem;font-weight:700;margin-bottom:5px}.uc p{color:var(--ts);font-size:.82rem}
+  @media(max-width:920px){.split,.usecases{grid-template-columns:1fr}.split.rev .text{order:0}}
+</style>
+</head>
+<body>
+{% include "_sprite.html" %}
+
+<nav><div class="wrap nav">
+  <a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <div class="nav-links"><a href="{{ url_for('web.index') }}">Home</a><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.faq') }}">FAQ</a><a href="{{ url_for('web.terms') }}">Legal</a></div>
+  <div class="nav-cta">
+    <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg></button>
+    <a href="{{ url_for('web.register') }}" class="btn btn-g btn-sm">Log in</a><a href="{{ url_for('web.register') }}" class="btn btn-p btn-sm">Start free</a>
+  </div>
+</div></nav>
+
+<header class="wrap phead">
+  <span class="tag"><svg class="ic"><use href="#i-layers"/></svg> Features</span>
+  <h1>One chat. <span class="hl">Your whole business.</span></h1>
+  <p>TaLi reads your everyday messages and turns them into clean records, live reports and accurate stock — without you ever leaving WhatsApp.</p>
+</header>
+
+<section><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-sparkles"/></svg> How it works</span><h2>From message to bookkeeping in seconds</h2></div>
+  <div class="grid-3">
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-message"/></svg></div><h3>1 · You message</h3><p>Tell TaLi what happened in plain words — no forms, no fields.</p><div class="ex">"Paid rent 150k yesterday"</div></div>
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-zap"/></svg></div><h3>2 · TaLi understands</h3><p>It extracts the amount, type, category, item and date automatically.</p><div class="ex">Expense · Rent · ₦150,000 · Jun 2</div></div>
+    <div class="step"><div class="n"><svg class="ic"><use href="#i-chart"/></svg></div><h3>3 · Your books update</h3><p>Records, balances, reports and stock all stay current in real time.</p><div class="ex">"What's my profit this month?"</div></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+
+  <div class="split">
+    <div class="text">
+      <span class="tag"><svg class="ic"><use href="#i-wallet"/></svg> Record</span>
+      <h2>Income &amp; expenses, captured in a sentence</h2>
+      <p>Sales, purchases, bills, payments — say it once and it's filed, categorised and dated for you.</p>
+      <ul>
+        <li><svg class="ic"><use href="#i-check"/></svg> Smart auto-categorisation (Sales, Fuel, Rent, Inventory…)</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Shorthand amounts — <b style="color:var(--tp)">2k</b>, <b style="color:var(--tp)">5h</b>, <b style="color:var(--tp)">50k</b></li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Back-dating — "…yesterday", "last Monday"</li>
+      </ul>
+    </div>
+    <div class="visual"><div class="chatlite">
+      <div class="bub out">Bought fuel 2k</div>
+      <div class="bub in"><b>Expense recorded</b><br>₦2,000 · Fuel · Jun 3</div>
+      <div class="bub out">Client paid me 50k for design</div>
+      <div class="bub in"><b>Income recorded</b><br>₦50,000 · Sales · "design"</div>
+    </div></div>
+  </div>
+
+  <div class="split rev">
+    <div class="text">
+      <span class="tag"><svg class="ic"><use href="#i-package"/></svg> Inventory</span>
+      <h2>Stock that keeps itself up to date</h2>
+      <p>Add, remove or correct stock in the same breath as a sale. TaLi warns you before you run out.</p>
+      <ul>
+        <li><svg class="ic"><use href="#i-check"/></svg> "Added 20 bags of rice" → stock goes up</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Low-stock alerts so you never miss a restock</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Quantities and units understood from plain text</li>
+      </ul>
+    </div>
+    <div class="visual"><div class="chatlite">
+      <div class="bub out">Sold 3 bags of rice</div>
+      <div class="bub in"><b>Stock updated</b><br>Rice: 12 bags left</div>
+      <div class="bub in" style="background:rgba(255,107,129,.14);color:#ffd2d9">Sugar is low — 4 bags left</div>
+    </div></div>
+  </div>
+
+  <div class="split">
+    <div class="text">
+      <span class="tag"><svg class="ic"><use href="#i-trending"/></svg> Report</span>
+      <h2>Ask a question, get the real number</h2>
+      <p>Balances, totals and daily/weekly/monthly summaries — answered the moment you ask.</p>
+      <ul>
+        <li><svg class="ic"><use href="#i-check"/></svg> "How much did I spend on transport this week?"</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Profit, not just cash — income minus expenses</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Multi-currency totals kept separate (₦ $ £)</li>
+      </ul>
+    </div>
+    <div class="visual"><div class="chatlite">
+      <div class="bub out">Monthly report</div>
+      <div class="bub in"><b>June summary</b><br>Income ₦612,400<br>Expenses ₦288,150<br><b>Profit ₦324,250</b></div>
+    </div></div>
+  </div>
+
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="shead"><span class="tag"><svg class="ic"><use href="#i-users"/></svg> Who it's for</span><h2>Built for the way you actually trade</h2></div>
+  <div class="usecases">
+    <div class="uc"><div class="ico"><svg class="ic"><use href="#i-package"/></svg></div><h3>Market traders</h3><p>Track stock &amp; daily takings</p></div>
+    <div class="uc"><div class="ico"><svg class="ic"><use href="#i-receipt"/></svg></div><h3>Shop owners</h3><p>Sales, costs &amp; profit</p></div>
+    <div class="uc"><div class="ico"><svg class="ic"><use href="#i-globe"/></svg></div><h3>Freelancers</h3><p>Multi-currency invoices</p></div>
+    <div class="uc"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div><h3>Small teams</h3><p>Shared books, up to 5 staff</p></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="cta-band">
+  <h2>See it work in your own chat.</h2>
+  <p>Free to start — your first record takes thirty seconds.</p>
+  <a href="{{ url_for('web.register') }}" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+</div></div>
+
+<footer><div class="wrap">
+  <div class="foot-grid">
+    <div><a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+      <p>Bookkeeping that lives in the chat you already use.</p></div>
+    <div><h4>Product</h4><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.index') }}#how">How it works</a></div>
+    <div><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Contact</a></div>
+    <div><h4>Legal</h4><a href="{{ url_for('web.privacy') }}">Privacy</a><a href="{{ url_for('web.terms') }}">Terms</a><a href="{{ url_for('web.faq') }}">FAQ</a></div>
+  </div>
+  <div class="foot-bottom"><span>© 2026 TaLi · Made for African small business</span><span>Tally, simplified.</span></div>
+</div></footer>
+
+<script>function taliTheme(){var o=['dark','light','system'],c;try{c=localStorage.getItem('tali-theme')||'system';}catch(e){c='dark';}var n=o[(o.indexOf(c)+1)%3];try{localStorage.setItem('tali-theme',n);}catch(e){}if(window.taliApply)window.taliApply(n);}</script>
+</body>
+</html>

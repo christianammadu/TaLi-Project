@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaLi — {% if step == 'otp' %}Verify code{% elif step == 'done' %}You're set{% else %}Register{% endif %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+  <script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
+</head>
+<body>
+{% include "_sprite.html" %}
+
+<button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme">
+  <svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg>
+</button>
+
+<div class="container">
+  <div class="acard">
+
+    <div class="brand">
+      <span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span>
+      <h1>TaLi</h1>
+      {% if step == 'otp' %}
+        <p>Enter the verification code sent to your WhatsApp</p>
+      {% elif step == 'done' %}
+        <p>You're all set</p>
+      {% else %}
+        <p>Your AI-powered WhatsApp bookkeeping assistant</p>
+      {% endif %}
+    </div>
+
+    {% if error %}
+    <div class="amsg err"><svg class="ic"><use href="#i-x"/></svg><span>{{ error }}</span></div>
+    {% endif %}
+    {% if message %}
+    <div class="amsg ok"><svg class="ic"><use href="#i-check-circle"/></svg><span>{{ message }}</span></div>
+    {% endif %}
+
+    {% if step == 'phone' %}
+    <!-- STEP 1 · phone -->
+    <form method="POST" action="{{ url_for('web.register') }}" id="phoneForm">
+      <div class="field">
+        <label class="field-label">Phone number</label>
+        <div class="phone-group">
+          <select name="country_code" class="cc" aria-label="Country code">
+            <option value="+234">🇳🇬 +234</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+91">🇮🇳 +91</option>
+            <option value="+254">🇰🇪 +254</option>
+            <option value="+233">🇬🇭 +233</option>
+            <option value="+27">🇿🇦 +27</option>
+            <option value="+971">🇦🇪 +971</option>
+            <option value="+61">🇦🇺 +61</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+81">🇯🇵 +81</option>
+            <option value="+86">🇨🇳 +86</option>
+            <option value="+55">🇧🇷 +55</option>
+            <option value="+7">🇷🇺 +7</option>
+            <option value="+82">🇰🇷 +82</option>
+            <option value="+39">🇮🇹 +39</option>
+            <option value="+34">🇪🇸 +34</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+62">🇮🇩 +62</option>
+          </select>
+          <input type="tel" name="phone" class="inp" placeholder="812 345 6789" required
+                 autocomplete="tel" inputmode="numeric" pattern="[0-9\s\-]+">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-p" id="submitBtn">
+        <span class="btn-text">Continue</span>
+        <svg class="ic"><use href="#i-arrow-right"/></svg>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    {% elif step == 'otp' %}
+    <!-- STEP 2 · OTP -->
+    <a href="{{ url_for('web.register') }}" class="back-link"><svg class="ic ic-sm"><use href="#i-arrow-left"/></svg> Change number</a>
+    <div class="phone-info">Code sent to <strong>{{ phone }}</strong></div>
+
+    <form method="POST" action="{{ url_for('web.verify_otp') }}" id="otpForm">
+      <input type="hidden" name="phone" value="{{ phone }}">
+      <input type="hidden" name="code" id="otpHidden" value="">
+      <div class="field">
+        <label class="field-label" style="text-align:center">Verification code</label>
+        <div class="otp-row" id="otpContainer">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="0" autocomplete="one-time-code" aria-label="Digit 1">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="1" aria-label="Digit 2">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="2" aria-label="Digit 3">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="3" aria-label="Digit 4">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="4" aria-label="Digit 5">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="5" aria-label="Digit 6">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-p" id="otpSubmitBtn" disabled>
+        <span class="btn-text">Verify</span>
+        <svg class="ic"><use href="#i-check"/></svg>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <div class="resend">
+      <button type="button" id="resendBtn" disabled>Resend code in <span id="countdown">2:00</span></button>
+    </div>
+
+    {% elif step == 'done' %}
+    <!-- STEP 3 · done (success message rendered above) -->
+    <div class="center">
+      <span class="mark lg"><svg class="ic"><use href="#i-check-circle"/></svg></span>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <p class="foot-note"><svg class="ic"><use href="#i-lock"/></svg> Secured with end-to-end encryption</p>
+</div>
+
+<script>
+function taliTheme(){var o=['dark','light','system'],c;try{c=localStorage.getItem('tali-theme')||'system';}catch(e){c='dark';}var n=o[(o.indexOf(c)+1)%3];try{localStorage.setItem('tali-theme',n);}catch(e){}if(window.taliApply)window.taliApply(n);}
+
+document.addEventListener('DOMContentLoaded', function () {
+  /* phone form loading state */
+  var phoneForm = document.getElementById('phoneForm');
+  if (phoneForm) {
+    phoneForm.addEventListener('submit', function () {
+      document.getElementById('submitBtn').classList.add('loading');
+    });
+  }
+
+  /* OTP box logic */
+  var otpContainer = document.getElementById('otpContainer');
+  if (otpContainer) {
+    var boxes = otpContainer.querySelectorAll('.otp-box');
+    var hidden = document.getElementById('otpHidden');
+    var submitBtn = document.getElementById('otpSubmitBtn');
+
+    function updateHidden() {
+      var val = '';
+      boxes.forEach(function (b) { val += b.value; });
+      hidden.value = val;
+      submitBtn.disabled = val.length < 6;
+    }
+
+    boxes.forEach(function (box, i) {
+      box.addEventListener('input', function () {
+        var v = this.value.replace(/\D/g, '');
+        // Multi-char value = a paste or OS one-time-code autofill landing in a
+        // single box. Spread it across the boxes from here onward.
+        if (v.length > 1) {
+          for (var k = 0; k < v.length && (i + k) < boxes.length; k++) {
+            boxes[i + k].value = v.charAt(k);
+            boxes[i + k].classList.add('filled');
+          }
+          boxes[Math.min(i + v.length, boxes.length) - 1].focus();
+          updateHidden();
+          return;
+        }
+        this.value = v.charAt(0) || '';
+        if (v && this.value) {
+          this.classList.add('filled');
+          if (i < 5) boxes[i + 1].focus();
+        } else {
+          this.classList.remove('filled');
+        }
+        updateHidden();
+      });
+      box.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !this.value && i > 0) {
+          boxes[i - 1].focus(); boxes[i - 1].value = ''; boxes[i - 1].classList.remove('filled'); updateHidden();
+        }
+        if (e.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus();
+        if (e.key === 'ArrowRight' && i < 5) boxes[i + 1].focus();
+      });
+      box.addEventListener('paste', function (e) {
+        e.preventDefault();
+        var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        paste.split('').forEach(function (ch, j) {
+          if (boxes[j]) { boxes[j].value = ch; boxes[j].classList.add('filled'); }
+        });
+        if (paste.length > 0) boxes[Math.min(paste.length, 5)].focus();
+        updateHidden();
+      });
+      box.addEventListener('focus', function () { this.select(); });
+    });
+
+    boxes[0].focus();
+    document.getElementById('otpForm').addEventListener('submit', function () {
+      submitBtn.classList.add('loading');
+    });
+
+    /* resend countdown — 2 minutes */
+    var resendBtn = document.getElementById('resendBtn');
+    var countdownEl = document.getElementById('countdown');
+    var seconds = 120;
+    function formatTime(s) { return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
+    countdownEl.textContent = formatTime(seconds);
+    var timer = setInterval(function () {
+      seconds--; countdownEl.textContent = formatTime(seconds);
+      if (seconds <= 0) { clearInterval(timer); resendBtn.disabled = false; resendBtn.textContent = 'Resend code'; }
+    }, 1000);
+    resendBtn.addEventListener('click', function () {
+      if (!resendBtn.disabled) {
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Sending…';
+        window.location.href = "{{ url_for('web.register') }}?resend={{ phone }}";
+      }
+    });
+  }
+});
+</script>
+</body>
+</html>

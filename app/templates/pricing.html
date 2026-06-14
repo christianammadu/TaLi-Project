@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — Pricing</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+<script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
+</head>
+<body>
+{% include "_sprite.html" %}
+
+<nav><div class="wrap nav">
+  <a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <div class="nav-links"><a href="{{ url_for('web.index') }}">Home</a><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.faq') }}">FAQ</a><a href="{{ url_for('web.terms') }}">Legal</a></div>
+  <div class="nav-cta">
+    <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg></button>
+    <a href="{{ url_for('web.register') }}" class="btn btn-g btn-sm">Log in</a><a href="{{ url_for('web.register') }}" class="btn btn-p btn-sm">Start free</a>
+  </div>
+</div></nav>
+
+<header class="wrap phead" style="padding-bottom:50px">
+  <span class="tag"><svg class="ic"><use href="#i-star"/></svg> Pricing</span>
+  <h1>Simple pricing that grows with you</h1>
+  <p>Start free, no card required. Upgrade only when your business does.</p>
+</header>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="price">
+    <div class="pcard"><h3>Starter</h3><div class="pr">₦0<span>/forever</span></div><p class="desc">For getting started</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> 50 records / month</li><li><svg class="ic"><use href="#i-check"/></svg> Balance &amp; summaries</li><li><svg class="ic"><use href="#i-check"/></svg> 1 currency</li><li><svg class="ic"><use href="#i-check"/></svg> WhatsApp support</li></ul>
+      <a href="{{ url_for('web.register') }}" class="btn btn-g btn-full">Start free</a></div>
+    <div class="pcard hot"><h3>Pro</h3><div class="pr">₦2,500<span>/month</span></div><p class="desc">For growing traders</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> Unlimited records</li><li><svg class="ic"><use href="#i-check"/></svg> Inventory tracking</li><li><svg class="ic"><use href="#i-check"/></svg> Multi-currency</li><li><svg class="ic"><use href="#i-check"/></svg> Daily/weekly/monthly reports</li></ul>
+      <a href="{{ url_for('web.register') }}" class="btn btn-p btn-full">Go Pro</a></div>
+    <div class="pcard"><h3>Business</h3><div class="pr">₦7,500<span>/month</span></div><p class="desc">For multiple shops</p>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg> Everything in Pro</li><li><svg class="ic"><use href="#i-check"/></svg> Up to 5 staff</li><li><svg class="ic"><use href="#i-check"/></svg> Exports &amp; backups</li><li><svg class="ic"><use href="#i-check"/></svg> Priority support</li></ul>
+      <a href="#" class="btn btn-g btn-full">Contact sales</a></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="shead"><h2>Compare plans</h2></div>
+  <table class="cmp">
+    <thead><tr><th>Feature</th><th>Starter</th><th class="hotcol">Pro</th><th>Business</th></tr></thead>
+    <tbody>
+      <tr><td>Monthly records</td><td>50</td><td class="hotcol">Unlimited</td><td>Unlimited</td></tr>
+      <tr><td>Income &amp; expense tracking</td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td><td class="hotcol yes"><svg class="ic"><use href="#i-check"/></svg></td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td></tr>
+      <tr><td>Reports (daily/weekly/monthly)</td><td>Summary only</td><td class="hotcol yes"><svg class="ic"><use href="#i-check"/></svg></td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td></tr>
+      <tr><td>Inventory tracking</td><td class="no">—</td><td class="hotcol yes"><svg class="ic"><use href="#i-check"/></svg></td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td></tr>
+      <tr><td>Multi-currency</td><td class="no">—</td><td class="hotcol yes"><svg class="ic"><use href="#i-check"/></svg></td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td></tr>
+      <tr><td>Staff accounts</td><td>1</td><td class="hotcol">1</td><td>Up to 5</td></tr>
+      <tr><td>Data export &amp; backup</td><td class="no">—</td><td class="hotcol no">—</td><td class="yes"><svg class="ic"><use href="#i-check"/></svg></td></tr>
+      <tr><td>Support</td><td>WhatsApp</td><td class="hotcol">WhatsApp</td><td>Priority</td></tr>
+    </tbody>
+  </table>
+  <p style="text-align:center;color:var(--ts);margin-top:28px;font-size:.95rem">Got questions? Read the <a href="{{ url_for('web.faq') }}" style="color:var(--wa)">FAQ →</a></p>
+</div></section>
+
+<div class="wrap"><div class="cta-band">
+  <h2>Start free today.</h2>
+  <p>Upgrade only when you're ready. No card, no commitment.</p>
+  <a href="{{ url_for('web.register') }}" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+</div></div>
+
+<footer><div class="wrap">
+  <div class="foot-grid">
+    <div><a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+      <p>Bookkeeping that lives in the chat you already use.</p></div>
+    <div><h4>Product</h4><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.index') }}#how">How it works</a></div>
+    <div><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Contact</a></div>
+    <div><h4>Legal</h4><a href="{{ url_for('web.privacy') }}">Privacy</a><a href="{{ url_for('web.terms') }}">Terms</a><a href="{{ url_for('web.faq') }}">FAQ</a></div>
+  </div>
+  <div class="foot-bottom"><span>© 2026 TaLi · Made for African small business</span><span>Tally, simplified.</span></div>
+</div></footer>
+
+<script>function taliTheme(){var o=['dark','light','system'],c;try{c=localStorage.getItem('tali-theme')||'system';}catch(e){c='dark';}var n=o[(o.indexOf(c)+1)%3];try{localStorage.setItem('tali-theme',n);}catch(e){}if(window.taliApply)window.taliApply(n);}</script>
+</body>
+</html>
