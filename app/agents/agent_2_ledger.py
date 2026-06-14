@@ -4,19 +4,63 @@ Receives events from Agent 1, enforces auth scopes, executes CRUD database opera
 """
 
 import json
+import os
+import uuid
 from mysql.connector import Error
 from app.data.database import get_db_connection
-from app.agents.band_sdk import BandSDK
+from app.agents.band import get_band_client
 from app.services.validators import dump_model
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
+
+# Band room handles (WP-04). Ledger forwards results to the CFO and runs the two-phase
+# review with the Compliance agent (WP-07) — all by @mention in the shared room.
+LEDGER_HANDLE = "@tali-ledger"
+CFO_HANDLE = "@tali-cfo"
+COMPLIANCE_HANDLE = "@tali-compliance"
 
 
 class LedgerAgent:
     """Agent 2 — Ledger & Tax. Interacts directly with database tables to process structured inputs."""
 
-    def __init__(self, user_id, sender_id):
+    def __init__(self, user_id, sender_id, band=None):
         self.user_id = user_id
         self.sender_id = sender_id
+        # Band connector (WP-04); injectable for tests. One room per sender for now.
+        self.band = band if band is not None else get_band_client()
+        self.room_id = os.getenv("BAND_ROOM_ID") or f"tali-{sender_id}"
+        self._review_timeout = float(os.getenv("BAND_REVIEW_TIMEOUT", "8"))
+        self._user_cid = None   # set by on_room_message so CFO's reply is collectable
+
+    def on_room_message(self, msg):
+        """Band room handler entry (wired by WP-06). Threads the user correlation_id so
+        the eventual CFO reply is collectable, then runs the ledger processing."""
+        self._user_cid = msg.get("correlation_id")
+        return self.handle_intake_payload(msg.get("body"))
+
+    def _emit_to_cfo(self, event_dict):
+        """Forward a ledger event to the CFO agent in the room (fire-and-forget). Threads
+        the user correlation_id so CFO can post the terminal reply the gateway collects."""
+        self.band.send(self.room_id, [CFO_HANDLE], event_dict,
+                       correlation_id=self._user_cid, sender=LEDGER_HANDLE)
+
+    def _review_gate(self, proposed):
+        """Two-phase commit seam (WP-04 / G-14): send a proposed-write envelope to the
+        Compliance agent BEFORE commit and block for a verdict. Returns (approved, reason).
+        A reject PREVENTS the commit. When no reviewer responds yet (pre-WP-07), fall back
+        to BAND_REVIEW_DEFAULT (default 'allow' for dev; set 'deny' for strict prod)."""
+        review_cid = uuid.uuid4().hex
+        self.band.send(self.room_id, [COMPLIANCE_HANDLE],
+                       {"type": "proposed_write", "proposed": proposed,
+                        "user_correlation_id": self._user_cid},
+                       correlation_id=review_cid, sender=LEDGER_HANDLE)
+        verdict = self.band.collect_reply(review_cid, timeout=self._review_timeout)
+        if verdict is None:
+            allow = os.getenv("BAND_REVIEW_DEFAULT", "allow").lower() == "allow"
+            return allow, ("no reviewer (default-allow)" if allow else "no reviewer (default-deny)")
+        if isinstance(verdict, dict):
+            return bool(verdict.get("approved", False)), verdict.get("reason", "")
+        v = str(verdict).strip().lower()
+        return v in ("approve", "approved", "ok", "allow", "yes"), str(verdict)
 
     def handle_intake_payload(self, payload):
         """Processes events from Agent 1."""
@@ -119,6 +163,24 @@ class LedgerAgent:
                         (record_uuid.bytes, self.sender_id, raw_text, int(amount))
                     )
 
+                    # Two-phase review (WP-04 / G-14): Compliance can veto before commit.
+                    approved, reason = self._review_gate({
+                        "intent": "record_transaction", "fast_path": True,
+                        "amount": float(amount), "currency": currency, "item": item,
+                    })
+                    if not approved:
+                        conn.rollback()
+                        reject_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id, session_id=session_id,
+                            user_id=user_id, business_id=business_id,
+                            source_agent="LedgerAgent", event_type="error",
+                            payload=LedgerUpdateEventPayload(
+                                status="rejected", intent="record_transaction",
+                                raw_text=raw_text, error_reason=f"Compliance hold: {reason}"),
+                        )
+                        self._emit_to_cfo(reject_event.model_dump(mode='json'))
+                        return f"🛑 Not recorded — compliance hold: {reason}"
+
                     # Record idempotency log inside the transaction atomically
                     cursor.execute(
                         "INSERT INTO processed_events (event_id, agent_name) VALUES (%s, 'LedgerAgent')",
@@ -153,8 +215,8 @@ class LedgerAgent:
                                 data=LedgerUpdateData(transactions=[tx_result])
                             )
                         )
-                        responses = BandSDK.publish("ledger_updates", success_event.model_dump(mode='json'))
-                        return responses[0] if responses else "✅ Shorthand saved."
+                        self._emit_to_cfo(success_event.model_dump(mode='json'))
+                        return "✅ Shorthand saved."
                     return "❌ Failed to record shorthand."
 
                 # NLP path execution
@@ -182,8 +244,8 @@ class LedgerAgent:
                             raw_text=raw_text
                         )
                     )
-                    responses = BandSDK.publish("ledger_updates", success_event.model_dump(mode='json'))
-                    return responses[0] if responses else "❌ Snapshot failed."
+                    self._emit_to_cfo(success_event.model_dump(mode='json'))
+                    return "📊 Snapshot requested."
 
                 # Trigger reports directly (Read-only, rollback transaction)
                 if "report" in intents and parsed.report:
@@ -202,8 +264,8 @@ class LedgerAgent:
                             data=LedgerUpdateData(report=parsed.report)
                         )
                     )
-                    responses = BandSDK.publish("ledger_updates", success_event.model_dump(mode='json'))
-                    return responses[0] if responses else "❌ Report failed."
+                    self._emit_to_cfo(success_event.model_dump(mode='json'))
+                    return "📑 Report requested."
 
                 # Trigger queries directly (Read-only, rollback transaction)
                 if "query" in intents:
@@ -299,6 +361,25 @@ class LedgerAgent:
                     results['debts'] = debt_results
 
                 if results:
+                    # Two-phase review (WP-04 / G-14): Compliance can veto before commit.
+                    approved, reason = self._review_gate({
+                        "intent": "split_routing",
+                        "transactions": len(tx_results), "inventory": len(inv_results),
+                        "debts": len(debt_results),
+                    })
+                    if not approved:
+                        conn.rollback()
+                        reject_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id, session_id=session_id,
+                            user_id=user_id, business_id=business_id,
+                            source_agent="LedgerAgent", event_type="error",
+                            payload=LedgerUpdateEventPayload(
+                                status="rejected", intent="split_routing",
+                                raw_text=raw_text, error_reason=f"Compliance hold: {reason}"),
+                        )
+                        self._emit_to_cfo(reject_event.model_dump(mode='json'))
+                        return f"🛑 Not recorded — compliance hold: {reason}"
+
                     # Record idempotency log inside the transaction atomically
                     cursor.execute(
                         "INSERT INTO processed_events (event_id, agent_name) VALUES (%s, 'LedgerAgent')",
@@ -327,10 +408,10 @@ class LedgerAgent:
                             )
                         )
                     )
-                    responses = BandSDK.publish("ledger_updates", success_event.model_dump(mode='json'))
+                    self._emit_to_cfo(success_event.model_dump(mode='json'))
                     # For output display, dump list representations
                     out_results = {k: [dump_model(x) for x in v] for k, v in results.items()}
-                    return responses[0] if responses else json.dumps(out_results, indent=2)
+                    return json.dumps(out_results, indent=2)
 
                 conn.rollback()
                 return "❓ No actions processed."
@@ -381,7 +462,7 @@ class LedgerAgent:
                             error_reason=f"Database Error Code {db_err.errno}: {db_err}"
                         )
                     )
-                    BandSDK.publish("ledger_errors", err_event.model_dump(mode='json'))
+                    self._emit_to_cfo(err_event.model_dump(mode='json'))
                     return {"status": "error_handled_via_pubsub"}
 
             except Exception as e:
@@ -418,7 +499,7 @@ class LedgerAgent:
                         error_reason=str(e)
                     )
                 )
-                BandSDK.publish("ledger_errors", err_event.model_dump(mode='json'))
+                self._emit_to_cfo(err_event.model_dump(mode='json'))
                 return {"status": "error_handled_via_pubsub"}
             finally:
                 if 'conn' in locals() and conn.is_connected():
