@@ -207,7 +207,7 @@ class CFOAgent:
     def handle_ledger_error(self, payload):
         """Read-Only Compensation Handler for Dead-Letter Saga channel."""
         from app.agents.event_schemas import LedgerUpdateEvent
-        from app.web.whatsapp import send_reply
+        from app.channels.registry import send_text   # reply on the originating channel (WP-05)
         try:
             if isinstance(payload, dict):
                 event = LedgerUpdateEvent.model_validate(payload)
@@ -218,7 +218,7 @@ class CFOAgent:
             print(f"[CFOAgent Schema Error] Invalid LedgerUpdateEvent on ledger_errors: {ve}")
             
         msg = "⚠️ I understood your request, but our database encountered a temporary lock. Your transaction was not saved. Please try again."
-        send_reply(self.sender_id, msg)
+        send_text(self.sender_id, msg)
         return msg
 
     def _get_evaluated_thresholds(self):
@@ -227,7 +227,8 @@ class CFOAgent:
         """
         from flask import current_app
         from app.data.database import get_db_connection
-        
+        from app.services.uuid_utils import uuid_to_bin
+
         # 1. System Defaults
         thresholds = {
             "low_stock_limit": float(current_app.config.get("DEFAULT_LOW_STOCK_LIMIT", 5)),
@@ -239,7 +240,7 @@ class CFOAgent:
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT alert_thresholds FROM users WHERE id = %s LIMIT 1", (self.user_id,))
+            cursor.execute("SELECT alert_thresholds FROM users WHERE id = %s LIMIT 1", (uuid_to_bin(self.user_id),))
             row = cursor.fetchone()
             if row and row['alert_thresholds']:
                 val = row['alert_thresholds']

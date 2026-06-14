@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import mysql.connector
 from mysql.connector import Error
 from flask import current_app
@@ -10,6 +12,38 @@ def get_db_connection():
         password=current_app.config['DB_PASSWORD'],
         database=current_app.config['DB_NAME']
     )
+
+
+@contextmanager
+def db_cursor(dictionary=False, commit=False):
+    """Yield a cursor with guaranteed cleanup — replaces the fragile
+    ``finally: if 'conn' in locals() and conn.is_connected(): cursor.close()`` idiom
+    (which NameErrors if ``conn.cursor()`` itself raises). Commits on clean exit when
+    ``commit=True``, rolls back on exception, and always closes cursor + connection.
+    """
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=dictionary)
+        yield cursor
+        if commit:
+            conn.commit()
+    except Exception:
+        if conn is not None:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        raise
+    finally:
+        if cursor is not None:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if conn is not None and conn.is_connected():
+            conn.close()
 
 def init_db(app):
     """Runs when the webserver boots to build all TaLi tables automatically."""

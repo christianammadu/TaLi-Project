@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TaLi — Privacy Policy</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C2562F'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
 <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
 <script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
 </head>
@@ -12,7 +12,7 @@
 {% include "_sprite.html" %}
 
 <nav><div class="wrap nav">
-  <a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <a href="{{ url_for('web.index') }}" class="wordmark sm" aria-label="TaLi home">TaLi<span class="dot">.</span></a>
   <div class="nav-links"><a href="{{ url_for('web.index') }}">Home</a><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.faq') }}">FAQ</a><a href="{{ url_for('web.terms') }}">Terms</a></div>
   <div class="nav-cta">
     <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg></button>
@@ -41,17 +41,17 @@
       <h1>Privacy Policy</h1>
       <p class="upd">Last updated: 3 June 2026</p>
     </div>
-    <p>TaLi ("we", "us") helps you keep business records through WhatsApp. This policy explains what we collect, why, and the choices you have. We aim to collect only what we need to run the service.</p>
+    <p>TaLi ("we", "us") helps you keep business records through WhatsApp and Telegram. This policy explains what we collect, why, and the choices you have. We aim to collect only what we need to run the service.</p>
 
     <h2 id="p-collect">1. Information we collect</h2>
     <p>To provide TaLi we collect:</p>
     <ul>
-      <li><strong>Your WhatsApp number</strong> — used to link and authenticate your account.</li>
+      <li><strong>Your WhatsApp number or Telegram account</strong> — used to link and authenticate your account.</li>
       <li><strong>The messages you send TaLi</strong> — the transaction, inventory and query text you choose to record.</li>
       <li><strong>Derived bookkeeping data</strong> — amounts, categories, dates and stock levels extracted from your messages.</li>
       <li><strong>Basic usage logs</strong> — timestamps and delivery status, used for reliability and support.</li>
     </ul>
-    <p>We do <strong>not</strong> read your other WhatsApp chats. We only process messages sent directly to TaLi.</p>
+    <p>We do <strong>not</strong> read your other WhatsApp or Telegram chats. We only process messages sent directly to TaLi.</p>
 
     <h2 id="p-use">2. How we use your information</h2>
     <ul>

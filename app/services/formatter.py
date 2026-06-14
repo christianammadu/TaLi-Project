@@ -11,11 +11,13 @@ CURRENCY_SYMBOLS = {
 
 
 def format_currency(amount, currency='NGN'):
-    """Format a number with the appropriate currency symbol. e.g. 2000 -> ₦2,000"""
+    """Format a number with its currency symbol. Whole amounts show no decimals
+    (₦2,000); fractional amounts show kobo/cents (₦2,500.50) so displayed totals stay
+    exact and agree with the 2dp PDF. None is treated as 0."""
     symbol = CURRENCY_SYMBOLS.get(currency.upper(), currency)
-    if amount < 0:
-        return f"-{symbol}{abs(amount):,.0f}"
-    return f"{symbol}{amount:,.0f}"
+    a = float(amount or 0)
+    body = f"{abs(a):,.2f}" if abs(a) % 1 else f"{abs(a):,.0f}"
+    return f"-{symbol}{body}" if a < 0 else f"{symbol}{body}"
 
 
 _TX_ACTION_LABELS = {
@@ -316,7 +318,7 @@ def format_sum_query(result):
     period = _format_period(result.get('period_start'), result.get('period_end'))
 
     lines = [
-        f"📊 *Summary*",
+        "📊 *Summary*",
         "",
         f"*Total {desc}:*",
     ]

@@ -7,6 +7,8 @@ here we prove the gate's decision + that a reject withholds (returns not-approve
 
 import os
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 from app.agents import agent_2_ledger
 from app.agents.agent_2_ledger import LedgerAgent, LEDGER_HANDLE, CFO_HANDLE, COMPLIANCE_HANDLE
@@ -50,6 +52,52 @@ class TestLedgerBandPort(unittest.TestCase):
         self.ledger._review_timeout = 0.2
         approved, _ = self.ledger._review_gate({"intent": "x"})
         self.assertFalse(approved)                 # strict prod posture
+
+    def test_review_runs_before_the_db_transaction(self):
+        """A compliance reject must return the hold WITHOUT opening the write transaction —
+        i.e. we never hold DB row locks across the blocking review (the #1 fix)."""
+        ev = SimpleNamespace(
+            correlation_id="c", session_id="s", user_id="user-1", business_id=None,
+            event_id="e1",
+            payload=SimpleNamespace(is_fast_path=True, raw_text="Sold rice 999999",
+                                    fast_path_transaction=None, nlp_parsed=None),
+        )
+        self.ledger._is_authorized = lambda: True
+        self.ledger._build_review_proposal = lambda e: {"intent": "record_transaction", "amount": 999999}
+        self.ledger._review_gate = lambda proposed: (False, "exceeds threshold")
+        self.ledger._emit_reject = lambda *a, **k: None
+        with mock.patch("app.agents.agent_2_ledger.get_db_connection") as gdb:
+            res = self.ledger.handle_intake_payload(ev)
+        self.assertIn("compliance hold", res)
+        gdb.assert_not_called()   # write transaction never opened on reject
+
+    def test_idempotency_drops_already_processed_event(self):
+        """If the event is already in processed_events, the ledger drops it (no re-write)."""
+        ev = SimpleNamespace(
+            correlation_id="c", session_id="s", user_id="user-1", business_id=None,
+            event_id="e1",
+            payload=SimpleNamespace(is_fast_path=True, raw_text="x",
+                                    fast_path_transaction=None, nlp_parsed=None),
+        )
+        self.ledger._is_authorized = lambda: True
+        self.ledger._build_review_proposal = lambda e: None   # not under test here
+
+        class _Cur:
+            def execute(self, *a, **k): pass
+            def fetchone(self): return {"event_id": "e1"}      # already-processed row
+            def close(self): pass
+
+        class _Conn:
+            def start_transaction(self): pass
+            def cursor(self, dictionary=False): return _Cur()
+            def rollback(self): pass
+            def commit(self): pass
+            def is_connected(self): return True
+            def close(self): pass
+
+        with mock.patch("app.agents.agent_2_ledger.get_db_connection", return_value=_Conn()):
+            res = self.ledger.handle_intake_payload(ev)
+        self.assertIn("Already processed", res)
 
     def test_emit_to_cfo_threads_user_correlation_id(self):
         self.ledger._user_cid = "user-9"

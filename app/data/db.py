@@ -69,7 +69,6 @@ def init_engine(app):
 
 def get_engine():
     """Return the engine, lazily initialising it from the current Flask app."""
-    global _engine
     if _engine is None:
         from flask import current_app
         init_engine(current_app._get_current_object())

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaLi — D-01 Brand System (WP-06 token sample)</title>
+<!-- Imports the real, rebranded design system. If the tokens render here, WP-06 landed. -->
+<link rel="stylesheet" href="tali.css">
+<style>
+  /* sample-sheet scaffolding only — all colour/type comes from tali.css tokens */
+  .sheet{max-width:1080px;margin:0 auto;padding:40px 28px 80px}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .sec{margin-top:52px}
+  .sec > h2{font-size:1.4rem;margin-bottom:4px}
+  .sec > .hint{color:var(--ts);font-size:.92rem;margin-bottom:20px}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{border:1px solid var(--bord);border-radius:var(--r-md);overflow:hidden;background:var(--card)}
+  .sw .chip{height:64px}
+  .sw .meta{padding:9px 11px;font-size:.78rem;font-family:var(--mono);color:var(--ts)}
+  .sw .meta b{display:block;color:var(--tp);font-family:var(--display);font-size:.92rem;font-weight:600;letter-spacing:0}
+  .type-row{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--bord);padding:14px 0}
+  .type-row .lbl{font-family:var(--mono);font-size:.72rem;color:var(--tm);width:120px;flex:none}
+  .card{background:var(--card);border:1px solid var(--bord);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+  .bs-chat{display:flex;flex-direction:column;gap:10px;max-width:420px;background:none}
+  .bubble{max-width:80%;padding:11px 14px;border-radius:16px;font-size:.92rem}
+  .from-me{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:5px}
+  .from-tali{align-self:flex-start;background:var(--paper-2);color:var(--ink);border-bottom-left-radius:5px}
+  .ledger{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 2px;font-size:.9rem}
+  .ledger-row+.ledger-row{border-top:1px solid var(--line)}
+  .ledger-row .lbl{color:var(--ts)}
+  .num{font-variant-numeric:tabular-nums;font-weight:600}
+  .num.in{color:var(--wa)} .num.out{color:var(--brand)}
+  .toggle{margin-left:auto;font-family:var(--mono);font-size:.78rem;color:var(--ts);cursor:pointer;
+    background:var(--card);border:1px solid var(--bord);border-radius:9px;padding:7px 12px}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:.95rem;
+    padding:12px 20px;border-radius:var(--r-md);cursor:pointer;text-decoration:none;transition:var(--fast)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="row">
+    <span class="wordmark lg">TaLi<span class="dot">.</span></span>
+    <button class="toggle" onclick="var h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark')">toggle theme</button>
+  </div>
+  <p class="hint" style="margin-top:10px;color:var(--ts)">D-01 · “Market Ledger” — warm paper, ink, one terracotta accent. This sheet renders straight from <code>tali.css</code>.</p>
+  <hr class="ledger-rule" style="margin-top:18px">
+
+  <!-- PALETTE -->
+  <div class="sec">
+    <h2>Palette</h2>
+    <p class="hint">Terracotta is the brand. WhatsApp green / Telegram blue are channel-CTA only.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:var(--paper)"></div><div class="meta"><b>paper</b>#FBF7EF · bg</div></div>
+      <div class="sw"><div class="chip" style="background:var(--paper-2)"></div><div class="meta"><b>paper-2</b>#F3EADA · cards</div></div>
+      <div class="sw"><div class="chip" style="background:var(--ink)"></div><div class="meta"><b>ink</b>#241F1A · text</div></div>
+      <div class="sw"><div class="chip" style="background:var(--ink-soft)"></div><div class="meta"><b>ink-soft</b>#6B6258</div></div>
+      <div class="sw"><div class="chip" style="background:var(--brand)"></div><div class="meta"><b>brand</b>#C2562F · terracotta</div></div>
+      <div class="sw"><div class="chip" style="background:var(--accent-soft)"></div><div class="meta"><b>accent-soft</b>#E7C9B6</div></div>
+      <div class="sw"><div class="chip" style="background:var(--line)"></div><div class="meta"><b>line</b>#E3D8C6 · hairline</div></div>
+      <div class="sw"><div class="chip" style="background:var(--wa)"></div><div class="meta"><b>wa</b>#1FAA53 · CTA only</div></div>
+      <div class="sw"><div class="chip" style="background:var(--tg)"></div><div class="meta"><b>tg</b>#2AABEE · CTA only</div></div>
+    </div>
+  </div>
+
+  <!-- TYPE -->
+  <div class="sec">
+    <h2>Type</h2>
+    <p class="hint">Display: Fraunces (serif). Body / UI: Hanken Grotesk. Numbers: tabular, ₦-prefixed.</p>
+    <div class="type-row"><span class="lbl">Fraunces 500</span><h1 style="font-weight:500;margin:0">A market trader's ledger, <em style="font-style:italic;color:var(--brand)">made of chat.</em></h1></div>
+    <div class="type-row"><span class="lbl">Fraunces 600</span><h2 style="margin:0">Record a sale in one message</h2></div>
+    <div class="type-row"><span class="lbl">Hanken 400</span><p style="margin:0;font-size:1.05rem;color:var(--ts)">Warm, plain, human — like a trusted bookkeeper who talks like a friend.</p></div>
+    <div class="type-row"><span class="lbl">tabular nums</span><span class="num" style="font-size:1.4rem">₦ 1,250,000.00</span></div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="sec">
+    <h2>Buttons</h2>
+    <p class="hint">Primary = terracotta (brand). Channel CTAs carry their platform colour.</p>
+    <div class="row">
+      <a class="btn btn-p" style="color:#fff">Get started</a>
+      <a class="btn btn-g">Secondary</a>
+      <a class="btn btn-wa">Continue on WhatsApp</a>
+      <a class="btn btn-tg">Continue on Telegram</a>
+    </div>
+  </div>
+
+  <!-- SIGNATURE MOTIF -->
+  <div class="sec">
+    <h2>Signature motif — chat becomes ledger</h2>
+    <p class="hint">The recurring hero idea: a chat line resolves into a ledger line.</p>
+    <div class="card">
+      <div class="bs-chat">
+        <div class="bubble from-me">Sold 2 bags rice ₦5,000 cash</div>
+        <div class="bubble from-tali">Got it ✓ Recorded a ₦5,000 sale and took 2 bags off stock.</div>
+      </div>
+      <div class="ledger">
+        <div class="ledger-row"><span class="lbl">Sale · Rice (2 bags)</span><span class="num in">+₦5,000</span></div>
+        <div class="ledger-row"><span class="lbl">Stock · Rice</span><span class="num out">−2 bags</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

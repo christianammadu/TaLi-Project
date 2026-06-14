@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TaLi — Features &amp; How it works</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2325D366'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C2562F'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
 <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
 <script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
 <style>
@@ -15,13 +15,13 @@
   .split .text p{color:var(--ts);font-size:1rem;margin-bottom:18px}
   .split .text ul{list-style:none;display:flex;flex-direction:column;gap:11px}
   .split .text li{display:flex;gap:10px;color:var(--ts);font-size:.95rem}
-  .split .text li .ic{color:var(--wa);width:18px;height:18px;margin-top:2px}
+  .split .text li .ic{color:var(--brand);width:18px;height:18px;margin-top:2px}
   .visual{background:var(--card);border:1px solid var(--bord);border-radius:20px;padding:28px;min-height:240px}
   .chatlite{display:flex;flex-direction:column;gap:10px}
   .chatlite .bub{max-width:85%;padding:10px 14px;border-radius:14px;font-size:.88rem}
   .usecases{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
   .uc{background:var(--card);border:1px solid var(--bord);border-radius:16px;padding:22px;text-align:center}
-  .uc .ico{width:46px;height:46px;border-radius:12px;background:var(--bg2);border:1px solid var(--bord);display:inline-grid;place-items:center;color:var(--wa);margin-bottom:12px}
+  .uc .ico{width:46px;height:46px;border-radius:12px;background:var(--bg2);border:1px solid var(--bord);display:inline-grid;place-items:center;color:var(--brand);margin-bottom:12px}
   .uc h3{font-size:.98rem;font-weight:700;margin-bottom:5px}.uc p{color:var(--ts);font-size:.82rem}
   @media(max-width:920px){.split,.usecases{grid-template-columns:1fr}.split.rev .text{order:0}}
 </style>
@@ -30,7 +30,7 @@
 {% include "_sprite.html" %}
 
 <nav><div class="wrap nav">
-  <a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
+  <a href="{{ url_for('web.index') }}" class="wordmark sm" aria-label="TaLi home">TaLi<span class="dot">.</span></a>
   <div class="nav-links"><a href="{{ url_for('web.index') }}">Home</a><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.faq') }}">FAQ</a><a href="{{ url_for('web.terms') }}">Legal</a></div>
   <div class="nav-cta">
     <button class="theme-btn" type="button" onclick="taliTheme()" aria-label="Toggle theme"><svg class="ic moon"><use href="#i-moon"/></svg><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic sys"><use href="#i-monitor"/></svg></button>
@@ -41,7 +41,7 @@
 <header class="wrap phead">
   <span class="tag"><svg class="ic"><use href="#i-layers"/></svg> Features</span>
   <h1>One chat. <span class="hl">Your whole business.</span></h1>
-  <p>TaLi reads your everyday messages and turns them into clean records, live reports and accurate stock — without you ever leaving WhatsApp.</p>
+  <p>TaLi reads your everyday messages and turns them into clean records, live reports and accurate stock — without you ever leaving WhatsApp or Telegram.</p>
 </header>
 
 <section><div class="wrap">
@@ -88,7 +88,7 @@
     <div class="visual"><div class="chatlite">
       <div class="bub out">Sold 3 bags of rice</div>
       <div class="bub in"><b>Stock updated</b><br>Rice: 12 bags left</div>
-      <div class="bub in" style="background:rgba(255,107,129,.14);color:#ffd2d9">Sugar is low — 4 bags left</div>
+      <div class="bub in" style="background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.25);color:var(--danger)">Sugar is low — 4 bags left</div>
     </div></div>
   </div>
 
@@ -124,13 +124,16 @@
 <div class="wrap"><div class="cta-band">
   <h2>See it work in your own chat.</h2>
   <p>Free to start — your first record takes thirty seconds.</p>
-  <a href="{{ url_for('web.register') }}" class="btn btn-p">Start free on WhatsApp <svg class="ic"><use href="#i-arrow-right"/></svg></a>
+  <div class="hero-cta" style="justify-content:center">
+    <a href="{{ whatsapp_url }}" class="btn btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg> Continue on WhatsApp</a>
+    <a href="{{ telegram_url }}" class="btn btn-tg"><svg class="ic"><use href="#i-telegram"/></svg> Continue on Telegram</a>
+  </div>
 </div></div>
 
 <footer><div class="wrap">
   <div class="foot-grid">
-    <div><a href="{{ url_for('web.index') }}" class="logo"><span class="mark"><svg class="ic"><use href="#i-tally"/></svg></span><span class="name">TaLi</span></a>
-      <p>Bookkeeping that lives in the chat you already use.</p></div>
+    <div><a href="{{ url_for('web.index') }}" class="wordmark" aria-label="TaLi home">TaLi<span class="dot">.</span></a>
+      <p style="margin-top:16px">Bookkeeping that lives in the chat you already use.</p></div>
     <div><h4>Product</h4><a href="{{ url_for('web.features') }}">Features</a><a href="{{ url_for('web.pricing') }}">Pricing</a><a href="{{ url_for('web.index') }}#how">How it works</a></div>
     <div><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Contact</a></div>
     <div><h4>Legal</h4><a href="{{ url_for('web.privacy') }}">Privacy</a><a href="{{ url_for('web.terms') }}">Terms</a><a href="{{ url_for('web.faq') }}">FAQ</a></div>

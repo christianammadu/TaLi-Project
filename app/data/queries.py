@@ -331,3 +331,31 @@ def query_balance(user_id):
     except Exception as e:
         print(f"Failed to query balance: {e}")
         return None
+
+
+def query_opening_balance(user_id, before_date):
+    """Net cash position (income − expenses) per currency for all transactions strictly
+    before ``before_date`` — i.e. the opening balance for a statement starting that day.
+
+    Returns ``{currency: net_float}`` (empty when there's no prior history or on failure),
+    so a statement's running/closing balance is a true balance, not period-only.
+    """
+    if not before_date:
+        return {}
+    try:
+        with session_scope() as s:
+            scope_col, scope_val = _scope(s, user_id)
+            income = func.coalesce(
+                func.sum(case((Transaction.type == 'income', Transaction.amount), else_=0)), 0)
+            expenses = func.coalesce(
+                func.sum(case((Transaction.type == 'expense', Transaction.amount), else_=0)), 0)
+            stmt = (
+                select(Transaction.currency, (income - expenses).label('net'))
+                .where(scope_col == scope_val)
+                .where(Transaction.transaction_date < before_date)
+                .group_by(Transaction.currency)
+            )
+            return {r.currency: float(r.net) for r in s.execute(stmt).all()}
+    except Exception as e:
+        print(f"Failed to query opening balance: {e}")
+        return {}

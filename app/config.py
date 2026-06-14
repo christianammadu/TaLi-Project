@@ -77,3 +77,25 @@ class Config:
     BAND_CFO_API_KEY = os.getenv("BAND_CFO_API_KEY", "")
     BAND_COMPLIANCE_AGENT_ID = os.getenv("BAND_COMPLIANCE_AGENT_ID", "")
     BAND_COMPLIANCE_API_KEY = os.getenv("BAND_COMPLIANCE_API_KEY", "")
+    # Each agent's @handle on YOUR Band tenant (default = the internal contract handle).
+    # The live backend posts to the room under each agent and translates the internal
+    # @tali-* mentions to these, so registered agents with different handles still work.
+    BAND_INTAKE_HANDLE = os.getenv("BAND_INTAKE_HANDLE", "@tali-intake")
+    BAND_LEDGER_HANDLE = os.getenv("BAND_LEDGER_HANDLE", "@tali-ledger")
+    BAND_CFO_HANDLE = os.getenv("BAND_CFO_HANDLE", "@tali-cfo")
+    BAND_COMPLIANCE_HANDLE = os.getenv("BAND_COMPLIANCE_HANDLE", "@tali-compliance")
+    # REST path for posting a message into a room (live mirror). Overridable in case your
+    # Band tenant's endpoint differs; {chat_id} is filled with BAND_ROOM_ID.
+    BAND_MESSAGE_PATH = os.getenv("BAND_MESSAGE_PATH", "/api/v1/agent/chats/{chat_id}/messages")
+
+    # --- Multi-channel identity (WP-02 / G-IDENTITY) ---
+    # TTL (minutes) for single-use deep-link binding tokens (Telegram onboarding + Path B /link).
+    BINDING_TOKEN_TTL_MIN = int(os.getenv("BINDING_TOKEN_TTL_MIN", "15"))
+
+    # --- Telegram channel (WP-03/04) ---
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "")   # without @ ; feeds the deep-link
+    TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    TELEGRAM_API_BASE = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
+    # Public WhatsApp number for the wa.me Path-B deep-link (the display number, not PHONE_NUMBER_ID).
+    WHATSAPP_PUBLIC_NUMBER = os.getenv("WHATSAPP_PUBLIC_NUMBER", "")

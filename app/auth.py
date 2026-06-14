@@ -8,12 +8,12 @@ import string
 from datetime import datetime, timedelta
 
 from flask import current_app
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 
 from app.data.db import session_scope
 from app.data.models import Session as SessionModel
-from app.data.models import User, VerificationCode, WhatsappAccount
+from app.data.models import BindingToken, ChannelAccount, User, VerificationCode, WhatsappAccount
 from app.services.uuid_utils import uuid7
 
 _DEFAULT_THRESHOLDS = {"low_stock_limit": 5, "high_debt_limit": 50000, "large_expense_flag": 100000}
@@ -474,3 +474,141 @@ def get_onboarding_state(user_id):
     except Exception as e:
         print(f"Failed to get onboarding state: {e}")
         return None
+
+
+# --- Multi-channel identity + binding tokens (WP-02 / G-IDENTITY) ---
+
+def generate_binding_token():
+    """A single-use deep-link token — URL-safe and ≤64 chars (Telegram /start payload limit)."""
+    return secrets.token_urlsafe(24)   # 32 chars, charset [A-Za-z0-9_-]
+
+
+def binding_token_is_expired(expires_at, now=None):
+    """Pure check: True if a token's expiry has passed (or is missing)."""
+    if expires_at is None:
+        return True
+    return expires_at <= (now or datetime.utcnow())
+
+
+def issue_binding_token(user_id, target_channel=None, ttl_minutes=None):
+    """Mint a single-use binding token for a user (deep-link onboarding + Path B /link).
+    Returns the token string, or None."""
+    token = generate_binding_token()
+    minutes = ttl_minutes or int(current_app.config.get("BINDING_TOKEN_TTL_MIN", 15))
+    expires_at = datetime.utcnow() + timedelta(minutes=minutes)
+    try:
+        with session_scope() as s:
+            s.add(BindingToken(token=token, user_id=user_id,
+                               target_channel=target_channel, expires_at=expires_at))
+        return token
+    except Exception as e:
+        print(f"Failed to issue binding token: {e}")
+        return None
+
+
+def link_channel(user_id, channel, channel_user_id):
+    """Upsert a (channel, channel_user_id) → user_id link. Returns True on success."""
+    try:
+        with session_scope() as s:
+            s.execute(
+                mysql_insert(ChannelAccount)
+                .values(channel=channel, channel_user_id=str(channel_user_id), user_id=user_id)
+                .on_duplicate_key_update(user_id=user_id)
+            )
+        return True
+    except Exception as e:
+        print(f"Failed to link channel: {e}")
+        return False
+
+
+def unlink_channel(channel, channel_user_id):
+    """Remove a channel link (the other channels keep working). Returns True on success."""
+    try:
+        with session_scope() as s:
+            s.execute(
+                delete(ChannelAccount).where(
+                    ChannelAccount.channel == channel,
+                    ChannelAccount.channel_user_id == str(channel_user_id),
+                )
+            )
+        return True
+    except Exception as e:
+        print(f"Failed to unlink channel: {e}")
+        return False
+
+
+def redeem_binding_token(token, channel, channel_user_id):
+    """Validate + consume a binding token and link the channel to its user.
+    Returns the user_id (str) on success, else None."""
+    try:
+        with session_scope() as s:
+            row = s.execute(
+                select(BindingToken).where(BindingToken.token == token, BindingToken.used_at.is_(None))
+            ).scalars().first()
+            if not row or binding_token_is_expired(row.expires_at):
+                return None
+            row.used_at = func.now()
+            user_id = row.user_id
+            s.execute(
+                mysql_insert(ChannelAccount)
+                .values(channel=channel, channel_user_id=str(channel_user_id), user_id=user_id)
+                .on_duplicate_key_update(user_id=user_id)
+            )
+            return str(user_id)
+    except Exception as e:
+        print(f"Failed to redeem binding token: {e}")
+        return None
+
+
+def resolve_channel_user(channel, channel_user_id):
+    """Resolve a (channel, channel_user_id) to a verified user dict, or None.
+    Falls back to the legacy ``whatsapp_accounts`` table for WhatsApp rows predating WP-02."""
+    try:
+        with session_scope() as s:
+            row = s.execute(
+                select(User.id, User.phone_number, User.display_name)
+                .join(ChannelAccount, User.id == ChannelAccount.user_id)
+                .where(
+                    ChannelAccount.channel == channel,
+                    ChannelAccount.channel_user_id == str(channel_user_id),
+                    User.is_verified.is_(True),
+                )
+            ).first()
+            if row:
+                return _user_dict(row)
+    except Exception as e:
+        print(f"Failed to resolve channel user: {e}")
+    if channel == "whatsapp":          # legacy fallback (pre-channel_accounts rows)
+        return get_user_by_sender(channel_user_id)
+    return None
+
+
+def resolve_user_by_address(address):
+    """Resolve a namespaced sender (``wa:..`` / ``tg:..``, or a bare legacy phone) to a user dict."""
+    from app.channels.base import split_address
+    channel, native = split_address(address)
+    if channel is None:                # bare legacy WhatsApp sender id
+        return get_user_by_sender(native)
+    return resolve_channel_user(channel, native)
+
+
+def open_session(sender_id, user_id):
+    """Open a fresh ACTIVE session for a (namespaced) sender, replacing any prior active one.
+
+    Used after a channel bind and to auto-renew a bound chat (the bind is the trust anchor)."""
+    try:
+        with session_scope() as s:
+            s.execute(
+                update(SessionModel)
+                .where(SessionModel.sender_id == sender_id, SessionModel.is_active.is_(True))
+                .values(is_active=False, status='EXPIRED')
+            )
+            expires_at = datetime.utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
+            s.add(SessionModel(
+                id=uuid7(), sender_id=sender_id, user_id=user_id,
+                expires_at=expires_at, status='ACTIVE', is_active=True,
+            ))
+        return True
+    except Exception as e:
+        print(f"Failed to open session: {e}")
+        return False

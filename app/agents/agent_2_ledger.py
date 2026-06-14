@@ -62,6 +62,39 @@ class LedgerAgent:
         v = str(verdict).strip().lower()
         return v in ("approve", "approved", "ok", "allow", "yes"), str(verdict)
 
+    def _build_review_proposal(self, event):
+        """Build the compliance review envelope from the payload — used to review BEFORE
+        any DB write, so the blocking review never runs inside an open transaction holding
+        row locks. Returns the proposed-write dict, or None for read-only/empty intents."""
+        p = event.payload
+        if p.is_fast_path:
+            c = p.fast_path_transaction
+            if not c:
+                return None
+            return {"intent": "record_transaction", "fast_path": True,
+                    "amount": float(c.amount) if c.amount is not None else 0.0,
+                    "currency": c.currency, "item": c.item}
+        parsed = p.nlp_parsed
+        if parsed and (parsed.transactions or parsed.inventory or parsed.debts):
+            return {"intent": "split_routing",
+                    "transactions": len(parsed.transactions),
+                    "inventory": len(parsed.inventory),
+                    "debts": len(parsed.debts)}
+        return None
+
+    def _emit_reject(self, event, intent, reason):
+        """Emit a compliance-reject event to the CFO (matching the proposal's intent)."""
+        from app.agents.event_schemas import LedgerUpdateEvent, LedgerUpdateEventPayload
+        reject_event = LedgerUpdateEvent(
+            correlation_id=event.correlation_id, session_id=event.session_id,
+            user_id=event.user_id, business_id=event.business_id,
+            source_agent="LedgerAgent", event_type="error",
+            payload=LedgerUpdateEventPayload(
+                status="rejected", intent=intent,
+                raw_text=event.payload.raw_text, error_reason=f"Compliance hold: {reason}"),
+        )
+        self._emit_to_cfo(reject_event.model_dump(mode='json'))
+
     def handle_intake_payload(self, payload):
         """Processes events from Agent 1."""
         # Deserialize and validate incoming Pydantic IntakePayload
@@ -70,7 +103,6 @@ class LedgerAgent:
             TransactionResult, LedgerUpdateData
         )
         from decimal import Decimal
-        from datetime import date
         import time
         try:
             if isinstance(payload, dict):
@@ -94,6 +126,17 @@ class LedgerAgent:
             return "❌ Authorization Error: User session invalid."
 
         user_id_bin = uuid_to_bin(self.user_id)
+
+        # Two-phase review (WP-04 / G-14) BEFORE opening any DB transaction. The review
+        # blocks on the Compliance agent for up to BAND_REVIEW_TIMEOUT; doing it here (not
+        # mid-transaction) means we never hold row locks across that call. A reject prevents
+        # the write entirely (nothing is inserted-then-rolled-back).
+        review_proposed = self._build_review_proposal(event)
+        if review_proposed is not None:
+            approved, reason = self._review_gate(review_proposed)
+            if not approved:
+                self._emit_reject(event, review_proposed["intent"], reason)
+                return f"🛑 Not recorded — compliance hold: {reason}"
 
         retry_delays = [0.1, 0.5, 1.0]
         max_attempts = len(retry_delays) + 1
@@ -163,25 +206,8 @@ class LedgerAgent:
                         (record_uuid.bytes, self.sender_id, raw_text, int(amount))
                     )
 
-                    # Two-phase review (WP-04 / G-14): Compliance can veto before commit.
-                    approved, reason = self._review_gate({
-                        "intent": "record_transaction", "fast_path": True,
-                        "amount": float(amount), "currency": currency, "item": item,
-                    })
-                    if not approved:
-                        conn.rollback()
-                        reject_event = LedgerUpdateEvent(
-                            correlation_id=correlation_id, session_id=session_id,
-                            user_id=user_id, business_id=business_id,
-                            source_agent="LedgerAgent", event_type="error",
-                            payload=LedgerUpdateEventPayload(
-                                status="rejected", intent="record_transaction",
-                                raw_text=raw_text, error_reason=f"Compliance hold: {reason}"),
-                        )
-                        self._emit_to_cfo(reject_event.model_dump(mode='json'))
-                        return f"🛑 Not recorded — compliance hold: {reason}"
-
-                    # Record idempotency log inside the transaction atomically
+                    # Compliance already reviewed before the transaction (no locks held).
+                    # Record idempotency log inside the transaction atomically.
                     cursor.execute(
                         "INSERT INTO processed_events (event_id, agent_name) VALUES (%s, 'LedgerAgent')",
                         (str(event.event_id),)
@@ -361,26 +387,8 @@ class LedgerAgent:
                     results['debts'] = debt_results
 
                 if results:
-                    # Two-phase review (WP-04 / G-14): Compliance can veto before commit.
-                    approved, reason = self._review_gate({
-                        "intent": "split_routing",
-                        "transactions": len(tx_results), "inventory": len(inv_results),
-                        "debts": len(debt_results),
-                    })
-                    if not approved:
-                        conn.rollback()
-                        reject_event = LedgerUpdateEvent(
-                            correlation_id=correlation_id, session_id=session_id,
-                            user_id=user_id, business_id=business_id,
-                            source_agent="LedgerAgent", event_type="error",
-                            payload=LedgerUpdateEventPayload(
-                                status="rejected", intent="split_routing",
-                                raw_text=raw_text, error_reason=f"Compliance hold: {reason}"),
-                        )
-                        self._emit_to_cfo(reject_event.model_dump(mode='json'))
-                        return f"🛑 Not recorded — compliance hold: {reason}"
-
-                    # Record idempotency log inside the transaction atomically
+                    # Compliance already reviewed before the transaction (no locks held).
+                    # Record idempotency log inside the transaction atomically.
                     cursor.execute(
                         "INSERT INTO processed_events (event_id, agent_name) VALUES (%s, 'LedgerAgent')",
                         (str(event.event_id),)
@@ -432,22 +440,11 @@ class LedgerAgent:
                     print(f"[LedgerAgent Transient DB Error, Attempt {attempt}] Code {db_err.errno}: {db_err}. Retrying in {delay}s...")
                     time.sleep(delay)
                 else:
-                    # Non-transient DB error or exhausted retries
-                    try:
-                        conn_fail = get_db_connection()
-                        cursor_fail = conn_fail.cursor()
-                        cursor_fail.execute(
-                            "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                            "WHERE sender_id = %s AND status = 'processing' "
-                            "ORDER BY created_at DESC LIMIT 1",
-                            (self.sender_id,)
-                        )
-                        conn_fail.commit()
-                        cursor_fail.close()
-                        conn_fail.close()
-                    except Exception as db_status_err:
-                        print(f"[LedgerAgent Status Fail Error] {db_status_err}")
-
+                    # Non-transient DB error or exhausted retries. The webhook_events
+                    # lifecycle is owned by the gateway (keyed by whatsapp_message_id);
+                    # the ledger only dead-letters the event to the CFO and returns — it
+                    # must not touch webhook_events (it can't target the right row, and the
+                    # gateway overwrites it on return anyway).
                     err_event = LedgerUpdateEvent(
                         correlation_id=correlation_id,
                         session_id=session_id,
@@ -467,23 +464,9 @@ class LedgerAgent:
 
             except Exception as e:
                 # Malformed payload, validation error, code bug -> fail immediately!
+                # (webhook_events lifecycle is the gateway's, keyed by message_id — see above)
                 if 'conn' in locals() and conn.is_connected():
                     conn.rollback()
-
-                try:
-                    conn_fail = get_db_connection()
-                    cursor_fail = conn_fail.cursor()
-                    cursor_fail.execute(
-                        "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE sender_id = %s AND status = 'processing' "
-                        "ORDER BY created_at DESC LIMIT 1",
-                        (self.sender_id,)
-                    )
-                    conn_fail.commit()
-                    cursor_fail.close()
-                    conn_fail.close()
-                except Exception as db_status_err:
-                    print(f"[LedgerAgent Status Fail Error] {db_status_err}")
 
                 err_event = LedgerUpdateEvent(
                     correlation_id=correlation_id,
@@ -502,9 +485,18 @@ class LedgerAgent:
                 self._emit_to_cfo(err_event.model_dump(mode='json'))
                 return {"status": "error_handled_via_pubsub"}
             finally:
-                if 'conn' in locals() and conn.is_connected():
-                    cursor.close()
-                    conn.close()
+                # Guard cursor independently — it's unbound if conn.cursor() itself raised,
+                # and may already be closed by the transient-retry branch above.
+                if 'cursor' in locals() and cursor is not None:
+                    try:
+                        cursor.close()
+                    except Exception:
+                        pass
+                if 'conn' in locals() and conn is not None and conn.is_connected():
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
 
     def _is_authorized(self):
         """Validate if the user exists in database permissions."""
@@ -697,7 +689,6 @@ class LedgerAgent:
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (debt_entry_uuid.bytes, user_id_bin, business_id, event_id, name, entry_type, amount, currency, raw_text)
         )
-        debt_entry_id = debt_entry_uuid.bytes
 
         # 2. Write to transactions (ledger entry for auditing)
         tx_uuid = uuid7()

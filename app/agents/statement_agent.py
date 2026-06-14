@@ -8,14 +8,30 @@ normal send_reply path. No YES/NO confirmation — statements never mutate data.
 import shutil
 from datetime import date
 
-from app.data.queries import query_statement, query_cashflow
+from app.data.queries import query_statement, query_cashflow, query_opening_balance
 from app.services.report_renderer import render
 from app.services.formatter import _format_period, format_statement_chat, format_cashflow_chat
-from app.web.whatsapp import send_document
+from app.channels.registry import send_document   # routes to the originating channel (WP-05)
 
 
 _ACTION_LABELS = {'purchase': 'Purchases', 'sale': 'Sales', 'expense': 'Expenses', 'income': 'Income'}
 _TYPE_LABELS = {'expense': 'Expenses', 'income': 'Income'}
+
+
+def _income_chat(rows, meta):
+    """Compact in-chat Income Statement (revenue → gross → net) per currency."""
+    from app.services.report_renderer import compute_income_statement, format_money
+    lines = [f"📊 *{meta['title']}* — {meta['subtitle']}"]
+    for cur, p in sorted(compute_income_statement(rows).items()):
+        lines += [
+            "",
+            f"Total revenue: *{format_money(p['total_revenue'], cur)}*",
+            f"Less cost of goods sold: {format_money(p['cogs'], cur)}",
+            f"*Gross profit: {format_money(p['gross_profit'], cur)}*",
+            f"Less operating expenses: {format_money(p['total_expenses'], cur)}",
+            f"*Net profit: {format_money(p['net_profit'], cur)}*",
+        ]
+    return "\n".join(lines)
 
 
 def describe(statement):
@@ -24,11 +40,13 @@ def describe(statement):
     report_type = statement.get('report_type', 'transactions')
     if report_type == 'cashflow':
         title = 'Cashflow Statement'
+    elif report_type == 'income_statement':
+        title = 'Income Statement'
     else:
         label = (_ACTION_LABELS.get(statement.get('action'))
                  or _TYPE_LABELS.get(statement.get('tx_type'))
                  or 'Transactions')
-        title = f"{label} Statement"
+        title = 'Statement of Account' if label == 'Transactions' else f"{label} Statement"
     start, end = _resolve_range(statement, report_type)
     return title, (_format_period(start, end) or 'all time')
 
@@ -68,13 +86,23 @@ class StatementAgent:
             'business_name': self._business_name(),
             'subtitle': self._range_label(start, end),
         }
+        # Real opening balance (prior-period net) so the statement of account / cashflow
+        # show true running + closing balances, not period-only movement.
+        if report_type in ('transactions', 'cashflow') and start:
+            meta['opening_balance'] = query_opening_balance(self.user_id, start)
 
         if report_type == 'cashflow':
             meta['title'] = 'Cashflow Statement'
             data = query_cashflow(self.user_id, start, end)
             is_empty = not data
+        elif report_type == 'income_statement':
+            meta['title'] = 'Income Statement'
+            # P&L is derived from the full period's rows (no type/action filter).
+            data = query_statement(self.user_id, {'period_start': start, 'period_end': end})
+            is_empty = not data
         else:
-            meta['title'] = f"{self._tx_label(statement)} Statement"
+            label = self._tx_label(statement)
+            meta['title'] = 'Statement of Account' if label == 'Transactions' else f"{label} Statement"
             filters = {
                 'tx_type': statement.get('tx_type'),
                 'action': statement.get('action'),
@@ -94,6 +122,8 @@ class StatementAgent:
         if fmt == 'chat':
             if report_type == 'cashflow':
                 return format_cashflow_chat(data, meta)
+            if report_type == 'income_statement':
+                return _income_chat(data, meta)
             return format_statement_chat(data, meta)
 
         files = []

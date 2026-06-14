@@ -7,6 +7,19 @@ lives in `.env` (gitignored); keep operator notes in `docs/credentials-setup.loc
 
 ---
 
+## 0. Prerequisites (app up + DB migrated)
+
+Get the app itself running first — the Telegram channel rides on it:
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            # then fill in the values (see §5 + the rest of .env)
+alembic upgrade head            # create/upgrade the MySQL schema
+python run.py                   # serves on http://localhost:5000
+```
+You need a **public HTTPS URL** for Telegram to reach the webhook — a deployed host, or
+`ngrok http 5000` in dev (§2). Set `APP_BASE_URL` to that URL.
+
 ## 1. Create the bot (BotFather)
 
 1. In Telegram, message **@BotFather** → `/newbot`.
@@ -42,6 +55,12 @@ rejects any request whose value ≠ `TELEGRAM_WEBHOOK_SECRET`.
 > **Dev without a public URL:** use long-polling (`getUpdates`) instead of a webhook — a small
 > poller loop hits the same gateway. The deployed setup uses the webhook above.
 
+**Deploy:** the webhook registration is **persistent** — Telegram keeps pushing to that URL
+with no expiry, so you only re-run `setWebhook` when the host/URL changes (new deploy domain,
+rotated `TELEGRAM_WEBHOOK_SECRET`). The public landing's **Continue on Telegram** / **Continue
+on WhatsApp** buttons (WP-07) are built from `TELEGRAM_BOT_USERNAME` and `WHATSAPP_PUBLIC_NUMBER`,
+so set both in the deployed `.env` for the CTAs to deep-link correctly.
+
 ## 3. How onboarding works (web deep-link — no phone/OTP)
 
 ```
@@ -51,7 +70,7 @@ Web /register  ──issues──▶  binding_tokens(token, user_id, expires_at)
                               │ user taps → Telegram sends "/start <token>"
 /webhook/telegram  ──/start <token>──▶ resolve token → bind tg:<chat_id> → channel_accounts → open session
                               │
-                         bot replies "✅ Linked — send me a transaction like 'Sold rice 5000'."
+                         bot replies "✅ Linked! Now just tell me what happened — like 'Sold rice 5000'."
 ```
 - Tokens are single-use, short-TTL, `[A-Za-z0-9_-]` ≤ 64 chars (Telegram's `start` payload limit).
 - An **unbound** chat (any stranger messaging the bot) only ever gets the deep-link prompt; the
@@ -97,7 +116,7 @@ APP_BASE_URL=https://<your-host>     # used to build the deep-link + setWebhook 
 ## 6. Smoke test
 1. `setWebhook` (step 2) → `getWebhookInfo` shows your URL, no errors.
 2. Register on the web → tap the `t.me/...?start=` link → bot replies "Linked".
-3. Send **`Sold rice 5000`** in Telegram → reply `✅ Recorded: Sales — ₦5,000`.
+3. Send **`Sold rice 5000`** in Telegram → a confirmation like `Got it ✓ Recorded a ₦5,000 sale`.
 4. Send **`finops`** → spend-by-provider report. Send a stranger message from another account →
    only the deep-link prompt (no processing).
 

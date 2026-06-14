@@ -37,6 +37,22 @@ class TransactionModel(BaseModel):
     description: Optional[str] = ''
     date: str
 
+    @field_validator('type', mode='before')
+    @classmethod
+    def check_type(cls, v):
+        t = str(v).lower().strip() if v is not None else v
+        if t not in VALID_TYPES:
+            raise ValueError(f"Invalid transaction type: '{v}'. Must be 'income' or 'expense'.")
+        return t
+
+    @field_validator('action', mode='before')
+    @classmethod
+    def coerce_action(cls, v):
+        # Unknown/empty actions fall back to the declared default rather than
+        # rejecting the whole transaction (LLM output varies).
+        a = str(v).lower().strip() if v else ''
+        return a if a in VALID_ACTIONS else 'other'
+
     @field_validator('amount')
     @classmethod
     def validate_amount_val(cls, v):
@@ -93,9 +109,11 @@ class TransactionModel(BaseModel):
             return 'NGN'
         return str(v).strip().upper()[:10]
 
-    @field_validator('category')
+    @field_validator('category', mode='before')
     @classmethod
     def clean_category(cls, v):
+        # mode='before' so an explicit None/empty coerces to the default
+        # (an 'after' validator never runs — None fails the str type first).
         if not v or not str(v).strip():
             return 'Miscellaneous'
         return str(v).strip()
@@ -108,6 +126,13 @@ class QueryModel(BaseModel):
     currency: Optional[str] = None
     period_start: Optional[str] = None
     period_end: Optional[str] = None
+
+    @field_validator('query_type', mode='before')
+    @classmethod
+    def coerce_query_type(cls, v):
+        # Unknown query types fall back to 'sum' rather than rejecting the query.
+        q = str(v).lower().strip() if v else ''
+        return q if q in ('sum', 'list', 'balance', 'count') else 'sum'
 
     @field_validator('currency')
     @classmethod
@@ -159,6 +184,14 @@ class DebtModel(BaseModel):
     type: Literal['customer_debt', 'supplier_debt']
     amount: Optional[float] = None
     currency: str = 'NGN'
+
+    @field_validator('currency', mode='before')
+    @classmethod
+    def clean_currency(cls, v):
+        # normalise case, consistent with TransactionModel
+        if not v or not str(v).strip():
+            return 'NGN'
+        return str(v).strip().upper()[:10]
 
     @field_validator('name')
     @classmethod

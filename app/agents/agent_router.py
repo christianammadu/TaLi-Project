@@ -10,12 +10,13 @@ Keeps the ``AgentRouter`` name + ``route(text, message_id)`` signature so
 """
 
 import json
+import os
 from mysql.connector import Error
 from app.agents.band import get_band_client
 from app.agents.agent_1_intake import IntakeAgent, LEDGER_HANDLE, CFO_HANDLE
 from app.agents.agent_2_ledger import LedgerAgent
 from app.agents.agent_3_cfo import CFOAgent
-from app.auth import get_active_session
+from app.auth import get_active_session, get_user_by_sender, get_user_by_phone
 from app.data.database import get_db_connection
 
 
@@ -55,21 +56,28 @@ class AgentRouter:
         # 1. Verify active session at the gateway entry point.
         session = get_active_session(self.sender_id)
         if not session:
-            from app.auth import get_user_by_sender, get_user_by_phone
             user = get_user_by_sender(self.sender_id) or get_user_by_phone(self.sender_id)
             if user:
-                return "🔒 Session expired or not found. Type *login* to authenticate."
-            return ("👋 *Welcome to TaLi!*\n\n"
-                    "Your number isn't registered yet. Type *register* to get your sign-up link.")
+                return "🔒 Your session's timed out. Type *login* to pick up where you left off."
+            return ("👋 Hi, I'm TaLi — your pocket bookkeeper.\n\n"
+                    "You're not set up yet. Type *register* to get your sign-up link.")
 
         # 2. Webhook deduplication + processing-state check (atomic transition).
         if message_id:
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor(dictionary=True)
+                # Claim the event atomically: a brand-new ('received'/'failed') row, OR a
+                # STALE 'processing' row whose previous attempt crashed before reaching
+                # processed/failed. Without the stale clause such an event would be dropped
+                # as a duplicate forever. stale_secs is a config int (>> sync processing time),
+                # embedded directly (sanitised via int(), injection-safe).
+                stale_secs = int(os.getenv("WEBHOOK_PROCESSING_STALE_SECONDS", "120"))
                 cursor.execute(
                     "UPDATE webhook_events SET status = 'processing', processed_at = NULL "
-                    "WHERE whatsapp_message_id = %s AND status IN ('received', 'failed')",
+                    "WHERE whatsapp_message_id = %s AND ("
+                    "status IN ('received', 'failed') "
+                    f"OR (status = 'processing' AND created_at < (NOW() - INTERVAL {stale_secs} SECOND)))",
                     (message_id,)
                 )
                 conn.commit()

@@ -7,7 +7,7 @@ import json
 from datetime import date
 from decimal import Decimal
 from mysql.connector import Error
-from app.data.database import get_db_connection
+from app.data.database import get_db_connection, db_cursor
 
 
 class SnapshotAgent:
@@ -18,20 +18,15 @@ class SnapshotAgent:
         # NULL until provisioned into a business — never default to a shared
         # constant, which would leak transactions across unrelated users.
         self.business_id = None
+        from app.services.uuid_utils import uuid_to_bin
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            from app.services.uuid_utils import uuid_to_bin
-            cursor.execute("SELECT business_id FROM users WHERE id = %s LIMIT 1", (uuid_to_bin(user_id),))
-            row = cursor.fetchone()
-            if row and row['business_id'] is not None:
-                self.business_id = row['business_id']
+            with db_cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT business_id FROM users WHERE id = %s LIMIT 1", (uuid_to_bin(user_id),))
+                row = cursor.fetchone()
+                if row and row['business_id'] is not None:
+                    self.business_id = row['business_id']
         except Exception as e:
             print(f"Error fetching business_id for SnapshotAgent: {e}")
-        finally:
-            if 'conn' in locals() and conn.is_connected():
-                cursor.close()
-                conn.close()
 
     def _scope(self, col="business_id"):
         """Return (sql_fragment, value): business-scoped when provisioned, else

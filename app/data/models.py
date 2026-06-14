@@ -45,6 +45,32 @@ class WhatsappAccount(Base):
     linked_at = Column(TIMESTAMP, server_default=_NOW)
 
 
+class ChannelAccount(Base):
+    """Multi-channel identity (WP-02 / G-IDENTITY): maps (channel, channel_user_id) → user.
+
+    One user can have several rows (e.g. ``whatsapp``+``telegram``) → one ledger across
+    channels. Supersedes ``whatsapp_accounts`` (backfilled by migration 0005)."""
+    __tablename__ = "channel_accounts"
+    channel = Column(String(20), primary_key=True)          # 'whatsapp' | 'telegram'
+    channel_user_id = Column(String(64), primary_key=True)  # phone / chat_id
+    user_id = Column(UUID_to_BINARY, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    linked_at = Column(TIMESTAMP, server_default=_NOW)
+    __table_args__ = (Index("idx_channel_account_user", "user_id"),)
+
+
+class BindingToken(Base):
+    """Single-use deep-link token (WP-02) that binds a channel chat to a user — the
+    Telegram onboarding + Path B cross-channel link primitive. ``token`` ≤64 chars,
+    URL-safe, short TTL; consumed on redemption (``used_at`` set)."""
+    __tablename__ = "binding_tokens"
+    token = Column(String(64), primary_key=True)
+    user_id = Column(UUID_to_BINARY, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    target_channel = Column(String(20))     # optional hint: which channel this token is for
+    expires_at = Column(TIMESTAMP, nullable=False)
+    used_at = Column(TIMESTAMP)
+    created_at = Column(TIMESTAMP, server_default=_NOW)
+
+
 class VerificationCode(Base):
     __tablename__ = "verification_codes"
     id = Column(Integer, primary_key=True, autoincrement=True)
