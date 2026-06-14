@@ -19,6 +19,7 @@ from app.agents.band import get_band_client
 INTAKE_HANDLE = "@tali-intake"
 LEDGER_HANDLE = "@tali-ledger"
 CFO_HANDLE = "@tali-cfo"
+HUMAN_HANDLE = "@tali-human"   # the human approver, surfaced in-room (WP-08)
 
 # Intents that mutate the ledger and therefore require an explicit confirmation.
 MUTATING_INTENTS = {'record_transaction', 'inventory', 'debt'}
@@ -527,6 +528,14 @@ class IntakeAgent:
         statement['format'] = fmt
         return self._run_statement(statement)
 
+    def _post_human_event(self, body):
+        """Surface a human-in-the-loop event in the Band room (fire-and-forget) so the
+        approval is visible + auditable (WP-08). The durable gate stays `pending_confirmations`."""
+        try:
+            self.band.send(self.room_id, [HUMAN_HANDLE], body, sender=INTAKE_HANDLE)
+        except Exception as e:
+            print(f"[IntakeAgent human-loop post failed] {e}")
+
     def _store_pending(self, text, parsed):
         """Persist a parsed write awaiting confirmation; return the breakdown prompt."""
         from app.services.formatter import format_confirmation
@@ -534,6 +543,8 @@ class IntakeAgent:
         if not prompt:
             return None
         if self._store_pending_json(text, parsed):
+            # Human-in-the-loop (WP-08): record that a human's approval is required, in-room.
+            self._post_human_event({"type": "approval_request", "summary": prompt, "raw_text": text})
             return prompt
         return None  # fall through to record directly rather than lose the entry
 
@@ -598,6 +609,9 @@ class IntakeAgent:
     def _apply_confirmation(self, decision, pending):
         """Commit (YES) or discard (NO) a pending parsed write."""
         self._clear_pending()
+        # Human-in-the-loop (WP-08): record the human's decision in-room for the audit trail.
+        self._post_human_event({"type": "human_decision",
+                                "decision": "rejected" if decision in CONFIRM_NO else "approved"})
         if decision in CONFIRM_NO:
             return "❌ Cancelled — nothing was recorded. Send it again to retry."
 
