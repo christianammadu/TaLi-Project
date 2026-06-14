@@ -10,6 +10,20 @@ from app.data.database import get_db_connection
 from app.services.formatter import format_period_report
 
 
+def format_router_spend(report):
+    """Render the model router's live per-provider/model session spend as WhatsApp text (WP-10)."""
+    if not report or not report.get("rows"):
+        return "*Live session spend (this run):* none yet."
+    lines = ["*Live session spend by provider (this run):*"]
+    for provider, agg in sorted(report.get("by_provider", {}).items()):
+        lines.append(f"• *{provider}*: ${agg['cost']:.5f} ({agg['calls']} calls)")
+    lines.append("_by model:_")
+    for r in report["rows"]:
+        lines.append(f"   – {r['provider']}/{r['model']}: ${r['cost']:.5f} ({r['calls']} calls)")
+    lines.append(f"*Session total:* ${report['total_cost']:.5f} across {report['total_calls']} calls")
+    return "\n".join(lines)
+
+
 class ReportingAgent:
     """Agent responsible for compiling and formatting transaction summaries."""
 
@@ -263,9 +277,12 @@ class ReportingAgent:
                 f"• *Total API Calls:* {total_calls}\n"
                 f"• *Total API Spend:* ${total_cost:.5f}\n"
                 f"• *Avg Model Latency:* {int(avg_latency)}ms\n\n"
-                f"*Spend by Feature/Intent:*\n"
+                f"*Spend by Feature/Intent (logged):*\n"
                 f"{breakdown_str}"
             )
+            # Append the model router's live per-provider/model spend for this run (WP-10).
+            from app.services import model_router
+            report += "\n\n" + format_router_spend(model_router.spend_report())
             return report
 
         except Error as e:
