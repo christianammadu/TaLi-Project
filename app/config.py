@@ -60,3 +60,20 @@ class Config:
     # Optional per-process spend ceiling (USD); 0 = unlimited. Enforced by the router so a
     # demo run can't blow the small AI/ML credit (Round 2 risk).
     MODEL_ROUTER_SPEND_CEILING_USD = float(os.getenv("MODEL_ROUTER_SPEND_CEILING_USD", "0"))
+
+    # --- Band platform (WP-02 / G-BAND-CONTRACT) ---
+    # "stub" = in-process fire-and-forget connector (offline dev/tests); "live" = real
+    # band.ai / Thenvoi over REST/WS. WS-vs-REST defaults to REST (Round 2) — confirm in WP-02.
+    BAND_BACKEND = os.getenv("BAND_BACKEND", "stub")
+    BAND_REST_URL = os.getenv("THENVOI_REST_URL", "https://app.band.ai/")
+    BAND_WS_URL = os.getenv("THENVOI_WS_URL", "wss://app.band.ai/api/v1/socket/websocket")
+    BAND_ROOM_ID = os.getenv("BAND_ROOM_ID", "")
+    # Per-agent credentials (agent_id + X-API-Key), registered on app.band.ai (Pro).
+    BAND_INTAKE_AGENT_ID = os.getenv("BAND_INTAKE_AGENT_ID", "")
+    BAND_INTAKE_API_KEY = os.getenv("BAND_INTAKE_API_KEY", "")
+    BAND_LEDGER_AGENT_ID = os.getenv("BAND_LEDGER_AGENT_ID", "")
+    BAND_LEDGER_API_KEY = os.getenv("BAND_LEDGER_API_KEY", "")
+    BAND_CFO_AGENT_ID = os.getenv("BAND_CFO_AGENT_ID", "")
+    BAND_CFO_API_KEY = os.getenv("BAND_CFO_API_KEY", "")
+    BAND_COMPLIANCE_AGENT_ID = os.getenv("BAND_COMPLIANCE_AGENT_ID", "")
+    BAND_COMPLIANCE_API_KEY = os.getenv("BAND_COMPLIANCE_API_KEY", "")
