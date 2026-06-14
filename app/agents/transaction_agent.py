@@ -25,12 +25,13 @@ class TransactionAgent:
     def process(self, text, parsed=None):
         """Processes transaction requests.
 
-        If parsed is None, routes via AgentRouter to maintain compatibility.
+        ``parsed`` is supplied by the Ledger when routing a query. The old
+        ``AgentRouter`` re-entry fallback was retired in WP-06 (G-09): the Band gateway
+        is the single entry point now, so re-routing here would recurse through the room.
         """
         if parsed is None:
-            from app.agents.agent_router import AgentRouter
-            router = AgentRouter(self.user_id, self.sender_id)
-            return router.route(text)
+            return ("🤔 I couldn't read that as a transaction. Try e.g. "
+                    "\"Sold rice 5000\" or \"Bought fuel 2k\".")
 
         intent = parsed.get('intent')
         if intent == 'record_transaction':
