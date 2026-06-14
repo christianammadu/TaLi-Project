@@ -4,12 +4,21 @@ Receives user messages, normalizes shorthand, resolves NL, logs AI calls, and es
 """
 
 import json
+import os
+import uuid
 from datetime import date
 from mysql.connector import Error
 from app.data.database import get_db_connection
 from app.services.nlp import parse_message
 from app.services.utils import parse_shorthand
-from app.agents.band_sdk import BandSDK
+from app.agents.band import get_band_client
+
+# Band room handles (WP-03). Agents coordinate by @mention in a shared room instead of
+# the retired in-memory BandSDK broker. Ledger/CFO consume these once WP-04/05 land; the
+# webhook→room gateway is wired in WP-06.
+INTAKE_HANDLE = "@tali-intake"
+LEDGER_HANDLE = "@tali-ledger"
+CFO_HANDLE = "@tali-cfo"
 
 # Intents that mutate the ledger and therefore require an explicit confirmation.
 MUTATING_INTENTS = {'record_transaction', 'inventory', 'debt'}
@@ -78,11 +87,31 @@ def _items_missing_amount(parsed):
 
 
 class IntakeAgent:
-    """Agent 1 — Intake & Normalizer. Processes raw inputs and dispatches payloads through Band SDK."""
+    """Agent 1 — Intake & Normalizer. Processes raw inputs and dispatches payloads
+    into the shared Band room via the connector (WP-03)."""
 
-    def __init__(self, user_id, sender_id):
+    def __init__(self, user_id, sender_id, band=None):
         self.user_id = user_id
         self.sender_id = sender_id
+        # Band connector (WP-03). Defaults to the configured backend (stub offline,
+        # live in prod); injectable for tests. One room per sender for now.
+        self.band = band if band is not None else get_band_client()
+        self.room_id = os.getenv("BAND_ROOM_ID") or f"tali-{sender_id}"
+        self._reply_timeout = float(os.getenv("BAND_REPLY_TIMEOUT", "8"))
+
+    def _band_send_collect(self, mentions, payload):
+        """Send an event into the room (fire-and-forget) and block for the terminal
+        reply via the reply-collection seam (G-05). Returns the reply text or None.
+
+        Replaces the old synchronous ``BandSDK.publish(...)[0]`` return: Band send has
+        no return value, so the answer is collected out-of-band by ``correlation_id``.
+        Until WP-04/05 register the Ledger/CFO handlers and WP-06 wires the gateway,
+        this returns None in-app (no handler), which callers degrade gracefully.
+        """
+        correlation_id = uuid.uuid4().hex
+        self.band.send(self.room_id, mentions, payload,
+                       correlation_id=correlation_id, sender=INTAKE_HANDLE)
+        return self.band.collect_reply(correlation_id, timeout=self._reply_timeout)
 
     def process(self, text):
         """Standard intake entry point for routing WhatsApp messages."""
@@ -406,9 +435,9 @@ class IntakeAgent:
                     parsed=parsed
                 )
             )
-            results = BandSDK.publish("cfo_escalation", event.model_dump(mode='json'))
+            reply = self._band_send_collect([CFO_HANDLE], event.model_dump(mode='json'))
             # Never dump raw JSON to the user — fall back to the human message.
-            return results[0] if (results and results[0]) else question
+            return reply if reply else question
 
 
         # Missing-price guard: a clear parse that names items/debts but has no
@@ -703,4 +732,7 @@ class IntakeAgent:
                 nlp_parsed=nlp_parsed
             )
         )
-        return BandSDK.publish("intake_to_ledger", event.model_dump(mode='json'))
+        # Hand off to the Ledger agent in the room; the reply is collected out-of-band.
+        # Callers keep their `results[0] if results else ...` shape, so wrap as a list.
+        reply = self._band_send_collect([LEDGER_HANDLE], event.model_dump(mode='json'))
+        return [reply] if reply is not None else []
