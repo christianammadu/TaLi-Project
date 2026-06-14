@@ -58,9 +58,9 @@ class AgentRouter:
             from app.auth import get_user_by_sender, get_user_by_phone
             user = get_user_by_sender(self.sender_id) or get_user_by_phone(self.sender_id)
             if user:
-                return "🔒 Session expired or not found. Type *login* to authenticate."
-            return ("👋 *Welcome to TaLi!*\n\n"
-                    "Your number isn't registered yet. Type *register* to get your sign-up link.")
+                return "🔒 Your session's timed out. Type *login* to pick up where you left off."
+            return ("👋 Hi, I'm TaLi — your pocket bookkeeper.\n\n"
+                    "You're not set up yet. Type *register* to get your sign-up link.")
 
         # 2. Webhook deduplication + processing-state check (atomic transition).
         if message_id:

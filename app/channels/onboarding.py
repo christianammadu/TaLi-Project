@@ -35,8 +35,9 @@ def _deeplink_for(channel, token):
 
 def onboarding_prompt():
     base = current_app.config.get("APP_BASE_URL", "").rstrip("/")
-    return ("👋 I don't know you yet. Link your TaLi account to start — register at "
-            f"{base}/register and you'll get a one-tap link back here.")
+    return ("👋 Hi, I'm TaLi — your pocket bookkeeper. We haven't met yet. "
+            f"Set up your free account at {base}/register and I'll send a one-tap "
+            "link to connect this chat.")
 
 
 def resolve(channel, native_id):
@@ -54,7 +55,7 @@ def handle_command(channel, native_id, command, arg):
         user_id = auth.redeem_binding_token(arg, channel, native_id)
         if user_id:
             auth.open_session(make_address(channel, native_id), user_id)
-            return "✅ Linked! Send me a transaction like “Sold rice 5000”."
+            return "✅ Linked! Now just tell me what happened — like “Sold rice 5000” — and I'll keep the books."
         return "⚠️ That link has expired or was already used. Get a fresh one and tap again."
 
     if command == "link":

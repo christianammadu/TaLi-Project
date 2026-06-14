@@ -43,10 +43,10 @@ def send_unregistered_welcome(sender):
     """One consistent first-contact message for unregistered numbers."""
     send_reply(
         sender,
-        "👋 *Welcome to TaLi!*\n\n"
-        "I keep your business books right here in WhatsApp — sales, expenses, "
-        "stock, debts and reports.\n\n"
-        "Your number isn't registered yet. Create your free account here:\n"
+        "👋 Hi, I'm TaLi — your pocket bookkeeper.\n\n"
+        "I keep your business books right here in the chat: sales, expenses, "
+        "stock, debts and reports — just tell me in your own words.\n\n"
+        "We're not set up yet. Create your free account here:\n"
         f"{current_app.config['APP_BASE_URL']}/register\n\n"
         "Then come back and type *login* to connect."
     )
@@ -72,10 +72,10 @@ def handle_login(sender):
         verify_url = f"{current_app.config['APP_BASE_URL']}/verify?t={token}"
         send_reply(
             sender,
-            f"🔐 *Login Verification*\n\n"
-            f"Tap the link below to get your access code:\n{verify_url}\n\n"
-            f"Then enter the 6-digit code here to log in.\n"
-            f"⏰ This link expires in {current_app.config['TOKEN_EXPIRY_MINUTES']} minutes."
+            f"🔐 *Let's log you in*\n\n"
+            f"Tap to get your access code:\n{verify_url}\n\n"
+            f"Then send me the 6-digit code and you're in.\n"
+            f"⏰ The link expires in {current_app.config['TOKEN_EXPIRY_MINUTES']} minutes."
         )
     else:
         send_reply(sender, "❌ Something went wrong. Please try again.")
@@ -163,7 +163,7 @@ def _send_next_onboarding(sender, user_id):
     nxt = state['next']
     if nxt == 'name':
         send_reply(sender, "👋 *Welcome to TaLi!*\n"
-                           "I keep your books right here in WhatsApp.\n\n"
+                           "I'll keep your books right here in the chat.\n\n"
                            "First — what should I call you? _(or reply *skip*)_")
     elif nxt == 'usage':
         send_reply(sender, "Are you using TaLi for *personal* or *business*?\n\n"
