@@ -385,9 +385,10 @@ def _account_story(rows, meta, st):
 
 def _cashflow_story(data, meta, st):
     """Cashflow — opening → monthly in/out/net → closing, per currency (direct, monthly)."""
+    opening_by_cur = meta.get('opening_balance') if isinstance(meta.get('opening_balance'), dict) else {}
     story = []
     for cur, rows in sorted((data or {}).items()):
-        opening = 0.0
+        opening = float(opening_by_cur.get(cur, 0.0))
         header = [Paragraph(h, st['th'] if i == 0 else st['th_r'])
                   for i, h in enumerate(['Month', 'Cash in', 'Cash out', 'Net', 'Balance'])]
         table = [header]

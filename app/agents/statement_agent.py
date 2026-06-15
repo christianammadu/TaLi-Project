@@ -8,7 +8,7 @@ normal send_reply path. No YES/NO confirmation — statements never mutate data.
 import shutil
 from datetime import date
 
-from app.data.queries import query_statement, query_cashflow
+from app.data.queries import query_statement, query_cashflow, query_opening_balance
 from app.services.report_renderer import render
 from app.services.formatter import _format_period, format_statement_chat, format_cashflow_chat
 from app.channels.registry import send_document   # routes to the originating channel (WP-05)
@@ -86,6 +86,10 @@ class StatementAgent:
             'business_name': self._business_name(),
             'subtitle': self._range_label(start, end),
         }
+        # Real opening balance (prior-period net) so the statement of account / cashflow
+        # show true running + closing balances, not period-only movement.
+        if report_type in ('transactions', 'cashflow') and start:
+            meta['opening_balance'] = query_opening_balance(self.user_id, start)
 
         if report_type == 'cashflow':
             meta['title'] = 'Cashflow Statement'
