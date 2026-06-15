@@ -413,6 +413,38 @@ def format_balance(result):
     return "\n".join(lines)
 
 
+def format_stock_levels(items):
+    """Format current inventory levels for WhatsApp.
+
+    Args:
+        items: list of {item, unit, stock} dicts (stock may be negative when more was
+               sold than recorded as bought).
+    """
+    if not items:
+        return ("📦 No stock tracked yet.\n\n"
+                "Tell me what you have, e.g. \"Add 50 bags of rice\", or record a "
+                "purchase like \"Bought 20 cartons of noodles 16k\".")
+
+    lines = ["📦 *Available stock*", ""]
+    needs_reconcile = False
+    for it in items:
+        qty = it.get('stock', 0)
+        qty_str = f"{qty:,.0f}" if float(qty).is_integer() else f"{qty:,.2f}"
+        unit = f" {it['unit']}" if it.get('unit') else ""
+        name = it.get('item', 'item')
+        if qty <= 0:
+            needs_reconcile = True
+            lines.append(f"• {name} — *{qty_str}{unit}* ⚠️ out of stock")
+        else:
+            lines.append(f"• {name} — {qty_str}{unit}")
+
+    if needs_reconcile:
+        lines.append("")
+        lines.append("_Some items show 0 or below — log your purchases to reconcile._")
+
+    return "\n".join(lines)
+
+
 def _format_period(start, end):
     """Format a date range into a readable string."""
     if not start and not end:
