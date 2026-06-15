@@ -60,6 +60,7 @@ def _log_outgoing(sender, text):
 def send_text(sender, text):
     """Send a text reply via the sender's own channel. Returns the transport response."""
     import time
+    from app.services.alerts import alert_slow_request, alert_failed_confirmation_delivery
     max_retries = 3
     retry_delay = 1.0
     api_start = time.time()
@@ -69,11 +70,28 @@ def send_text(sender, text):
             _log_outgoing(sender, text)
             api_time_ms = int((time.time() - api_start) * 1000)
             print(f"[PERF] Channel API Latency: {api_time_ms}ms (attempt {attempt})")
+            alert_slow_request("send_text", api_time_ms)
             return resp
         except Exception as e:
             print(f"[send_text Attempt {attempt} Failed] Error: {e}")
             if attempt == max_retries:
-                print(f"[CRITICAL] Confirmation message could not be delivered to {sender}: {text}")
+                alert_failed_confirmation_delivery(sender, text, str(e))
+                # Queue failed delivery to DB for retry/recovery
+                try:
+                    from app.data.database import get_db_connection
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "INSERT INTO pending_deliveries (sender_id, message_text) VALUES (%s, %s)",
+                        (sender, text)
+                    )
+                    conn.commit()
+                except Exception as db_err:
+                    print(f"Error queueing failed delivery: {db_err}")
+                finally:
+                    if 'conn' in locals() and conn.is_connected():
+                        cursor.close()
+                        conn.close()
                 raise e
             time.sleep(retry_delay * attempt)
 

@@ -7,7 +7,7 @@ import json
 import os
 import uuid
 from mysql.connector import Error
-from app.data.database import get_db_connection
+from app.data.database import get_db_connection, set_transaction_state
 from app.agents.band import get_band_client
 from app.services.validators import dump_model
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
@@ -124,8 +124,11 @@ class LedgerAgent:
         is_fast_path = event.payload.is_fast_path
         raw_text = event.payload.raw_text
 
+        set_transaction_state(event.event_id, user_id, 'PROCESSING_LEDGER')
+
         # 1. Authorize user permissions
         if not self._is_authorized():
+            set_transaction_state(event.event_id, user_id, 'FAILED')
             return "❌ Authorization Error: User session invalid."
 
         user_id_bin = uuid_to_bin(self.user_id)
@@ -139,6 +142,7 @@ class LedgerAgent:
             approved, reason = self._review_gate(review_proposed)
             if not approved:
                 self._emit_reject(event, review_proposed["intent"], reason)
+                set_transaction_state(event.event_id, user_id, 'FAILED')
                 return f"🛑 Not recorded — compliance hold: {reason}"
 
         retry_delays = [0.1, 0.5, 1.0]
@@ -166,6 +170,7 @@ class LedgerAgent:
                     cleaned = event.payload.fast_path_transaction
                     if not cleaned:
                         conn.rollback()
+                        set_transaction_state(event.event_id, user_id, 'FAILED')
                         return "❌ Error: Missing fast path transaction data."
 
                     # Resolve category ID
@@ -217,6 +222,7 @@ class LedgerAgent:
                         (str(event.event_id),)
                     )
                     conn.commit()
+                    set_transaction_state(event.event_id, user_id, 'COMPLETED')
 
                     if tx_id:
                         tx_result = TransactionResult(
@@ -247,12 +253,14 @@ class LedgerAgent:
                         )
                         self._emit_to_cfo(success_event.model_dump(mode='json'))
                         return "✅ Shorthand saved."
+                    set_transaction_state(event.event_id, user_id, 'FAILED')
                     return "❌ Failed to record shorthand."
 
                 # NLP path execution
                 parsed = event.payload.nlp_parsed
                 if not parsed:
                     conn.rollback()
+                    set_transaction_state(event.event_id, user_id, 'FAILED')
                     return "❌ Error: Missing parsed payload."
 
                 intents = parsed.intents
@@ -373,6 +381,7 @@ class LedgerAgent:
                     inv_reply = json.loads(inv_reply_str)
                     if inv_reply.get('status') == 'clarification_needed':
                         conn.rollback()
+                        set_transaction_state(event.event_id, user_id, 'FAILED')
                         # Return the human question — never the raw JSON (this reply is
                         # sent straight to the customer, it does not pass through the CFO).
                         return inv_reply.get('question') or "I need a bit more detail to record that stock change."
@@ -387,6 +396,7 @@ class LedgerAgent:
                     debt_reply = json.loads(debt_reply_str)
                     if debt_reply.get('status') == 'clarification_needed':
                         conn.rollback()
+                        set_transaction_state(event.event_id, user_id, 'FAILED')
                         return debt_reply.get('question') or "I need a bit more detail to record that debt."
                     debt_results.append(DebtResult(**debt_reply))
                 if debt_results:
@@ -400,6 +410,7 @@ class LedgerAgent:
                         (str(event.event_id),)
                     )
                     conn.commit()
+                    set_transaction_state(event.event_id, user_id, 'COMPLETED')
 
                     tx_id_str = str(tx_results[0].id) if tx_results else None
 
@@ -428,6 +439,7 @@ class LedgerAgent:
                     return json.dumps(out_results, indent=2)
 
                 conn.rollback()
+                set_transaction_state(event.event_id, user_id, 'FAILED')
                 return "❓ No actions processed."
 
             except Error as db_err:
@@ -451,6 +463,7 @@ class LedgerAgent:
                     # the ledger only dead-letters the event to the CFO and returns — it
                     # must not touch webhook_events (it can't target the right row, and the
                     # gateway overwrites it on return anyway).
+                    set_transaction_state(event.event_id, user_id, 'FAILED')
                     err_event = LedgerUpdateEvent(
                         correlation_id=correlation_id,
                         session_id=session_id,
@@ -474,6 +487,7 @@ class LedgerAgent:
                 if 'conn' in locals() and conn.is_connected():
                     conn.rollback()
 
+                set_transaction_state(event.event_id, user_id, 'FAILED')
                 err_event = LedgerUpdateEvent(
                     correlation_id=correlation_id,
                     session_id=session_id,

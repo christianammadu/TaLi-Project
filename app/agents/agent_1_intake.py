@@ -9,11 +9,15 @@ import re
 import uuid
 from datetime import date
 from mysql.connector import Error
-from app.data.database import get_db_connection
+from app.data.database import get_db_connection, set_transaction_state
 from app.services.nlp import parse_message
 from app.services.utils import parse_shorthand
 from app.agents.band import get_band_client
 from app.auth import get_active_session  # module-level (app.auth has no agent deps) — patchable + consistent with agent_router
+from app.services.constants import (
+    RESPONSE_PROCESSING, RESPONSE_CANCELLED, RESPONSE_TIMEOUT, RESPONSE_FAILED,
+    RESPONSE_PENDING, RESPONSE_INVALID_FORMAT, RESPONSE_STATEMENT_CANCELLED
+)
 
 # Band room handles (WP-03). Agents coordinate by @mention in a shared room instead of
 # the retired in-memory BandSDK broker. Ledger/CFO consume these once WP-04/05 land; the
@@ -158,18 +162,19 @@ class IntakeAgent:
         if pending:
             pj = pending['parsed_json']
             pj = pj if isinstance(pj, dict) else json.loads(pj)
+            event_id = pj.get('_event_id')
+            if event_id:
+                set_transaction_state(event_id, self.user_id, 'RECEIVED')
             if pj.get('awaiting') == 'statement_format':
                 if text_lower in FORMAT_REPLIES or text_lower in CONFIRM_NO:
                     return self._apply_format_choice(text_lower, pj)
                 else:
-                    return ("Which format would you like?\n\n"
-                            "1️⃣ Chat summary\n2️⃣ PDF document\n3️⃣ Excel spreadsheet\n\n"
-                            "Reply *1*, *2* or *3*.")
+                    return RESPONSE_INVALID_FORMAT
             else:
                 if text_lower in CONFIRM_YES or text_lower in CONFIRM_NO:
                     return self._apply_confirmation(text_lower, pending)
                 else:
-                    return "Do you want to record this? Please reply YES or NO."
+                    return RESPONSE_PENDING
 
         # Define regex matchers upfront to enforce strict priority
         inv_match_add = re.match(r'^(?:add|added)\s+(\d+(?:\.\d+)?)\s+(?:bags\s+of\s+|units\s+of\s+)?(\w+)$', text_lower)
@@ -548,7 +553,7 @@ class IntakeAgent:
             extracted_data={"parsed": parsed, "raw_text": text, "is_fast_path": False},
             confidence=parsed.get('confidence', 1.0)
         )
-        return results[0] if results else "❌ Ledger processing failed."
+        return results[0] if results else RESPONSE_FAILED
 
     def _run_statement(self, statement, raw_text=''):
         """Generate/deliver a statement. After an in-chat render, re-hold the
@@ -586,11 +591,9 @@ class IntakeAgent:
         if not fmt:
             if text_lower in CONFIRM_NO:
                 self._clear_pending()
-                return "❌ Okay — report cancelled."
+                return RESPONSE_STATEMENT_CANCELLED
             # A bare 'yes'/'ok' doesn't pick a format; nudge once more.
-            return ("Which format would you like?\n\n"
-                    "1️⃣ Chat summary\n2️⃣ PDF document\n3️⃣ Excel spreadsheet\n\n"
-                    "Reply *1*, *2* or *3*.")
+            return RESPONSE_INVALID_FORMAT
         self._clear_pending()
         statement = dict(pj.get('statement') or {})
         statement['format'] = fmt
@@ -612,8 +615,11 @@ class IntakeAgent:
         if not prompt:
             return None
         # Generate event_id and store it in parsed so that it persists in pending_confirmations
-        parsed['_event_id'] = str(uuid.uuid4())
+        event_id = str(uuid.uuid4())
+        parsed['_event_id'] = event_id
+        set_transaction_state(event_id, self.user_id, 'RECEIVED')
         if self._store_pending_json(text, parsed):
+            set_transaction_state(event_id, self.user_id, 'PENDING_CONFIRMATION')
             # Human-in-the-loop (WP-08): record that a human's approval is required, in-room.
             self._post_human_event({"type": "approval_request", "summary": prompt, "raw_text": text})
             return prompt
@@ -688,9 +694,15 @@ class IntakeAgent:
         self._post_human_event({"type": "human_decision",
                                 "decision": "rejected" if decision in CONFIRM_NO else "approved"})
 
+        pj = pending['parsed_json']
+        parsed = pj if isinstance(pj, dict) else json.loads(pj)
+        event_id = parsed.get('_event_id')
+
         if decision in CONFIRM_NO:
             self._clear_pending()
-            return "❌ Cancelled — nothing was recorded. Send it again to retry."
+            if event_id:
+                set_transaction_state(event_id, self.user_id, 'FAILED')
+            return RESPONSE_CANCELLED
 
         # Lock the row and check/set _recording flag atomically
         conn = get_db_connection()
@@ -712,7 +724,7 @@ class IntakeAgent:
             if parsed.get('_recording'):
                 conn.rollback()
                 print(f"[IntakeAgent] Duplicate YES detected for {self.sender_id}. Suppressing.")
-                return "⏳ Processing..."
+                return RESPONSE_PROCESSING
 
             parsed['_recording'] = True
             cursor.execute(
@@ -720,17 +732,20 @@ class IntakeAgent:
                 (json.dumps(parsed), self.sender_id)
             )
             conn.commit()
+            if event_id:
+                set_transaction_state(event_id, self.user_id, 'CONFIRMED')
         except Error as e:
             if 'conn' in locals() and conn.is_connected():
                 conn.rollback()
             print(f"Error locking pending confirmation: {e}")
+            if event_id:
+                set_transaction_state(event_id, self.user_id, 'FAILED')
             return "❌ A database error occurred. Please try again."
         finally:
             if 'conn' in locals() and conn.is_connected():
                 cursor.close()
                 conn.close()
 
-        event_id = parsed.get('_event_id')
         results = self._publish_intake(
             intent="split_routing",
             extracted_data={"parsed": parsed, "raw_text": pending['raw_text'], "is_fast_path": False},
@@ -744,9 +759,13 @@ class IntakeAgent:
         if reply is not None:
             if reply.startswith("🛑"):  # Compliance rejection
                 self._clear_pending()
+                if event_id:
+                    set_transaction_state(event_id, self.user_id, 'FAILED')
                 return reply
             elif reply.startswith("⚠️") or reply.startswith("❌"):  # Transient/database error
                 self._reset_recording_flag()
+                if event_id:
+                    set_transaction_state(event_id, self.user_id, 'FAILED')
                 return reply
             else:
                 self._clear_pending()
@@ -759,10 +778,13 @@ class IntakeAgent:
                 return self._reconstruct_success_reply(event_id)
             else:
                 self._reset_recording_flag()
-                return "⚠️ Connection timed out while recording. Your transaction was not saved. Please try again."
+                set_transaction_state(event_id, self.user_id, 'FAILED')
+                return RESPONSE_TIMEOUT
         
         self._reset_recording_flag()
-        return "❌ Ledger processing failed."
+        if event_id:
+            set_transaction_state(event_id, self.user_id, 'FAILED')
+        return RESPONSE_FAILED
 
     def _reset_recording_flag(self):
         """Reset the _recording flag to False in pending_confirmations."""
