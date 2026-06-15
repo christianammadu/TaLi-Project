@@ -1,12 +1,24 @@
 <div align="center">
- 
-# 📊 TaLi
+
+<img src="app/static/brand/tali-mark-256.png" alt="TaLi logo" width="112" />
+
+# TaLi
  
 ### Collaborative Multi-Agent Bookkeeping over WhatsApp & Telegram
  
 **TaLi** (from _"Tally"_) is an enterprise-grade, multi-agent bookkeeping system built for small businesses in Africa. It enables traders, shop owners, and freelancers to manage their transactions, inventory, and debts in plain natural language directly from **WhatsApp** and **Telegram**, backed by a collaborative agent network.
- 
-`WhatsApp` · `Telegram` · `Band SDK` · `Featherless AI` · `AI/ML API` · `Flask` · `SQLAlchemy` · `MySQL` · `Alembic`
+
+![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
+
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?logo=flask&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-C2562F)
+![Band of Agents](https://img.shields.io/badge/Band%20of%20Agents-Hackathon%202026-C2562F)
+
+`Band` · `Featherless AI` · `AI/ML API` · `Alembic`
  
 </div>
  
@@ -25,6 +37,7 @@ TaLi was specifically built and designed for the **Band of Agents Hackathon (Jun
 ## Table of contents
  
 - [Why TaLi](#why-tali)
+- [See it in action](#see-it-in-action)
 - [How it works](#how-it-works)
 - [Multi-Agent Collaboration Architecture](#multi-agent-collaboration-architecture)
 - [Technology Partner Integrations](#technology-partner-integrations)
@@ -44,6 +57,25 @@ Most small traders and informal merchants keep their accounts in their head or o
  
 > 💬 **Merchant:** *"Sold 3 bags of rice 18k"*  
 > 🤖 **TaLi:** *"Recorded a ₦18,000 sale. Stock updated: 12 bags of rice remaining. ✓"*
+ 
+---
+ 
+## See it in action
+ 
+The same books, in the chat app the merchant already uses. Record sales, expenses, stock and debts in plain language — and high-value entries pause for a compliance + human approval before they're committed.
+ 
+<div align="center">
+<table>
+<tr>
+<td align="center">📱 <b>WhatsApp</b></td>
+<td align="center">✈️ <b>Telegram</b></td>
+</tr>
+<tr>
+<td valign="top"><img src="docs/img/whatsapp-view.png" alt="TaLi on WhatsApp" width="300"/></td>
+<td valign="top"><img src="docs/img/telegram-view.png" alt="TaLi on Telegram" width="300"/></td>
+</tr>
+</table>
+</div>
  
 ---
  
@@ -69,11 +101,11 @@ TaLi receives inbound messaging webhooks, resolves the user session, and dispatc
  
 ```mermaid
 flowchart TD
-    WA[WhatsApp / Telegram API] -->|Webhook| WH[web/routes.py · /webhook]
-    WH -->|Verify & Dedup| AUTH[auth.py · Sessions]
-    WH --> GW[agents/agent_router.py · Band Gateway]
+    WA["WhatsApp / Telegram API"] -->|Webhook| WH["web/routes.py · /webhook"]
+    WH -->|"Verify & Dedup"| AUTH["auth.py · Sessions"]
+    WH --> GW["agents/agent_router.py · Band Gateway"]
  
-    subgraph ROOM[Band Room · Dynamic Handoffs]
+    subgraph ROOM["Band Room · Dynamic Handoffs"]
       A1["@tali-intake<br/>NLP Parser"]
       A2["@tali-ledger<br/>Ledger State Manager"]
       A4["@tali-compliance<br/>Policy Auditor"]
@@ -82,26 +114,26 @@ flowchart TD
     end
  
     GW --> A1
-    A1 -->|@ledger| A2
-    A2 -->|Proposes Write| A4
-    A4 -->|Approve / Veto| A2
-    A2 -.->|Threshold Trigger| HU
-    HU -.->|Approval Event| A2
-    A2 -->|@cfo| A3
-    A3 -->|Terminal Response| GW
-    GW -->|Send Reply| WA
+    A1 -->|"@ledger"| A2
+    A2 -->|"Proposes Write"| A4
+    A4 -->|"Approve / Veto"| A2
+    A2 -.->|"Threshold Trigger"| HU
+    HU -.->|"Approval Event"| A2
+    A2 -->|"@cfo"| A3
+    A3 -->|"Terminal Response"| GW
+    GW -->|"Send Reply"| WA
  
-    A1 -.-> MR[services/model_router.py]
+    A1 -.-> MR["services/model_router.py"]
     A4 -.-> MR
-    MR -.-> P{{Featherless AI & AI/ML API}}
-    A2 -.-> DB[(MySQL Database)]
+    MR -.-> P{{"Featherless AI & AI/ML API"}}
+    A2 -.-> DB[("MySQL Database")]
 ```
  
 ---
  
 ## Technology Partner Integrations
  
-TaLi implements a native **Multi-provider Model Router** ([model_router.py](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/services/model_router.py)) that routes agent roles to optimized serverless endpoints:
+TaLi implements a native **Multi-provider Model Router** ([model_router.py](app/services/model_router.py)) that routes agent roles to optimized serverless endpoints:
  
 - **Featherless AI**: Powers our specialized open-source reasoning models. We use `Qwen/Qwen2.5-72B-Instruct` for natural language parsing (`intake`) and `mistralai/Mistral-Small-24B-Instruct-2501` for structured policy checks (`compliance`).
 - **AI/ML API**: Connects to frontier commercial models like `gpt-4o` for CFO analysis, cost forecasting, and complex escalation reasoning.
@@ -133,11 +165,12 @@ TaLi-Project/
 │   ├── config.py              # Environment configuration loader
 │   ├── auth.py                # OTP delivery, link minting, session validation
 │   ├── agents/                # Band room intelligence pipeline
-│   │   ├── agent_router.py        # Gateway routing and event deduping
-│   │   ├── agent_1_intake.py      # NLP parser (Featherless AI)
-│   │   ├── agent_2_ledger.py      # Database read/writes and transaction hooks
-│   │   ├── agent_3_cfo.py         # Response compilation and stock alerts
-│   │   └── band_sdk.py            # Local in-process pub/sub stub
+│   │   ├── agent_router.py        # Webhook→room gateway, session + event dedup
+│   │   ├── agent_1_intake.py      # NLP parse + classify (Featherless AI)
+│   │   ├── agent_2_ledger.py      # Propose→review→commit ledger writes
+│   │   ├── agent_3_cfo.py         # Reply composition, balances, stock alerts
+│   │   ├── compliance_agent.py    # Pre-commit policy audit + human-in-the-loop
+│   │   └── band/band_client.py    # Band connector (in-process stub + live REST)
 │   ├── data/                  # Persistent data layers
 │   │   ├── db.py                  # SQLAlchemy engine & session scopes
 │   │   ├── models.py              # Declarative database models (Users, Ledger, Webhooks)
@@ -218,7 +251,7 @@ TaLi is configured via environment variables. Refer to [`.env.example`](.env.exa
  
 ## Database & Migrations
  
-Database schema changes are managed by **Alembic** under `migrations/`. The database models are defined in [models.py](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/data/models.py).
+Database schema changes are managed by **Alembic** under `migrations/`. The database models are defined in [models.py](app/data/models.py).
  
 ```bash
 alembic upgrade head                              # Apply all migrations
@@ -240,9 +273,9 @@ python -m pytest          # Execute unit tests
  
 ## Design System & UI
  
-TaLi features a custom design system ("Market Ledger" style) utilizing Hanken Grotesk and Fraunces fonts. The branding is configured in [landing.css](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/landing.css) and [style.css](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/style.css), which are optimized for mobile and desktop screens.
+TaLi features a custom design system ("Market Ledger" style) utilizing Hanken Grotesk and Fraunces fonts. The branding is configured in [landing.css](app/static/landing.css) and [style.css](app/static/style.css), which are optimized for mobile and desktop screens. The app mark lives in [app/static/brand/](app/static/brand/) as a scalable SVG plus PNGs (1024→32).
  
-We serve a custom Open Graph marketing asset located at [og-image.png](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/og-image.png) for link preview rendering on chat clients and search indexers.
+We serve a custom Open Graph marketing asset located at [og-image.png](app/static/og-image.png) for link preview rendering on chat clients and search indexers.
  
 ---
  

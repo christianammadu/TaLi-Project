@@ -7,3 +7,6 @@ myvenv/
 
 # Local-only setup notes (credentials guidance — never commit). Any *.local.md is ignored.
 *.local.md
+
+# macOS
+.DS_Store
