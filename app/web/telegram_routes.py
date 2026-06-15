@@ -9,6 +9,7 @@ route + the document/dead-letter reply paths behind the channel is WP-05.)
 from flask import Blueprint, jsonify, request
 
 from app.channels import onboarding
+from app.channels.account_settings import render_settings, apply_setting
 from app.channels.base import split_address
 from app.channels.telegram import TelegramChannel
 
@@ -49,6 +50,15 @@ def telegram_webhook():
     from app.auth import get_active_session, open_session
     if not get_active_session(msg.sender):
         open_session(msg.sender, user["id"])
+
+    # 3b. Settings menu + "set <field> <value>" edits (same surface as WhatsApp).
+    low = msg.text.strip().lower()
+    if low in ("settings", "/settings"):
+        _tg.send_text(msg.sender, render_settings(user["id"]))
+        return jsonify(ok=True)
+    if low.startswith("set "):
+        _tg.send_text(msg.sender, apply_setting(user["id"], msg.text))
+        return jsonify(ok=True)
 
     from app.agents.agent_router import AgentRouter
     reply = AgentRouter(user_id=user["id"], sender_id=msg.sender).route(msg.text, msg.message_id)

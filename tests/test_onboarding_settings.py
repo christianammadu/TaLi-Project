@@ -68,14 +68,12 @@ class TestOnboardingState(unittest.TestCase):
         self.assertIsNone(self._next(None))
 
 
-class TestHandleSet(unittest.TestCase):
-    """routes.handle_set — settings edits."""
+class TestSettings(unittest.TestCase):
+    """account_settings.apply_setting / render_settings — channel-agnostic (return text)."""
 
     def setUp(self):
-        self.session = {'user_id': 1}
         patches = mock.patch.multiple(
-            'app.web.routes',
-            send_reply=mock.DEFAULT,
+            'app.channels.account_settings',
             set_display_name=mock.DEFAULT,
             set_usage_type=mock.DEFAULT,
             update_business_profile=mock.DEFAULT,
@@ -87,53 +85,59 @@ class TestHandleSet(unittest.TestCase):
         for k in ('set_display_name', 'set_usage_type', 'update_business_profile', '_set_base_currency'):
             self.m[k].return_value = True
 
-    def _reply(self):
-        return self.m['send_reply'].call_args[0][1]
+    def _apply(self, text):
+        from app.channels.account_settings import apply_setting
+        return apply_setting(1, text)
 
     def test_set_name(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set name Ada', self.session)
+        reply = self._apply('set name Ada')
         self.m['set_display_name'].assert_called_once_with(1, 'Ada')
-        self.assertIn('Name updated', self._reply())
+        self.assertIn('Name updated', reply)
 
     def test_set_currency_uppercases(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set currency usd', self.session)
+        reply = self._apply('set currency usd')
         self.m['_set_base_currency'].assert_called_once_with(1, 'USD')
-        self.assertIn('USD', self._reply())
+        self.assertIn('USD', reply)
 
     def test_set_currency_invalid_rejected(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set currency dollars', self.session)
+        reply = self._apply('set currency dollars')
         self.m['_set_base_currency'].assert_not_called()
-        self.assertIn('3-letter', self._reply())
+        self.assertIn('3-letter', reply)
 
     def test_set_type_business(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set type business', self.session)
+        self._apply('set type business')
         self.m['set_usage_type'].assert_called_once_with(1, 'business')
 
     def test_set_type_invalid_rejected(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set type corporate', self.session)
+        self._apply('set type corporate')
         self.m['set_usage_type'].assert_not_called()
 
     def test_set_business_implies_business_usage(self):
-        from app.web.routes import handle_set
-        handle_set('234', "set business Ada's Kitchen", self.session)
+        self._apply("set business Ada's Kitchen")
         self.m['update_business_profile'].assert_called_once_with(1, name="Ada's Kitchen")
         self.m['set_usage_type'].assert_called_once_with(1, 'business')
 
     def test_set_missing_value_shows_usage(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set name', self.session)
+        reply = self._apply('set name')
         self.m['set_display_name'].assert_not_called()
-        self.assertIn('Usage', self._reply())
+        self.assertIn('Usage', reply)
 
     def test_set_unknown_field(self):
-        from app.web.routes import handle_set
-        handle_set('234', 'set colour blue', self.session)
-        self.assertIn('name', self._reply().lower())
+        reply = self._apply('set colour blue')
+        self.assertIn('name', reply.lower())
+
+    def test_render_settings_menu(self):
+        from app.channels import account_settings
+        snapshot = {
+            'display_name': 'Ada', 'usage_type': 'business', 'base_currency': 'NGN',
+            'business_profile': {'name': "Ada's Kitchen", 'type': 'Food / Restaurant'},
+            'alert_thresholds': {'low_stock_limit': 5},
+        }
+        with mock.patch.object(account_settings, '_read_settings', return_value=snapshot):
+            out = account_settings.render_settings(1)
+        self.assertIn('Your settings', out)
+        self.assertIn('Ada', out)
+        self.assertIn('NGN', out)
 
 
 class TestOnboardingAnswer(unittest.TestCase):
