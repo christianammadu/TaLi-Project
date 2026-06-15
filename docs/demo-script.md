@@ -11,7 +11,8 @@ Regulated & High-Stakes Workflows track.
 - [ ] `COMPLIANCE_LARGE_AMOUNT` set low (e.g. `50000`) so a demo "big" sale triggers the veto.
 - [ ] `MODEL_ROUTER_SPEND_CEILING_USD` set (e.g. `8`) so credits can't be exhausted mid-demo.
 - [ ] Rehearse once in `BAND_BACKEND=stub` / OpenAI-only to reserve partner credits; have a backup recording.
-- [ ] Open: WhatsApp chat · the Band room (app.band.ai) · a terminal · the `/audit` endpoint.
+- [ ] Telegram bot live per [`docs/telegram-setup.md`](telegram-setup.md) (`setWebhook` done); a test account already linked to the **same** TaLi user as the WhatsApp number (so both channels share one ledger).
+- [ ] Open: WhatsApp chat · **Telegram chat** · the Band room (app.band.ai) · a terminal · the `/audit` endpoint.
 
 ## Beats
 
@@ -40,14 +41,23 @@ and a full audit trail for regulated finance."
 - Walk the JSON: **parse → handoffs → write**, with the **model + cost** per step and the
   **approval**. "Every action, handoff, model, cost and approval is reconstructable by id."
 
-**3:45–4:30 — FinOps (deliberate credit optimization).**
+**3:45–4:10 — FinOps (deliberate credit optimization).**
 - Send: **`finops`** → show the reply: live **spend split by provider/model** (Featherless
   workers cheap + high-volume; AI/ML reserved for reasoning; OpenAI fallback). "We route the
   cheap, high-volume work to Featherless and reserve the $10 AI/ML credit for hard reasoning."
 
-**4:30–5:00 — Close.**
+**4:10–4:40 — Same books, any chat (dual-channel).**
+- Cut to **Telegram**, same business. Send: **`income statement for this month as pdf`**.
+- The bot replies with the **branded PDF** (terracotta letterhead, COGS→gross→net) — open it on screen.
+- Voiceover: "Same agents, same ledger — over WhatsApp *or* Telegram. The message arrives on
+  either channel, the gateway routes it to the Band room, and the reply (or document) goes back
+  out the channel it came in on. One business, one set of books, two front doors."
+- _(If time is tight: just send `Sold rice 5000` on Telegram and show the same `Got it ✓`
+  confirmation — proof the second channel hits the same gateway.)_
+
+**4:40–5:00 — Close.**
 "Four agents, one Band room, plan-execute-review with human-in-the-loop and a regulated-grade
-audit trail — built on Band as the coordination layer. Thanks."
+audit trail — over WhatsApp and Telegram, built on Band as the coordination layer. Thanks."
 
 ## On-screen checklist (what each beat must show)
 - The Band room with 4 named participants + @mention handoffs (the core scoring evidence).
@@ -55,6 +65,7 @@ audit trail — built on Band as the coordination layer. Thanks."
 - A human approval **in the room**.
 - The `/audit/<event_id>` lifecycle JSON.
 - The FinOps per-provider spend.
+- The **same ledger on a second channel** (Telegram) — a message/document over both WhatsApp and Telegram.
 
 ## Fallbacks if live misbehaves
 - Band live flaky → narrate over the `BAND_BACKEND=stub` run (same flow, in-process).
