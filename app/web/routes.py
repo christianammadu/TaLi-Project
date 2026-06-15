@@ -2,7 +2,6 @@ import re
 import hmac
 import hashlib
 from flask import Blueprint, request, jsonify, current_app
-from mysql.connector import Error
 from app.data.database import get_db_connection
 from app.web.whatsapp import send_reply
 from app.auth import (
@@ -368,12 +367,14 @@ def webhook():
             if not hmac.compare_digest(signature, expected):
                 print("Webhook signature verification failed — rejecting payload")
                 return jsonify({"status": "forbidden"}), 403
+        elif current_app.config.get('OTP_DEV_BYPASS'):
+            print("WARNING: META_APP_SECRET unset — signature NOT verified (OTP_DEV_BYPASS dev mode)")
         else:
-            print("WARNING: META_APP_SECRET not configured — webhook signature NOT verified")
+            # Fail closed: never process unauthenticated webhooks in production.
+            print("META_APP_SECRET not configured — rejecting webhook (set it, or OTP_DEV_BYPASS for dev)")
+            return jsonify({"status": "forbidden"}), 403
 
-        data = request.json
-        # LOG 1: See the raw data Meta sends you
-        print(f"Full Data Received: {data}")
+        data = request.get_json(silent=True) or {}
 
         try:
             if 'messages' in data['entry'][0]['changes'][0]['value']:

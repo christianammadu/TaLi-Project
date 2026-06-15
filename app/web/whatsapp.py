@@ -108,7 +108,8 @@ def send_otp_template(recipient, code):
         cursor.execute(
             "INSERT INTO messages (user_id, sender_id, direction, message_text) "
             "VALUES (%s, %s, 'outgoing', %s)",
-            (user_id, recipient, f"OTP sent ({'ok' if success else 'FAILED'}): {code}")
+            # SECURITY: never persist the OTP value — log delivery status only.
+            (user_id, recipient, f"OTP sent ({'ok' if success else 'FAILED'})")
         )
         conn.commit()
     except Exception as e:

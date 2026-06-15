@@ -60,8 +60,12 @@ class TelegramChannel(Channel):
     def verify(self, request):
         secret = current_app.config.get("TELEGRAM_WEBHOOK_SECRET", "")
         if not secret:
-            print("[Telegram] TELEGRAM_WEBHOOK_SECRET unset — skipping verification (DEV ONLY)")
-            return True
+            # Fail closed in production; only the explicit dev flag accepts unsigned updates.
+            if current_app.config.get("OTP_DEV_BYPASS"):
+                print("[Telegram] TELEGRAM_WEBHOOK_SECRET unset — accepting (OTP_DEV_BYPASS dev mode)")
+                return True
+            print("[Telegram] TELEGRAM_WEBHOOK_SECRET unset — rejecting webhook (set it, or OTP_DEV_BYPASS for dev)")
+            return False
         return self.verify_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""), secret)
 
     @staticmethod
