@@ -1,5 +1,5 @@
 import json
-from datetime import date, timedelta
+from datetime import date
 from app.services import model_router
 
 

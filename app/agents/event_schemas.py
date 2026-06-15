@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from app.services.validators import UnifiedResponseModel, TransactionModel, InventoryModel, DebtModel, ReportModel
+from app.services.validators import UnifiedResponseModel, TransactionModel, ReportModel
 
 
 class BaseBandEvent(BaseModel):

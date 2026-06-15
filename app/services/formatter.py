@@ -316,7 +316,7 @@ def format_sum_query(result):
     period = _format_period(result.get('period_start'), result.get('period_end'))
 
     lines = [
-        f"📊 *Summary*",
+        "📊 *Summary*",
         "",
         f"*Total {desc}:*",
     ]

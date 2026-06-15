@@ -70,7 +70,6 @@ class LedgerAgent:
             TransactionResult, LedgerUpdateData
         )
         from decimal import Decimal
-        from datetime import date
         import time
         try:
             if isinstance(payload, dict):
@@ -697,7 +696,6 @@ class LedgerAgent:
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (debt_entry_uuid.bytes, user_id_bin, business_id, event_id, name, entry_type, amount, currency, raw_text)
         )
-        debt_entry_id = debt_entry_uuid.bytes
 
         # 2. Write to transactions (ledger entry for auditing)
         tx_uuid = uuid7()

@@ -628,7 +628,6 @@ def _xlsx_transactions(wb, by_cur, meta):
 def _xlsx_summary(wb, by_cur, meta):
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     bold = Font(bold=True)
-    head = Font(bold=True, size=12)
     accent_fill = PatternFill('solid', fgColor='EAF3EC')
     thin_top = Border(top=Side(style='thin', color='241F1A'))
     ws = wb.create_sheet(title='Summary')
