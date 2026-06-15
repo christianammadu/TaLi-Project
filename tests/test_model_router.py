@@ -116,5 +116,45 @@ class TestModelRouter(unittest.TestCase):
         self.assertAlmostEqual(res["estimated_cost"], 10 * 0.150 / 1_000_000 + 5 * 0.600 / 1_000_000)
 
 
+class TestModelRouterHealth(unittest.TestCase):
+    """Passive liveness tracking that powers /health."""
+
+    def setUp(self):
+        for k in ("OPENAI_API_KEY", "AIML_API_KEY", "FEATHERLESS_API_KEY"):
+            os.environ.setdefault(k, "test-key")
+        os.environ.pop("MODEL_ROUTER_SPEND_CEILING_USD", None)
+        model_router._spent_usd = 0.0
+        model_router._overall.update(last_ok_ts=None, last_ok_provider=None, last_fail_ts=None, last_error=None)
+        model_router._provider_health.clear()
+        self._real = model_router.get_client
+
+    def tearDown(self):
+        model_router.get_client = self._real
+        model_router._spent_usd = 0.0
+
+    def test_unknown_before_any_call(self):
+        self.assertEqual(model_router.health_report()["status"], "unknown")
+
+    def test_up_after_success(self):
+        model_router.get_client = lambda name: _FakeClient(lambda **kw: _FakeResp("{}"))
+        model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
+        rep = model_router.health_report()
+        self.assertEqual(rep["status"], "up")
+        self.assertEqual(rep["last_ok_provider"], "featherless")
+        self.assertIsNotNone(rep["providers"]["featherless"]["last_ok"])
+
+    def test_down_after_all_fail_surfaces_error(self):
+        def fail(name):
+            def fn(**kw):
+                raise RuntimeError(f"{name} 401 invalid key")
+            return _FakeClient(fn)
+        model_router.get_client = fail
+        with self.assertRaises(RuntimeError):
+            model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
+        rep = model_router.health_report()
+        self.assertEqual(rep["status"], "down")
+        self.assertIn("invalid key", rep["providers"]["openai"]["last_error"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,7 +18,9 @@ Roles: ``intake`` (Featherless), ``escalation``/``cfo`` (AI/ML), ``compliance`` 
 """
 
 import os
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from openai import OpenAI
 
@@ -78,6 +80,70 @@ def _record_spend(provider, model, cost, prompt_tokens, completion_tokens):
 def reset_spend():
     """Clear the spend accumulator (e.g. at the start of a billed session)."""
     _spend.clear()
+
+
+# --- Liveness tracking (for /health) ---------------------------------------
+# Updated passively as real calls happen — no extra API cost. Process-scoped, so it
+# reflects this worker's recent traffic. `_overall` answers "is the model layer working?"
+_overall = {"last_ok_ts": None, "last_ok_provider": None, "last_fail_ts": None, "last_error": None}
+_provider_health = {}  # provider -> {"last_ok_ts", "last_fail_ts", "last_error"}
+
+
+def _mark_ok(provider):
+    now = time.time()
+    _overall.update(last_ok_ts=now, last_ok_provider=provider)
+    _provider_health.setdefault(provider, {}).update(last_ok_ts=now, last_error=None)
+
+
+def _mark_provider_fail(provider, err):
+    _provider_health.setdefault(provider, {}).update(last_fail_ts=time.time(), last_error=str(err)[:300])
+
+
+def _iso(ts):
+    return datetime.fromtimestamp(ts, timezone.utc).isoformat() if ts else None
+
+
+def health_report(active_probe=False):
+    """Liveness of the model layer for the /health endpoint.
+
+    Passive by default (reads recorded outcomes — free). With ``active_probe=True`` it
+    makes ONE tiny live call down the chain to confirm reachability right now.
+    Status: ``up`` (last completed call succeeded), ``down`` (last attempt failed across
+    all providers), or ``unknown`` (no calls yet this worker).
+    """
+    providers = {}
+    for name, prov in PROVIDERS.items():
+        ph = _provider_health.get(name, {})
+        providers[name] = {
+            "key_configured": bool(_cfg(prov.api_key_env, "")),
+            "last_ok": _iso(ph.get("last_ok_ts")),
+            "last_failure": _iso(ph.get("last_fail_ts")),
+            "last_error": ph.get("last_error"),
+        }
+
+    ok_ts, fail_ts = _overall["last_ok_ts"], _overall["last_fail_ts"]
+    if not ok_ts and not fail_ts:
+        status = "unknown"
+    else:
+        status = "up" if (ok_ts or 0) >= (fail_ts or 0) else "down"
+
+    report = {
+        "status": status,
+        "last_ok_provider": _overall["last_ok_provider"],
+        "last_ok": _iso(ok_ts),
+        "last_failure": _iso(fail_ts),
+        "providers": providers,
+    }
+
+    if active_probe:
+        try:
+            r = chat_completion("intake", messages=[{"role": "user", "content": "ping"}], max_tokens=1)
+            report["probe"] = {"ok": True, "provider": r["provider"], "model": r["model"]}
+            report["status"] = "up"
+        except Exception as e:
+            report["probe"] = {"ok": False, "error": str(e)[:500]}
+            report["status"] = "down"
+    return report
 
 
 def spend_report():
@@ -177,6 +243,7 @@ def chat_completion(role, messages, **params):
             est = _estimate_cost(provider_name, pt, ct)
             _spent_usd += est
             _record_spend(provider_name, model, est, pt, ct)
+            _mark_ok(provider_name)
             return {
                 "content": resp.choices[0].message.content,
                 "provider": provider_name,
@@ -188,6 +255,8 @@ def chat_completion(role, messages, **params):
             }
         except Exception as e:  # timeout / 429 / quota / connection / bad response
             errors.append((provider_name, str(e)))
+            _mark_provider_fail(provider_name, e)
             continue
 
+    _overall.update(last_fail_ts=time.time(), last_error=str(errors)[:500])
     raise RuntimeError(f"all providers failed for role {role!r}: {errors}")
