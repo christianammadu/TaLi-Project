@@ -548,6 +548,23 @@ def init_db(app):
 
         conn.commit()
         print("MySQL Tables Initialized successfully.")
+
+        # The channel-identity tables (channel_accounts, binding_tokens) are introduced
+        # by Alembic migration 0005 and are NOT in the raw CREATE TABLE block above. Create
+        # them idempotently from the ORM here so a deploy that hasn't run `alembic upgrade
+        # head` still has the multi-channel link feature working (without these,
+        # issue_binding_token / redeem fail silently → "Couldn't create a link").
+        try:
+            from app.data.db import Base, get_engine
+            import app.data.models as _models
+            Base.metadata.create_all(
+                bind=get_engine(),
+                tables=[_models.ChannelAccount.__table__, _models.BindingToken.__table__],
+                checkfirst=True,
+            )
+            print("Channel-identity tables ensured (channel_accounts, binding_tokens).")
+        except Exception as ce:
+            print(f"Could not ensure channel-identity tables: {ce}")
     except Error as e:
         print(f"MySQL Table Initialization failed: {e}")
     finally:
