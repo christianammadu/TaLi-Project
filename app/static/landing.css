@@ -199,31 +199,60 @@ footer{border-top:1px solid var(--bord);padding:56px 0 40px;position:relative;z-
 .bub.in b{color:var(--brand)}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 
-/* ---------- hero signature motif — a chat that becomes a ledger (D-01) ---------- */
-.hero-card{width:min(430px,100%);background:var(--card);border:1px solid var(--bord);border-radius:24px;
-  box-shadow:var(--shadow),0 0 80px rgba(194,86,47,.07);padding:22px 20px;position:relative}
-.hc-head{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.hc-av{width:40px;height:40px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--brand),var(--brand-dark));
-  display:grid;place-items:center;box-shadow:0 4px 14px var(--glow)}
-.hc-av .ic{stroke:#fff;width:21px;height:21px}
-.hc-head .who{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:-.01em;line-height:1.1}
-.hc-head .who .dot{color:var(--brand)}
-.hc-head .who small{display:block;font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:500;font-size:.72rem;color:var(--ts);letter-spacing:0}
-.hc-head .badge{margin-left:auto;font-family:var(--mono);font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--brand);background:var(--brand-soft);border:1px solid rgba(194,86,47,.2);padding:4px 10px;border-radius:100px}
-.hc-chat{display:flex;flex-direction:column;gap:8px;padding:16px 2px 2px}
-/* the seam where chat resolves into the ledger */
-.hc-seam{display:flex;align-items:center;gap:11px;margin:16px 0 6px;color:var(--ts);
-  font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.hc-seam::before,.hc-seam::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--brand);opacity:.45}
-.hc-ledger{padding:2px}
-.ledger-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 2px;font-size:.9rem}
-.ledger-row+.ledger-row{border-top:1px solid var(--line)}
-.ledger-row .lbl{color:var(--ts)}
-.ledger-row .num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--tp);white-space:nowrap}
-.ledger-row.total{margin-top:2px;border-top:2px solid var(--brand);padding-top:11px}
-.ledger-row.total .lbl{color:var(--tp);font-weight:600}
-.ledger-row.total .num{color:var(--brand);font-size:1.05rem}
+/* ---------- hero device — an iPhone alternating between the WhatsApp & Telegram chats ----------
+   The phone shows the SAME TaLi exchange in each app; the Telegram screen cross-fades in and out
+   over the WhatsApp one (one animated element). Channel green/blue here depict the real apps —
+   they are not page/brand chrome (the D-01 rule), so the mockup stays faithful. */
+.device{position:relative;width:min(300px,78vw);aspect-ratio:300/620;background:#0c0c10;
+  border-radius:46px;padding:11px;box-shadow:0 34px 70px -30px rgba(40,25,10,.55),
+  0 0 0 2px #25252c, inset 0 0 0 2px rgba(255,255,255,.05)}
+.device-island{position:absolute;top:20px;left:50%;transform:translateX(-50%);
+  width:92px;height:26px;background:#000;border-radius:100px;z-index:5}
+.device-home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);
+  width:118px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);z-index:5}
+.app-screen{position:absolute;inset:11px;border-radius:36px;overflow:hidden;
+  display:flex;flex-direction:column}
+.app-tg{animation:tg-alt 11s ease-in-out infinite}        /* WhatsApp is the base; Telegram fades over it */
+@keyframes tg-alt{0%,5%{opacity:0} 12%,46%{opacity:1} 53%,95%{opacity:0} 100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.app-tg{animation:none;opacity:1}}
+/* app header */
+.app-bar{display:flex;align-items:center;gap:9px;padding:40px 14px 11px;color:#fff;flex-shrink:0}
+.app-bar .a-av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);
+  display:grid;place-items:center;flex-shrink:0}
+.app-bar .a-av .ic{stroke:#fff;fill:none;width:16px;height:16px}
+.app-bar .a-id{font-weight:600;font-size:.84rem;line-height:1.15}
+.app-bar .a-id small{display:block;font-weight:400;font-size:.64rem;opacity:.85}
+.app-bar .a-tag{margin-left:auto;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.92}
+/* chat + bubbles */
+.app-chat{flex:1;display:flex;flex-direction:column;gap:7px;padding:14px 11px;overflow:hidden}
+.msg{max-width:84%;padding:7px 10px;border-radius:12px;font-size:.75rem;line-height:1.4;color:#10231b;
+  box-shadow:0 1px 1px rgba(0,0,0,.07)}
+.msg.in{align-self:flex-start;background:#fff;border-top-left-radius:4px;color:#111}
+.msg.out{align-self:flex-end;border-top-right-radius:4px}
+.msg b{font-weight:700}
+.msg i{display:block;text-align:right;font-style:normal;font-size:.56rem;opacity:.45;margin-top:2px}
+/* input bar */
+.app-input{display:flex;align-items:center;gap:8px;padding:9px 12px;flex-shrink:0}
+.app-input .a-field{flex:1;background:#fff;border-radius:100px;padding:8px 13px;font-size:.7rem;
+  color:#8a98a5;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.app-send{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.app-send .ic{width:15px;height:15px}
+/* WhatsApp skin */
+.app-wa{background:#ece5dd}
+.app-wa .app-bar{background:#075e54}
+.app-wa .app-chat{background:#ece5dd}
+.app-wa .app-input{background:#ece5dd}
+.app-wa .msg.out{background:#dcf8c6}
+.app-wa .app-send{background:#25d366}
+.app-wa .app-send .ic{stroke:#fff;fill:none}
+/* Telegram skin */
+.app-tg{background:#cfe0ee}
+.app-tg .app-bar{background:#3390ec}
+.app-tg .app-chat{background:linear-gradient(180deg,#d8e8f5,#c8dcef)}
+.app-tg .app-input{background:#fff}
+.app-tg .msg.out{background:#eeffde}
+.app-tg .app-send{background:#3390ec}
+.app-tg .app-send .ic{fill:#fff;stroke:none}
 
 /* ---------- dashboard preview ---------- */
 .dash{background:linear-gradient(180deg,var(--card),transparent);border:1px solid var(--bord);border-radius:24px;

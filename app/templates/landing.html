@@ -37,22 +37,42 @@
     </div>
   </div>
   <div class="center-x">
-    <div class="hero-card">
-      <div class="hc-head">
-        <div class="hc-av"><svg class="ic"><use href="#i-tally"/></svg></div>
-        <div class="who">TaLi<span class="dot">.</span><small>Bookkeeper · online</small></div>
-        <span class="badge">Ledger</span>
+    <div class="device" role="img" aria-label="TaLi running inside WhatsApp and Telegram">
+      <div class="device-island"></div>
+
+      <!-- WhatsApp screen (base layer) -->
+      <div class="app-screen app-wa">
+        <div class="app-bar">
+          <span class="a-av"><svg class="ic"><use href="#i-tally"/></svg></span>
+          <span class="a-id">TaLi<small>online</small></span>
+          <span class="a-tag">WhatsApp</span>
+        </div>
+        <div class="app-chat">
+          <div class="msg out">Sold 3 bags of rice 18k<i>9:41</i></div>
+          <div class="msg in"><b>Got it ✓</b> Recorded a ₦18,000 sale — 3 bags off your rice stock.<i>9:41</i></div>
+          <div class="msg out">Profit this week?<i>9:42</i></div>
+          <div class="msg in"><b>₦81,300</b> 💰<br>Income ₦142,500 · Expenses ₦61,200<i>9:42</i></div>
+        </div>
+        <div class="app-input"><span class="a-field">Message</span><span class="app-send"><svg class="ic"><use href="#i-send"/></svg></span></div>
       </div>
-      <div class="hc-chat">
-        <div class="bub out" style="animation-delay:.15s">Sold 3 bags of rice 18k<small>9:41</small></div>
-        <div class="bub in" style="animation-delay:.6s"><b>Got it ✓</b> Recorded a ₦18,000 sale and took 3 bags off your rice stock.<small>9:41</small></div>
+
+      <!-- Telegram screen (cross-fades over WhatsApp) -->
+      <div class="app-screen app-tg">
+        <div class="app-bar">
+          <span class="a-av"><svg class="ic"><use href="#i-tally"/></svg></span>
+          <span class="a-id">TaLi<small>bot</small></span>
+          <span class="a-tag">Telegram</span>
+        </div>
+        <div class="app-chat">
+          <div class="msg out">Sold 3 bags of rice 18k<i>9:41</i></div>
+          <div class="msg in"><b>Got it ✓</b> Recorded a ₦18,000 sale — 3 bags off your rice stock.<i>9:41</i></div>
+          <div class="msg out">Profit this week?<i>9:42</i></div>
+          <div class="msg in"><b>₦81,300</b> 💰<br>Income ₦142,500 · Expenses ₦61,200<i>9:42</i></div>
+        </div>
+        <div class="app-input"><span class="a-field">Message</span><span class="app-send"><svg class="ic"><use href="#i-telegram"/></svg></span></div>
       </div>
-      <div class="hc-seam">recorded</div>
-      <div class="hc-ledger">
-        <div class="ledger-row"><span class="lbl">Sale · Rice (3 bags)</span><span class="num">+₦18,000</span></div>
-        <div class="ledger-row"><span class="lbl">Stock · Rice</span><span class="num">12 left</span></div>
-        <div class="ledger-row total"><span class="lbl">This week · profit</span><span class="num">₦81,300</span></div>
-      </div>
+
+      <div class="device-home"></div>
     </div>
   </div>
 </header>
