@@ -158,7 +158,9 @@ class CFOAgent:
 
             warnings = []
             for inv in invs:
-                if inv.status != 'clarification_needed' and inv.new_stock <= low_stock_limit:
+                # Low-stock nudge only when the level is non-negative; a negative level is
+                # handled separately below (it means more was sold than we've tracked buying).
+                if inv.status != 'clarification_needed' and 0 <= inv.new_stock <= low_stock_limit:
                     warnings.append(f"⚠️ Warning: stock of '{inv.product}' is low ({int(inv.new_stock)} left).")
             for debt in debts:
                 if debt.new_balance > high_debt_limit:
@@ -172,7 +174,13 @@ class CFOAgent:
             for tx in txs:
                 reply_lines.append(f"✅ Recorded: {tx.category} — ₦{int(tx.amount):,}")
             for inv in invs:
-                reply_lines.append(f"📦 Inventory Updated: {inv.product} stock level is now {int(inv.new_stock)} {inv.unit or 'units'}.")
+                n = int(inv.new_stock)
+                unit = inv.unit or 'units'
+                if n < 0:
+                    reply_lines.append(f"📦 {inv.product}: recorded ✓ — tracked stock is now {n} {unit}. "
+                                       f"Log your purchases (e.g. \"bought 50 {unit} of {inv.product}\") to reconcile.")
+                else:
+                    reply_lines.append(f"📦 Inventory Updated: {inv.product} stock level is now {n} {unit}.")
             for debt in debts:
                 action_lbl = "repaid" if debt.action == 'repayment' else "owes"
                 reply_lines.append(f"👥 Debt Ledger: {debt.name} {action_lbl} ₦{int(debt.amount):,}. Outstanding: ₦{int(debt.new_balance):,}.")

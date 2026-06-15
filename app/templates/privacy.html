@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TaLi — Privacy Policy</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C2562F'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
-<link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-<script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>
+{% set meta_title = "TaLi — Privacy Policy" %}
+{% set meta_desc = "Our Privacy Policy outlines how TaLi collects, processes, and protects your business records, WhatsApp/Telegram phone numbers, and transactional data." %}
+{% include "_meta.html" %}
 </head>
 <body>
 {% include "_sprite.html" %}

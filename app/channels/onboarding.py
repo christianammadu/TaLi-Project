@@ -40,6 +40,39 @@ def onboarding_prompt():
             "link to connect this chat.")
 
 
+def help_text(channel):
+    """What TaLi can do + the slash commands, tailored to the channel.
+
+    Plain text only — Telegram ``sendMessage`` carries no ``parse_mode``, so WhatsApp-style
+    ``*bold*``/``_italic_`` would render as literal characters. Curly quotes match the rest of
+    the bot's voice.
+    """
+    other = WHATSAPP if channel == TELEGRAM else TELEGRAM
+    return (
+        "📖 TaLi — your pocket bookkeeper\n"
+        "Just tell me what happened, in your own words:\n\n"
+        "📝 Record\n"
+        "  • “Sold rice 5000”\n"
+        "  • “Bought fuel 2k”\n"
+        "  • “Sold 3 bags of rice 5000 on credit to John”\n\n"
+        "📦 Stock\n"
+        "  • “Add 10 bags of rice”   • “Set rice to 50”\n\n"
+        "👥 Debts\n"
+        "  • “John owes 5000”   • “John paid 2000”\n\n"
+        "📊 Ask\n"
+        "  • “What's my balance?”\n"
+        "  • “How much did I spend this month?”\n"
+        "  • “How is my business doing?”\n\n"
+        "📑 Reports\n"
+        "  • “Monthly report” — quick summary\n"
+        "  • “Statement of my sales for June” — chat, PDF or Excel\n\n"
+        "⚙️ Commands\n"
+        f"  /link {other} — use TaLi on {other.title()} too (one shared ledger)\n"
+        "  /unlink — disconnect this chat\n"
+        "  /help — show this message"
+    )
+
+
 def resolve(channel, native_id):
     """The user bound to this chat, or None (legacy WhatsApp rows included)."""
     return auth.resolve_channel_user(channel, native_id)
@@ -76,5 +109,8 @@ def handle_command(channel, native_id, command, arg):
         auth.unlink_channel(channel, native_id)
         return "Unlinked this chat from your TaLi account. Your other channels still work."
 
-    # "start" with no token, "help", or anything else → onboarding prompt
+    if command == "help":
+        return help_text(channel)
+
+    # "start" with no token or anything else → onboarding prompt
     return onboarding_prompt()
