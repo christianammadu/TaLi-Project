@@ -440,22 +440,11 @@ class LedgerAgent:
                     print(f"[LedgerAgent Transient DB Error, Attempt {attempt}] Code {db_err.errno}: {db_err}. Retrying in {delay}s...")
                     time.sleep(delay)
                 else:
-                    # Non-transient DB error or exhausted retries
-                    try:
-                        conn_fail = get_db_connection()
-                        cursor_fail = conn_fail.cursor()
-                        cursor_fail.execute(
-                            "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                            "WHERE sender_id = %s AND status = 'processing' "
-                            "ORDER BY created_at DESC LIMIT 1",
-                            (self.sender_id,)
-                        )
-                        conn_fail.commit()
-                        cursor_fail.close()
-                        conn_fail.close()
-                    except Exception as db_status_err:
-                        print(f"[LedgerAgent Status Fail Error] {db_status_err}")
-
+                    # Non-transient DB error or exhausted retries. The webhook_events
+                    # lifecycle is owned by the gateway (keyed by whatsapp_message_id);
+                    # the ledger only dead-letters the event to the CFO and returns — it
+                    # must not touch webhook_events (it can't target the right row, and the
+                    # gateway overwrites it on return anyway).
                     err_event = LedgerUpdateEvent(
                         correlation_id=correlation_id,
                         session_id=session_id,
@@ -475,23 +464,9 @@ class LedgerAgent:
 
             except Exception as e:
                 # Malformed payload, validation error, code bug -> fail immediately!
+                # (webhook_events lifecycle is the gateway's, keyed by message_id — see above)
                 if 'conn' in locals() and conn.is_connected():
                     conn.rollback()
-
-                try:
-                    conn_fail = get_db_connection()
-                    cursor_fail = conn_fail.cursor()
-                    cursor_fail.execute(
-                        "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE sender_id = %s AND status = 'processing' "
-                        "ORDER BY created_at DESC LIMIT 1",
-                        (self.sender_id,)
-                    )
-                    conn_fail.commit()
-                    cursor_fail.close()
-                    conn_fail.close()
-                except Exception as db_status_err:
-                    print(f"[LedgerAgent Status Fail Error] {db_status_err}")
 
                 err_event = LedgerUpdateEvent(
                     correlation_id=correlation_id,
@@ -510,9 +485,18 @@ class LedgerAgent:
                 self._emit_to_cfo(err_event.model_dump(mode='json'))
                 return {"status": "error_handled_via_pubsub"}
             finally:
-                if 'conn' in locals() and conn.is_connected():
-                    cursor.close()
-                    conn.close()
+                # Guard cursor independently — it's unbound if conn.cursor() itself raised,
+                # and may already be closed by the transient-retry branch above.
+                if 'cursor' in locals() and cursor is not None:
+                    try:
+                        cursor.close()
+                    except Exception:
+                        pass
+                if 'conn' in locals() and conn is not None and conn.is_connected():
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
 
     def _is_authorized(self):
         """Validate if the user exists in database permissions."""
