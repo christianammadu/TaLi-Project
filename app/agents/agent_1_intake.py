@@ -12,6 +12,7 @@ from app.data.database import get_db_connection
 from app.services.nlp import parse_message
 from app.services.utils import parse_shorthand
 from app.agents.band import get_band_client
+from app.auth import get_active_session  # module-level (app.auth has no agent deps) — patchable + consistent with agent_router
 
 # Band room handles (WP-03). Agents coordinate by @mention in a shared room instead of
 # the retired in-memory BandSDK broker. Ledger/CFO consume these once WP-04/05 land; the
@@ -421,7 +422,6 @@ class IntakeAgent:
                 )
 
             from app.agents.event_schemas import CFOEscalationEvent, CFOEscalationEventPayload
-            from app.auth import get_active_session
             session = get_active_session(self.sender_id)
             session_id = str(session['id']) if session else None
             business_id = session.get('business_id', 1) if session and 'business_id' in session else 1
@@ -706,7 +706,6 @@ class IntakeAgent:
     def _publish_intake(self, intent, extracted_data, confidence):
         """Serialize and publish intake payload using IntakePayload Pydantic model."""
         from app.services.validators import UnifiedResponseModel, TransactionModel
-        from app.auth import get_active_session
         from app.agents.event_schemas import IntakePayload, IntakeEventPayload
         
         session = get_active_session(self.sender_id)

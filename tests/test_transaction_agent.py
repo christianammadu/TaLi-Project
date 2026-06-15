@@ -6,7 +6,7 @@ without requiring a database connection or OpenAI API key.
 
 import unittest
 from datetime import date, timedelta
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock, patch
 
 
 class TestValidators(unittest.TestCase):
