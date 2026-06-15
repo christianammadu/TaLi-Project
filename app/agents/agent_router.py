@@ -11,6 +11,7 @@ Keeps the ``AgentRouter`` name + ``route(text, message_id)`` signature so
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from mysql.connector import Error
 from app.agents.band import get_band_client
 from app.agents.agent_1_intake import IntakeAgent, LEDGER_HANDLE, CFO_HANDLE
@@ -18,6 +19,9 @@ from app.agents.agent_2_ledger import LedgerAgent
 from app.agents.agent_3_cfo import CFOAgent
 from app.auth import get_active_session, get_user_by_sender, get_user_by_phone
 from app.data.database import get_db_connection
+
+# ThreadPoolExecutor for backpressure control and thread worker reuse (max 10 concurrent tasks)
+_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 
 class AgentRouter:
@@ -206,5 +210,5 @@ class AgentRouter:
                                     cursor.close()
                                     conn.close()
 
-            threading.Thread(target=async_worker, args=(app, text, message_id), daemon=True).start()
+            _EXECUTOR.submit(async_worker, app, text, message_id)
             return "__ASYNC_STARTED__"
