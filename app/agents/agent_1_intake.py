@@ -99,7 +99,11 @@ class IntakeAgent:
         # live in prod); injectable for tests. One room per sender for now.
         self.band = band if band is not None else get_band_client()
         self.room_id = os.getenv("BAND_ROOM_ID") or f"tali-{sender_id}"
-        self._reply_timeout = float(os.getenv("BAND_REPLY_TIMEOUT", "8"))
+        # Outer wait for the terminal reply. MUST exceed the Ledger's BAND_REVIEW_TIMEOUT
+        # (the compliance review runs *inside* this window) plus DB-write + CFO headroom —
+        # otherwise a slow review makes Intake give up and report "Transaction failed" even
+        # though the write goes through. Keep reply_timeout > review_timeout.
+        self._reply_timeout = float(os.getenv("BAND_REPLY_TIMEOUT", "12"))
 
     def _band_send_collect(self, mentions, payload):
         """Send an event into the room (fire-and-forget) and block for the terminal
