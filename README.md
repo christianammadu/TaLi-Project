@@ -1,264 +1,251 @@
 <div align="center">
-
+ 
 # 📊 TaLi
-
-### Bookkeeping that lives in the chat you already use.
-
-**TaLi** (from _"Tally"_) is an AI bookkeeping assistant for small businesses in
-Africa. Owners record income, expenses, inventory and debts in plain language
-over **WhatsApp** — _"Sold rice 5000"_ — and TaLi turns each message into clean
-records, live reports and accurate stock. No app to install, no spreadsheets.
-
-`WhatsApp` · `Flask` · `MySQL` · `SQLAlchemy` · `OpenAI` · `Meta Cloud API`
-
+ 
+### Collaborative Multi-Agent Bookkeeping over WhatsApp & Telegram
+ 
+**TaLi** (from _"Tally"_) is an enterprise-grade, multi-agent bookkeeping system built for small businesses in Africa. It enables traders, shop owners, and freelancers to manage their transactions, inventory, and debts in plain natural language directly from **WhatsApp** and **Telegram**, backed by a collaborative agent network.
+ 
+`WhatsApp` · `Telegram` · `Band SDK` · `Featherless AI` · `AI/ML API` · `Flask` · `SQLAlchemy` · `MySQL` · `Alembic`
+ 
 </div>
-
+ 
 ---
-
+ 
+## 🤝 Band of Agents Hackathon Alignment
+ 
+TaLi was specifically built and designed for the **Band of Agents Hackathon (June 12–19, 2026)** to address **Track 1: Internal Enterprise Workflows** and **Track 3: Regulated & High-Stakes Workflows**. It showcases a collaborative, conversation-driven agent network operated inside a shared environment.
+ 
+- **Collaboration Layer (Band)**: Instead of a linear, hardcoded script, TaLi deploys a team of **5 specialized agents** collaborating inside a shared **Band Room**. Communication, task handoffs, and state coordination occur dynamically via native `@mentions` and structured JSON message events.
+- **Traceability & Safety (Human-in-the-Loop)**: High-risk actions (large expenses or debt changes) trigger an active compliance review and require inline human approval in the room before database persistence occurs.
+- **Technology Partners (Featherless AI & AI/ML API)**: Powered by a multi-provider router that matches task complexity to the optimal provider (e.g. Featherless AI for compliance auditing; AI/ML API for CFO analytics), backed by automatic failovers.
+ 
+---
+ 
 ## Table of contents
-
+ 
 - [Why TaLi](#why-tali)
-- [Features](#features)
 - [How it works](#how-it-works)
-- [Architecture](#architecture)
-- [Project structure](#project-structure)
-- [Tech stack](#tech-stack)
-- [Getting started](#getting-started)
+- [Multi-Agent Collaboration Architecture](#multi-agent-collaboration-architecture)
+- [Technology Partner Integrations](#technology-partner-integrations)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
 - [Configuration](#configuration)
-- [Database & migrations](#database--migrations)
-- [Running & testing](#running--testing)
-- [Design system](#design-system)
-- [Documentation](#documentation)
-- [Roadmap](#roadmap)
-
+- [Database & Migrations](#database--migrations)
+- [Running & Testing](#running--testing)
+- [Design System & UI](#design-system--ui)
+ 
 ---
-
+ 
 ## Why TaLi
-
-Most small traders keep their books in their head or a torn notebook, and never
-really know if they're making money. TaLi meets them where they already are —
-WhatsApp — and does the bookkeeping for them from ordinary messages.
-
-> _"Bought fuel 2k"_ → **Expense · Fuel · ₦2,000** recorded.
-> _"What's my profit this month?"_ → **Income ₦612,400 · Expenses ₦288,150 · Profit ₦324,250**
-
-## Features
-
-| | Feature | What it does |
-|---|---------|--------------|
-| 💸 | **Income & expenses** | Natural-language capture with smart auto-categorisation and shorthand (`2k`, `5h`, `50k`). |
-| 📈 | **Reports on demand** | Daily / weekly / monthly summaries with real profit, per currency. |
-| 📦 | **Inventory** | "Added 20 bags of rice" updates stock; low-stock alerts before you run out. |
-| 🧾 | **Debt tracking** | Track receivables & payables per person, with running balances. |
-| 🌍 | **Multi-currency** | ₦, $, £ and more, kept separate so totals never mix. |
-| 🔍 | **Just ask** | Plain-language questions, exact answers — balances, totals, lists. |
-| 🔐 | **Private & secure** | Locked to your WhatsApp number; webhook signature verification. |
-
+ 
+Most small traders and informal merchants keep their accounts in their head or on easily misplaced paper logs. Existing accounting software has a steep learning curve and requires spreadsheets. TaLi meets merchants where they already are — chat apps — and does the bookkeeping for them through simple, conversational messages.
+ 
+> 💬 **Merchant:** *"Sold 3 bags of rice 18k"*  
+> 🤖 **TaLi:** *"Recorded a ₦18,000 sale. Stock updated: 12 bags of rice remaining. ✓"*
+ 
+---
+ 
 ## How it works
-
+ 
 ```
-1. Message it          2. AI understands         3. Books update
-   "Sold rice 5000"  →  amount · type · item   →  records, reports
-   over WhatsApp         category · date            and stock stay live
+1. Chat Message       2. Band Room Handoff       3. Compliance & Human       4. Live Update
+  "Sold rice 18k"  →   NLP Parse & Propose   →    Audit policy rules    →    DB committed &
+  via WA/Telegram      via @tali-intake           & human loop approval        CFO replies
 ```
-
-## Architecture
-
-TaLi receives WhatsApp webhooks, authenticates the sender, then drops the message into a
-**Band chat room** (band.ai / Thenvoi) where **four specialized agents coordinate by
-`@mention`** — plan → execute → **review** → **human-approve** → reply — before replying.
-Coordination is conversation-driven through Band (the active coordination layer), not
-hardcoded function calls.
-
+ 
+---
+ 
+## Multi-Agent Collaboration Architecture
+ 
+TaLi receives inbound messaging webhooks, resolves the user session, and dispatches the payload to a shared **Band Room** (using `BAND_BACKEND=stub` for local offline dev, and `live` for the real platform). Inside the room, **five specialized agents** coordinate the lifecycle of the request:
+ 
+1. **`@tali-intake` (Intake Agent)**: Receives the raw text, uses NLP (`Featherless AI`) to parse the intent, amount, units, date, and entities, and `@mentions` the Ledger Agent with the structured transaction proposal.
+2. **`@tali-ledger` (Ledger Agent)**: Maintains the ledger state machine. It verifies balance changes, structures database records, and `@mentions` the Compliance Agent to request an audit before committing.
+3. **`@tali-compliance` (Compliance Agent)**: Audits the transaction against system safety thresholds (e.g. flagging single expenses > ₦100k or debts > ₦50k) and either raises a veto or `@mentions` the Ledger Agent with approval.
+4. **`@tali-human` (Human Loop Agent)**: Active when compliance flags a transaction for manual oversight. It pauses execution, sends an interactive approval request, and notifies the Ledger Agent once a manager approves.
+5. **`@tali-cfo` (CFO Agent)**: Summarizes the outcome, calculates total cashflow and multi-currency balances, monitors low stock alerts, and posts the final customer-facing reply back to the chat gateway.
+ 
 ```mermaid
 flowchart TD
-    WA[WhatsApp Cloud API] -->|webhook| WH[web/routes.py · /webhook]
-    WH -->|verify + dedup| AUTH[auth.py · sessions]
-    WH --> GW[agents/agent_router.py · Band gateway]
-
-    subgraph ROOM[Band room · @mention routing]
-      A1["@tali-intake<br/>NLP parse + classify"]
-      A2["@tali-ledger<br/>propose → await → commit"]
-      A4["@tali-compliance<br/>pre-commit veto"]
-      A3["@tali-cfo<br/>compose reply"]
-      HU["@tali-human<br/>approval"]
+    WA[WhatsApp / Telegram API] -->|Webhook| WH[web/routes.py · /webhook]
+    WH -->|Verify & Dedup| AUTH[auth.py · Sessions]
+    WH --> GW[agents/agent_router.py · Band Gateway]
+ 
+    subgraph ROOM[Band Room · Dynamic Handoffs]
+      A1["@tali-intake<br/>NLP Parser"]
+      A2["@tali-ledger<br/>Ledger State Manager"]
+      A4["@tali-compliance<br/>Policy Auditor"]
+      A3["@tali-cfo<br/>Financial Reporter"]
+      HU["@tali-human<br/>Human Approval Portal"]
     end
-
+ 
     GW --> A1
     A1 -->|@ledger| A2
-    A2 -->|proposed write| A4
-    A4 -->|approve / reject| A2
+    A2 -->|Proposes Write| A4
+    A4 -->|Approve / Veto| A2
+    A2 -.->|Threshold Trigger| HU
+    HU -.->|Approval Event| A2
     A2 -->|@cfo| A3
-    A1 -. confirm .-> HU
-    A3 -->|terminal reply| GW
-    GW -->|send_reply| WA
-
+    A3 -->|Terminal Response| GW
+    GW -->|Send Reply| WA
+ 
     A1 -.-> MR[services/model_router.py]
-    MR -.-> P{{AI/ML · Featherless · OpenAI}}
-    A2 -.-> DB[(MySQL)]
-    GW -.-> AUD[services/audit.py · /audit/&lt;event_id&gt;]
+    A4 -.-> MR
+    MR -.-> P{{Featherless AI & AI/ML API}}
+    A2 -.-> DB[(MySQL Database)]
 ```
-
-- **Band coordination layer** — agents connect through `agents/band/band_client.py`
-  (`BAND_BACKEND=stub` for offline dev, `live` for the real platform); the gateway wires
-  them as `@mention` handlers and threads a `correlation_id` for reply collection.
-  `agents/event_schemas.py` (Pydantic) are the message bodies.
-- **Multi-provider model routing** — `services/model_router.py` `get_client(role)` routes
-  each agent role across **AI/ML API** (frontier reasoning + low-confidence escalation),
-  **Featherless** (open-source workers), and **OpenAI** (fallback on timeout / 429 / quota).
-- **Plan → execute → review** — the Ledger withholds its DB commit until the **Compliance**
-  agent approves the proposed write (two-phase commit); human approval is surfaced in-room.
-- **Unified audit trail** — reconstruct any write's lifecycle (parse → handoffs → write,
-  with model + cost + approval) via `services/audit.py` / `GET /audit/<event_id>`.
-- **Idempotency**: inbound `message_id`s are deduped via a `webhook_events` table.
-- **Data layer**: **SQLAlchemy** (pooled engine + ORM) with **Alembic** migrations — see
-  [`docs/sqlalchemy_migration.md`](docs/sqlalchemy_migration.md).
-
-> **Band of Agents Hackathon:** see [`plans/2026-06-13-band-hackathon-gaps/`](plans/2026-06-13-band-hackathon-gaps/)
-> for the gap analysis + work plan, and [`docs/demo-script.md`](docs/demo-script.md) for the
-> demo walkthrough. Fill `docs/credentials-setup.local.md` and set `BAND_BACKEND=live` to run
-> against the real platform.
-
-## Project structure
-
+ 
+---
+ 
+## Technology Partner Integrations
+ 
+TaLi implements a native **Multi-provider Model Router** ([model_router.py](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/services/model_router.py)) that routes agent roles to optimized serverless endpoints:
+ 
+- **Featherless AI**: Powers our specialized open-source reasoning models. We use `Qwen/Qwen2.5-72B-Instruct` for natural language parsing (`intake`) and `mistralai/Mistral-Small-24B-Instruct-2501` for structured policy checks (`compliance`).
+- **AI/ML API**: Connects to frontier commercial models like `gpt-4o` for CFO analysis, cost forecasting, and complex escalation reasoning.
+- **Graceful Failovers**: Every routing chain has automatic fallbacks to OpenAI (`gpt-4o-mini`) in case of provider timeouts, 429s, or service outages, ensuring high availability.
+- **FinOps Spending Controls**: Tracks token usage and costs per model in real-time, enforcing a budget limit (`MODEL_ROUTER_SPEND_CEILING_USD`) to prevent runaway API spend.
+ 
+---
+ 
+## Features
+ 
+| Category | Feature | What it does |
+|:---:|---|---|
+| 💸 | **Income & Expenses** | Record sales, costs, and purchases using conversational text and short-hand amounts (`2k`, `5h`, `50k`). |
+| 📦 | **Auto Inventory** | Inventory adjustments are updated on transaction commits (e.g. "Added 20 bags of rice" or "Sold 3 bags"); tags alert when stock drops below minimum limits. |
+| 🧾 | **Debt Ledger** | Track accounts receivable and payable by name, offering summaries of who owes who. |
+| 🌍 | **Multi-Currency** | Keep totals in Naira (₦), Dollars ($), and Pounds (£) separated so conversion errors never pollute local accounts. |
+| 🔐 | **Security & Verification** | Two-factor verification using access codes, signed webhook checks, and phone number session bindings. |
+ 
+---
+ 
+## Project Structure
+ 
 ```
-bookkeeper/
-├── app.py                     # entry point — create_app()
+TaLi-Project/
+├── run.py                     # App entry point (creates & launches Flask server)
+├── alembic.ini                # Database migration configuration
 ├── app/
-│   ├── __init__.py            # Flask app factory (engine, init_db, blueprints)
-│   ├── config.py              # env-driven configuration
-│   ├── auth.py                # registration, login, sessions (ORM)
-│   ├── agents/                # the multi-agent intelligence pipeline
-│   │   ├── agent_router.py        # dispatch + dedup
-│   │   ├── agent_1_intake.py      # NLP parse & classify
-│   │   ├── agent_2_ledger.py      # write transactions / inventory / debt
-│   │   ├── agent_3_cfo.py         # compose replies, alerts, reports
-│   │   ├── transaction_agent.py   # transaction helpers
-│   │   ├── inventory_agent.py · reporting_agent.py · snapshot_agent.py · debt_agent.py
-│   │   ├── band_sdk.py            # in-process pub/sub
-│   │   └── event_schemas.py      # Pydantic event contracts
-│   ├── data/                  # persistence
-│   │   ├── db.py                  # SQLAlchemy engine + session_scope()
-│   │   ├── models.py              # ORM models (one per table)
-│   │   ├── queries.py             # transaction reads/writes (ORM)
-│   │   └── database.py            # legacy init_db() (being retired for Alembic)
-│   ├── services/              # domain helpers
-│   │   ├── nlp.py                 # OpenAI intent parsing
-│   │   ├── validators.py · formatter.py · utils.py
-│   ├── web/                   # HTTP + messaging
-│   │   ├── routes.py              # /webhook (WhatsApp inbound)
-│   │   ├── web_routes.py          # registration / verify pages
-│   │   └── whatsapp.py            # Meta Cloud API send helpers
-│   ├── templates/             # auth pages (TaLi-branded, light/dark)
-│   └── static/                # style.css
-├── migrations/                # Alembic (env.py + versions/)
-├── design/                    # design system & page mockups (design/tali/)
-├── docs/                      # project status, bug review, migration plan
-├── tests/                     # unit tests
-├── .env.example               # all config documented here
-└── requirements.txt
+│   ├── __init__.py            # Flask app factory (pooled engine setup, routes, context)
+│   ├── config.py              # Environment configuration loader
+│   ├── auth.py                # OTP delivery, link minting, session validation
+│   ├── agents/                # Band room intelligence pipeline
+│   │   ├── agent_router.py        # Gateway routing and event deduping
+│   │   ├── agent_1_intake.py      # NLP parser (Featherless AI)
+│   │   ├── agent_2_ledger.py      # Database read/writes and transaction hooks
+│   │   ├── agent_3_cfo.py         # Response compilation and stock alerts
+│   │   └── band_sdk.py            # Local in-process pub/sub stub
+│   ├── data/                  # Persistent data layers
+│   │   ├── db.py                  # SQLAlchemy engine & session scopes
+│   │   ├── models.py              # Declarative database models (Users, Ledger, Webhooks)
+│   │   └── database.py            # Legacy schema initializer
+│   ├── services/              # External integrations
+│   │   ├── model_router.py        # Multi-provider router (Featherless & AI/ML API)
+│   │   └── nlp.py                 # Core LLM prompt structures
+│   ├── templates/             # Jinja2 templates (landing, pricing, registers)
+│   │   ├── _meta.html             # Reusable SEO, OG, and layout meta tags
+│   │   └── ...
+│   └── static/                # Stylesheets (style.css, landing.css) and assets
+├── migrations/                # Alembic versions and migration hooks
+├── tests/                     # Project test suite
+└── requirements.txt           # Main project dependencies
 ```
-
-## Tech stack
-
-- **Backend:** Python · Flask
-- **Database:** MySQL · SQLAlchemy 2.0 (ORM) · Alembic (migrations)
-- **AI:** OpenAI (intent parsing) · Pydantic (validation/contracts)
-- **Messaging:** WhatsApp Cloud API (Meta Graph API)
-
-## Getting started
-
+ 
+---
+ 
+## Getting Started
+ 
 ### Prerequisites
 - Python 3.11+
 - MySQL 8+
-- A Meta WhatsApp Cloud API app (access token, phone number id, verify token, app secret)
-- An OpenAI API key
-
-### Setup
-
-```bash
-git clone https://github.com/christianammadu/bookkeeper.git
-cd bookkeeper
-
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env          # then fill in the values (see Configuration)
-
-# Create the schema:
-#   fresh database:
-alembic upgrade head
-#   existing database already built by init_db():
-#   alembic stamp 0001_baseline && alembic upgrade head
-
-python app.py                 # starts the Flask server on :5000
-```
-
-Expose `:5000` publicly (e.g. `ngrok http 5000`) and point your Meta webhook at
-`https://<public-url>/webhook` using your `VERIFY_TOKEN`.
-
-## Configuration
-
-All settings come from environment variables (`.env`). See
-[`.env.example`](.env.example) for the full list. Key ones:
-
-| Variable | Purpose |
-|----------|---------|
-| `SECRET_KEY` | Flask secret — set a strong random value in production. |
-| `ACCESS_TOKEN`, `PHONE_NUMBER_ID`, `VERIFY_TOKEN` | WhatsApp Cloud API credentials. |
-| `META_APP_SECRET` | Verifies inbound webhook signatures (**set in production**). |
-| `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL connection. |
-| `OPENAI_API_KEY`, `OPENAI_MODEL` | AI parsing (default `gpt-4o-mini`). |
-| `SESSION_DURATION_HOURS`, `OTP_EXPIRY_MINUTES`, `TOKEN_EXPIRY_MINUTES` | Auth windows. |
-
-## Database & migrations
-
-Schema is owned by **Alembic** (`migrations/`), with the ORM models in
-`app/data/models.py` as the single source of truth.
-
-```bash
-alembic upgrade head                              # apply migrations
-alembic revision --autogenerate -m "describe"     # create a new migration
-alembic downgrade -1                              # roll back one
-```
-
-The legacy `init_db()` still runs at boot for backward compatibility and will be
-retired once Alembic is verified against a live database
-([migration plan](docs/sqlalchemy_migration.md)).
-
-## Running & testing
-
-```bash
-python app.py            # run the server
-python -m pytest         # run the unit tests (tests/)
-```
-
-## Design system
-
-The product's marketing, auth and legal pages have a full design system —
-dark/light themes, a tally-marks logomark and a line-icon set — under
-[`design/tali/`](design/tali/). Open `design/tali/index.html` to browse all
-pages. Earlier exploration lives in `design/landing-wireframes/`.
-
-## Documentation
-
-| Doc | What's in it |
-|-----|--------------|
-| [`docs/project_status.md`](docs/project_status.md) | Architecture & build status. |
-| [`docs/critical_bugs.md`](docs/critical_bugs.md) | Security/correctness review with fix status. |
-| [`docs/sqlalchemy_migration.md`](docs/sqlalchemy_migration.md) | SQLAlchemy + Alembic migration plan. |
-
-## Roadmap
-
-- [x] Multi-agent WhatsApp pipeline (intake → ledger → CFO)
-- [x] Webhook dedup, signature verification, sender-scoped login
-- [x] SQLAlchemy + Alembic foundation; `auth` / `queries` ported to the ORM
-- [ ] Finish porting agents off raw SQL; retire `init_db()` DDL
-- [ ] Format report/inventory replies (no raw JSON), async webhook ack
-- [ ] Rate limiting, structured logging, broader test coverage
-
+- An OpenAI API Key
+- An AI/ML API Key & Featherless AI API Key
+- Meta WhatsApp Cloud API credentials
+ 
+### Installation & Setup
+ 
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/christianammadu/TaLi-Project.git
+   cd TaLi-Project
+   ```
+ 
+2. **Set up a virtual environment**:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+ 
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+ 
+4. **Configure environment**:
+   Create a `.env` file based on `.env.example` and fill in your keys:
+   ```bash
+   cp .env.example .env
+   ```
+ 
+5. **Run migrations**:
+   ```bash
+   alembic upgrade head
+   ```
+ 
+6. **Start the server**:
+   ```bash
+   python run.py
+   ```
+ 
 ---
-
+ 
+## Configuration
+ 
+TaLi is configured via environment variables. Refer to [`.env.example`](.env.example) for details. Key variables:
+ 
+- `OPENAI_API_KEY`, `AIML_API_KEY`, `FEATHERLESS_API_KEY`: API access for model providers.
+- `BAND_BACKEND`: Set to `stub` for offline development (simulates agent room exchanges), or `live` for connecting to the Band production servers.
+- `WHATSAPP_PUBLIC_NUMBER`, `TELEGRAM_BOT_USERNAME`: User access entry points.
+- `META_APP_SECRET`: Key used to verify Meta Cloud Webhook signatures.
+ 
+---
+ 
+## Database & Migrations
+ 
+Database schema changes are managed by **Alembic** under `migrations/`. The database models are defined in [models.py](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/data/models.py).
+ 
+```bash
+alembic upgrade head                              # Apply all migrations
+alembic revision --autogenerate -m "description"  # Generate new migration version
+alembic downgrade -1                              # Roll back last migration
+```
+ 
+---
+ 
+## Running & Testing
+ 
+Launch tests to verify the integrity of session mapping and agent stubs:
+```bash
+python run.py             # Start dev server
+python -m pytest          # Execute unit tests
+```
+ 
+---
+ 
+## Design System & UI
+ 
+TaLi features a custom design system ("Market Ledger" style) utilizing Hanken Grotesk and Fraunces fonts. The branding is configured in [landing.css](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/landing.css) and [style.css](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/style.css), which are optimized for mobile and desktop screens.
+ 
+We serve a custom Open Graph marketing asset located at [og-image.png](file:///c:/Users/chris/OneDrive/Desktop/TaLi-Project/app/static/og-image.png) for link preview rendering on chat clients and search indexers.
+ 
+---
+ 
 <div align="center">
-<sub>© 2026 TaLi · Made for African small business · <em>Tally, simplified.</em></sub>
+<sub>© 2026 TaLi · Built for the Band of Agents Hackathon · <em>Tally, simplified.</em></sub>
 </div>
