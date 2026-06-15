@@ -54,6 +54,22 @@ class TestComplianceAgent(unittest.TestCase):
         approved_ok, _ = ledger._review_gate({"intent": "record_transaction", "amount": 5000})
         self.assertTrue(approved_ok)                        # normal write approved
 
+    def test_review_gate_preserves_ledger_user_cid_with_both_handlers_wired(self):
+        # Regression: with BOTH agents wired in the room (as the gateway does), the
+        # Compliance verdict posts terminally @mentioning @tali-ledger. That terminal reply
+        # must be COLLECTED, not re-dispatched into the Ledger's own handler. Re-entry there
+        # overwrote the Ledger's _user_cid with the review id, so the CFO's success reply was
+        # keyed wrong, Intake's collect_reply timed out, and the user saw "Transaction failed"
+        # for a write that had actually committed.
+        ledger = LedgerAgent("user-1", "sender-1", band=self.band)
+        self.band.on_message(LEDGER_HANDLE, ledger.on_room_message)
+        self.band.on_message(COMPLIANCE_HANDLE, self.compliance.on_room_message)
+
+        ledger._user_cid = "USER-CID"                 # as on_room_message sets for the real message
+        approved, _ = ledger._review_gate({"intent": "record_transaction", "amount": 5000})
+        self.assertTrue(approved)
+        self.assertEqual(ledger._user_cid, "USER-CID")  # verdict did NOT clobber the user cid
+
     def test_gateway_auto_wires_compliance(self):
         router = AgentRouter(user_id="user-1", sender_id="sender-1")
         self.assertTrue(hasattr(router, "compliance"))

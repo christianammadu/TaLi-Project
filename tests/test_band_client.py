@@ -63,6 +63,21 @@ class TestBandStubConnector(unittest.TestCase):
     def test_collect_reply_times_out_without_a_terminal_message(self):
         self.assertIsNone(self.client.collect_reply("no-such-corr", timeout=0.2))
 
+    def test_terminal_reply_is_collected_not_redispatched(self):
+        # Regression: a terminal reply is a point-to-point answer for collect_reply, the
+        # END of a chain — it must NOT also be dispatched to an @mentioned handler. The
+        # Compliance verdict posts terminally @mentioning @tali-ledger; re-entering the
+        # Ledger handler there corrupted its per-message state and tripped schema errors.
+        calls = []
+        self.client.on_message("@ledger", lambda m: calls.append(m))
+
+        reply = self.client.send(self.room, ["@ledger"], {"approved": True, "reason": "ok"},
+                                 correlation_id="rev-1", sender="@compliance", terminal=True)
+        self.assertIsInstance(reply, str)                       # message id
+        self.assertEqual(calls, [])                             # handler NOT re-entered
+        self.assertEqual(self.client.collect_reply("rev-1", timeout=2.0),
+                         {"approved": True, "reason": "ok"})    # but still collectable
+
 
 if __name__ == "__main__":
     unittest.main()

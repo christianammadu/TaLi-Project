@@ -59,7 +59,14 @@ class _StubBackend:
         }
         self._log.append(msg)
         if terminal and correlation_id is not None:
+            # A terminal reply is a point-to-point answer for collect_reply — the END of a
+            # chain, NOT a new inbound event. Capture it and STOP: it must not also be
+            # dispatched to @mentioned handlers. Re-dispatching re-enters a handler with
+            # reply data (e.g. the Compliance verdict reaching the Ledger), which corrupts
+            # that handler's per-message state (the Ledger's _user_cid → wrong reply key →
+            # "Transaction failed") and trips schema validation on the reply body.
             self._replies[correlation_id] = body
+            return msg["id"]
         # Fire-and-forget: deliver to each @mentioned handler, DISCARD return values.
         for handle in msg["mentions"]:
             cb = self._handlers.get(handle)
