@@ -3,11 +3,37 @@
 Aggregates cash flow, total outstanding receivables/payables, and lists low-stock products.
 """
 
-import json
 from datetime import date
 from decimal import Decimal
 from mysql.connector import Error
 from app.data.database import get_db_connection, db_cursor
+
+
+def _naira(v):
+    v = float(v)
+    return f"-₦{abs(v):,.0f}" if v < 0 else f"₦{v:,.0f}"
+
+
+def format_snapshot(cash_in, cash_out, profit, customer_debt, supplier_debt, low_stock_items, status):
+    """Render the snapshot as a human-readable chat message (never raw JSON)."""
+    status_emoji = {"Healthy": "🟢", "Warning": "🟡", "Unhealthy": "🔴"}.get(status, "")
+    trend = "📈" if float(profit) >= 0 else "📉"
+    lines = [
+        f"📊 Business Health: {status} {status_emoji}".rstrip(),
+        "",
+        "This month",
+        f"• Money in: {_naira(cash_in)}",
+        f"• Money out: {_naira(cash_out)}",
+        f"• Profit: {_naira(profit)} {trend}",
+        "",
+        f"• Owed to you: {_naira(customer_debt)}",
+        f"• You owe: {_naira(supplier_debt)}",
+    ]
+    lines.append(
+        f"⚠️ Low stock: {', '.join(low_stock_items)}" if low_stock_items
+        else "✅ Stock levels look fine"
+    )
+    return "\n".join(lines)
 
 
 class SnapshotAgent:
@@ -123,22 +149,12 @@ class SnapshotAgent:
             else:
                 status = "Healthy"
 
-            return json.dumps({
-                "cash_in": float(cash_in),
-                "cash_out": float(cash_out),
-                "profit": float(profit),
-                "outstanding_customer_debt": float(customer_debt),
-                "outstanding_supplier_debt": float(supplier_debt),
-                "low_stock_items": low_stock_items,
-                "status": status
-            }, indent=2)
+            return format_snapshot(cash_in, cash_out, profit, customer_debt,
+                                   supplier_debt, low_stock_items, status)
 
         except Error as e:
             print(f"Database error in SnapshotAgent: {e}")
-            return json.dumps({
-                "status": "error",
-                "message": "A database error occurred while compiling the health snapshot."
-            }, indent=2)
+            return "⚠️ I couldn't compile your business snapshot right now. Please try again shortly."
         finally:
             if 'conn' in locals() and conn.is_connected():
                 cursor.close()

@@ -513,6 +513,25 @@ class TestStockQuery(unittest.TestCase):
         self.assertIn("rice — 5 bags", out)
 
 
+class TestSnapshotFormat(unittest.TestCase):
+    """/snapshot must return a human message, never raw JSON (regression)."""
+
+    def test_format_snapshot_is_human_text(self):
+        from app.agents.snapshot_agent import format_snapshot
+        out = format_snapshot(163700, 17072000, 163700 - 17072000, 0, 0, [], "Unhealthy")
+        self.assertIn("Business Health", out)
+        self.assertIn("Unhealthy", out)
+        self.assertIn("₦163,700", out)
+        self.assertIn("-₦16,908,300", out)     # negative profit reads cleanly
+        self.assertNotIn("{", out)              # no JSON braces
+        self.assertNotIn("cash_in", out)        # no raw keys
+
+    def test_format_snapshot_lists_low_stock(self):
+        from app.agents.snapshot_agent import format_snapshot
+        out = format_snapshot(5000, 1000, 4000, 0, 0, ["rice", "beans"], "Healthy")
+        self.assertIn("Low stock: rice, beans", out)
+
+
 class TestReportingAgent(unittest.TestCase):
     """Tests for app/reporting_agent.py"""
 
