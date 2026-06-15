@@ -28,7 +28,10 @@ class LedgerAgent:
         # Band connector (WP-04); injectable for tests. One room per sender for now.
         self.band = band if band is not None else get_band_client()
         self.room_id = os.getenv("BAND_ROOM_ID") or f"tali-{sender_id}"
-        self._review_timeout = float(os.getenv("BAND_REVIEW_TIMEOUT", "8"))
+        # Inner wait for the Compliance verdict. MUST stay below Intake's BAND_REPLY_TIMEOUT
+        # (this review runs inside that window) so a slow/degraded reviewer defaults here
+        # rather than blowing the outer reply budget → "Transaction failed".
+        self._review_timeout = float(os.getenv("BAND_REVIEW_TIMEOUT", "5"))
         self._user_cid = None   # set by on_room_message so CFO's reply is collectable
 
     def on_room_message(self, msg):

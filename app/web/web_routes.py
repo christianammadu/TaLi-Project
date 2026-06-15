@@ -1,5 +1,7 @@
+import hmac
+import os
 import re
-from flask import Blueprint, request, render_template, current_app
+from flask import Blueprint, request, render_template, current_app, jsonify
 from sqlalchemy import select
 from app.auth import (
     create_registration_otp,
@@ -39,6 +41,33 @@ def inject_channel_links():
 def index():
     """Public marketing landing page."""
     return render_template('landing.html')
+
+
+@web_bp.route('/health', methods=['GET'])
+def health():
+    """Liveness endpoint — point an uptime monitor (UptimeRobot, etc.) here.
+
+    Passive by default and free: it reports the model layer's status from recent real
+    traffic ("up"/"down"/"unknown") plus which provider keys are configured and the last
+    error per provider — so you can see *when* and *why* the intelligence service is down.
+    Returns HTTP 503 when status is "down" so monitors alert automatically.
+
+    ``?probe=1`` forces ONE tiny live model call to confirm reachability right now; it's
+    gated by ``AUDIT_TOKEN`` (X-Audit-Token header) in production to avoid cost abuse.
+    """
+    from app.services import model_router
+    want_probe = request.args.get('probe', '').lower() in ('1', 'true', 'yes')
+    if want_probe:
+        token = os.getenv('AUDIT_TOKEN', '')
+        authorized = (
+            os.getenv('OTP_DEV_BYPASS', 'false').lower() == 'true' if not token
+            else hmac.compare_digest(request.headers.get('X-Audit-Token', ''), token)
+        )
+        if not authorized:
+            want_probe = False  # never spend on an unauthenticated probe — fall back to passive
+    models = model_router.health_report(active_probe=want_probe)
+    code = 503 if models['status'] == 'down' else 200
+    return jsonify({"app": "ok", "models": models}), code
 
 
 @web_bp.route('/features', methods=['GET'])

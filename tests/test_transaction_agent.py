@@ -513,6 +513,61 @@ class TestStockQuery(unittest.TestCase):
         self.assertIn("rice — 5 bags", out)
 
 
+class TestSnapshotFormat(unittest.TestCase):
+    """/snapshot must return a human message, never raw JSON (regression)."""
+
+    def test_format_snapshot_is_human_text(self):
+        from app.agents.snapshot_agent import format_snapshot
+        out = format_snapshot(163700, 17072000, 163700 - 17072000, 0, 0, [], "Unhealthy")
+        self.assertIn("Business Health", out)
+        self.assertIn("Unhealthy", out)
+        self.assertIn("₦163,700", out)
+        self.assertIn("-₦16,908,300", out)     # negative profit reads cleanly
+        self.assertNotIn("{", out)              # no JSON braces
+        self.assertNotIn("cash_in", out)        # no raw keys
+
+    def test_format_snapshot_lists_low_stock(self):
+        from app.agents.snapshot_agent import format_snapshot
+        out = format_snapshot(5000, 1000, 4000, 0, 0, ["rice", "beans"], "Healthy")
+        self.assertIn("Low stock: rice, beans", out)
+
+
+class TestLocalReadQueryFastPath(unittest.TestCase):
+    """Stock/balance questions are classified locally (no LLM), so they answer even when
+    the model is down — the fix for "What are my inventory" → 'intelligence unavailable'."""
+
+    def test_is_stock_query_positives(self):
+        from app.agents.agent_1_intake import _is_stock_query
+        for q in ("what are my inventory", "what's in stock", "stock levels",
+                  "available stock", "my stock", "inventory", "what do i have left"):
+            self.assertTrue(_is_stock_query(q.lower()), q)
+
+    def test_is_stock_query_negatives(self):
+        from app.agents.agent_1_intake import _is_stock_query
+        for q in ("add 10 bags of rice", "sold rice 5000", "i bought new stock 5000", "set rice to 50"):
+            self.assertFalse(_is_stock_query(q.lower()), q)
+
+    def test_is_balance_query(self):
+        from app.agents.agent_1_intake import _is_balance_query
+        self.assertTrue(_is_balance_query("what's my balance"))
+        self.assertTrue(_is_balance_query("balance"))
+        self.assertFalse(_is_balance_query("sold rice 5000"))
+
+    def test_inventory_question_skips_llm(self):
+        from unittest.mock import patch
+        from app.agents.agent_1_intake import IntakeAgent
+        from app.agents.band.band_client import get_band_client
+        agent = IntakeAgent("u1", "s1", band=get_band_client(backend="stub"))
+        with patch.object(agent, '_publish_intake', return_value=["📦 *Available stock*\n• rice — 5 bags"]) as pub, \
+             patch('app.agents.agent_1_intake.parse_message') as parse:
+            out = agent.process("What are my inventory")
+        parse.assert_not_called()                                   # the LLM is never called
+        self.assertIn("Available stock", out)
+        self.assertEqual(pub.call_args.kwargs['intent'], 'query')   # routed as a query…
+        parsed = pub.call_args.kwargs['extracted_data']['parsed']
+        self.assertEqual(parsed['query']['query_type'], 'stock')    # …of type stock
+
+
 class TestReportingAgent(unittest.TestCase):
     """Tests for app/reporting_agent.py"""
 
