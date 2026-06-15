@@ -82,11 +82,8 @@ class _StubBackend:
         return msgs[-limit:]
 
     def collect_reply(self, correlation_id, timeout=10.0, poll=0.05):
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            if correlation_id in self._replies:
-                return self._replies.pop(correlation_id)
-            time.sleep(poll)
+        if correlation_id in self._replies:
+            return self._replies.pop(correlation_id)
         return None
 
 

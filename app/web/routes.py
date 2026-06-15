@@ -253,7 +253,7 @@ def handle_authenticated_message(sender, text, session, message_id=None):
     user_id = session['user_id']
     router = AgentRouter(user_id=user_id, sender_id=sender)
     reply = router.route(text, message_id)
-    if reply in ("__DUPLICATE_DROP__", "__ERROR_HANDLED_SAGA__"):
+    if reply in ("__DUPLICATE_DROP__", "__ERROR_HANDLED_SAGA__", "__ASYNC_STARTED__"):
         return
     send_reply(sender, reply)
 

@@ -50,9 +50,10 @@ class AgentRouter:
         self.compliance = ComplianceAgent(self.user_id, self.sender_id, band=self.band)
         self.band.on_message(COMPLIANCE_HANDLE, self.compliance.on_room_message)
 
-    def route(self, text, message_id=None):
+    def route(self, text, message_id=None, sync=False):
         """Authenticate, dedupe the webhook event, run Intake (which drives the room),
-        and return the collected reply. Same contract as the pre-Band router."""
+        and return the collected reply. Same contract as the pre-Band router.
+        """
         # 1. Verify active session at the gateway entry point.
         session = get_active_session(self.sender_id)
         if not session:
@@ -106,41 +107,104 @@ class AgentRouter:
                     cursor.close()
                     conn.close()
 
-        # 3. Drive the flow through Intake (which sends into the room + collects the reply).
+        # Check Flask app context and testing flag to determine synchronous execution
+        sync_execution = False
         try:
-            response = self.intake.process(text)
-            if message_id:
-                try:
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE whatsapp_message_id = %s",
-                        (message_id,)
-                    )
-                    conn.commit()
-                except Error as e:
-                    print(f"[AgentRouter Update Status Error] {e}")
-                finally:
-                    if 'conn' in locals() and conn.is_connected():
-                        cursor.close()
-                        conn.close()
-            return response
-        except Exception as err:
-            if message_id:
-                try:
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE whatsapp_message_id = %s",
-                        (message_id,)
-                    )
-                    conn.commit()
-                except Error as e:
-                    print(f"[AgentRouter Failure Update Error] {e}")
-                finally:
-                    if 'conn' in locals() and conn.is_connected():
-                        cursor.close()
-                        conn.close()
-            raise err
+            from flask import current_app
+            if current_app:
+                if current_app.config.get('TESTING', False) or current_app.testing:
+                    sync_execution = True
+            else:
+                sync_execution = True
+        except RuntimeError:
+            sync_execution = True
+
+        if sync or sync_execution:
+            # 3. Drive the flow through Intake synchronously
+            try:
+                response = self.intake.process(text)
+                if message_id:
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "UPDATE webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP "
+                            "WHERE whatsapp_message_id = %s",
+                            (message_id,)
+                        )
+                        conn.commit()
+                    except Error as e:
+                        print(f"[AgentRouter Update Status Error] {e}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+                return response
+            except Exception as err:
+                if message_id:
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
+                            "WHERE whatsapp_message_id = %s",
+                            (message_id,)
+                        )
+                        conn.commit()
+                    except Error as e:
+                        print(f"[AgentRouter Failure Update Error] {e}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+                raise err
+        else:
+            # 3. Drive the flow through Intake asynchronously in a background thread
+            import threading
+            from flask import current_app
+            app = current_app._get_current_object()
+
+            def async_worker(app_obj, text_val, msg_id):
+                with app_obj.app_context():
+                    try:
+                        response = self.intake.process(text_val)
+                        if response:
+                            from app.channels.registry import send_text
+                            send_text(self.sender_id, response)
+                        if msg_id:
+                            try:
+                                conn = get_db_connection()
+                                cursor = conn.cursor()
+                                cursor.execute(
+                                    "UPDATE webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP "
+                                    "WHERE whatsapp_message_id = %s",
+                                    (msg_id,)
+                                )
+                                conn.commit()
+                            except Error as e:
+                                print(f"[AgentRouter Async Update Status Error] {e}")
+                            finally:
+                                if 'conn' in locals() and conn.is_connected():
+                                    cursor.close()
+                                    conn.close()
+                    except Exception as err:
+                        print(f"[AgentRouter Async Worker Exception] {err}")
+                        if msg_id:
+                            try:
+                                conn = get_db_connection()
+                                cursor = conn.cursor()
+                                cursor.execute(
+                                    "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
+                                    "WHERE whatsapp_message_id = %s",
+                                    (msg_id,)
+                                )
+                                conn.commit()
+                            except Error as e:
+                                print(f"[AgentRouter Async Failure Update Error] {e}")
+                            finally:
+                                if 'conn' in locals() and conn.is_connected():
+                                    cursor.close()
+                                    conn.close()
+
+            threading.Thread(target=async_worker, args=(app, text, message_id), daemon=True).start()
+            return "__ASYNC_STARTED__"

@@ -153,18 +153,23 @@ class IntakeAgent:
         text_stripped = text.strip()
         text_lower = text_stripped.lower()
 
-        # Pending gates: a YES/NO commits or discards a pending parsed write; a
-        # format word (chat/pdf/excel/1/2/3) answers a pending "chat or PDF?"
-        # statement question. Both are checked before anything else.
-        if text_lower in CONFIRM_YES or text_lower in CONFIRM_NO or text_lower in FORMAT_REPLIES:
-            pending = self._load_pending()
-            if pending:
-                pj = pending['parsed_json']
-                pj = pj if isinstance(pj, dict) else json.loads(pj)
-                if pj.get('awaiting') == 'statement_format':
+        # Pending gates: check self._load_pending() first to handle FSM state
+        pending = self._load_pending()
+        if pending:
+            pj = pending['parsed_json']
+            pj = pj if isinstance(pj, dict) else json.loads(pj)
+            if pj.get('awaiting') == 'statement_format':
+                if text_lower in FORMAT_REPLIES or text_lower in CONFIRM_NO:
                     return self._apply_format_choice(text_lower, pj)
+                else:
+                    return ("Which format would you like?\n\n"
+                            "1️⃣ Chat summary\n2️⃣ PDF document\n3️⃣ Excel spreadsheet\n\n"
+                            "Reply *1*, *2* or *3*.")
+            else:
                 if text_lower in CONFIRM_YES or text_lower in CONFIRM_NO:
                     return self._apply_confirmation(text_lower, pending)
+                else:
+                    return "Do you want to record this? Please reply YES or NO."
 
         # Define regex matchers upfront to enforce strict priority
         inv_match_add = re.match(r'^(?:add|added)\s+(\d+(?:\.\d+)?)\s+(?:bags\s+of\s+|units\s+of\s+)?(\w+)$', text_lower)
@@ -601,10 +606,13 @@ class IntakeAgent:
 
     def _store_pending(self, text, parsed):
         """Persist a parsed write awaiting confirmation; return the breakdown prompt."""
+        import uuid
         from app.services.formatter import format_confirmation
         prompt = format_confirmation(parsed)
         if not prompt:
             return None
+        # Generate event_id and store it in parsed so that it persists in pending_confirmations
+        parsed['_event_id'] = str(uuid.uuid4())
         if self._store_pending_json(text, parsed):
             # Human-in-the-loop (WP-08): record that a human's approval is required, in-room.
             self._post_human_event({"type": "approval_request", "summary": prompt, "raw_text": text})
@@ -671,21 +679,202 @@ class IntakeAgent:
 
     def _apply_confirmation(self, decision, pending):
         """Commit (YES) or discard (NO) a pending parsed write."""
-        self._clear_pending()
+        import json
+        from mysql.connector import Error
+        from app.data.database import get_db_connection
+        from app.services.uuid_utils import uuid_to_bin
+
         # Human-in-the-loop (WP-08): record the human's decision in-room for the audit trail.
         self._post_human_event({"type": "human_decision",
                                 "decision": "rejected" if decision in CONFIRM_NO else "approved"})
+
         if decision in CONFIRM_NO:
+            self._clear_pending()
             return "❌ Cancelled — nothing was recorded. Send it again to retry."
 
-        pj = pending['parsed_json']
-        parsed = pj if isinstance(pj, (dict, list)) else json.loads(pj)
+        # Lock the row and check/set _recording flag atomically
+        conn = get_db_connection()
+        try:
+            conn.start_transaction()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT id, parsed_json FROM pending_confirmations WHERE sender_id = %s FOR UPDATE",
+                (self.sender_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                conn.rollback()
+                return "❌ No pending transaction found or it has expired."
+
+            pj = row['parsed_json']
+            parsed = pj if isinstance(pj, dict) else json.loads(pj)
+
+            if parsed.get('_recording'):
+                conn.rollback()
+                print(f"[IntakeAgent] Duplicate YES detected for {self.sender_id}. Suppressing.")
+                return "⏳ Processing..."
+
+            parsed['_recording'] = True
+            cursor.execute(
+                "UPDATE pending_confirmations SET parsed_json = %s WHERE sender_id = %s",
+                (json.dumps(parsed), self.sender_id)
+            )
+            conn.commit()
+        except Error as e:
+            if 'conn' in locals() and conn.is_connected():
+                conn.rollback()
+            print(f"Error locking pending confirmation: {e}")
+            return "❌ A database error occurred. Please try again."
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+        event_id = parsed.get('_event_id')
         results = self._publish_intake(
             intent="split_routing",
             extracted_data={"parsed": parsed, "raw_text": pending['raw_text'], "is_fast_path": False},
-            confidence=parsed.get('confidence', 1.0)
+            confidence=parsed.get('confidence', 1.0),
+            event_id=event_id
         )
-        return results[0] if results else "❌ Ledger processing failed."
+
+        reply = results[0] if results else None
+        
+        # If the reply indicates success, or if we got compliance rejection, clear pending state
+        if reply is not None:
+            if reply.startswith("🛑"):  # Compliance rejection
+                self._clear_pending()
+                return reply
+            elif reply.startswith("⚠️") or reply.startswith("❌"):  # Transient/database error
+                self._reset_recording_flag()
+                return reply
+            else:
+                self._clear_pending()
+                return reply
+
+        # Recovery path: check if transaction was committed on a timeout
+        if event_id:
+            if self._check_event_committed(event_id):
+                self._clear_pending()
+                return self._reconstruct_success_reply(event_id)
+            else:
+                self._reset_recording_flag()
+                return "⚠️ Connection timed out while recording. Your transaction was not saved. Please try again."
+        
+        self._reset_recording_flag()
+        return "❌ Ledger processing failed."
+
+    def _reset_recording_flag(self):
+        """Reset the _recording flag to False in pending_confirmations."""
+        from app.data.database import get_db_connection
+        from mysql.connector import Error
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT parsed_json FROM pending_confirmations WHERE sender_id = %s FOR UPDATE",
+                (self.sender_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                pj = row['parsed_json']
+                parsed = pj if isinstance(pj, dict) else json.loads(pj)
+                if '_recording' in parsed:
+                    parsed['_recording'] = False
+                cursor.execute(
+                    "UPDATE pending_confirmations SET parsed_json = %s WHERE sender_id = %s",
+                    (json.dumps(parsed), self.sender_id)
+                )
+                conn.commit()
+        except Error as e:
+            print(f"Error resetting recording flag: {e}")
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    def _check_event_committed(self, event_id):
+        """Check if any database record associated with event_id was committed."""
+        from app.data.database import get_db_connection
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM transactions WHERE event_id LIKE %s", (f"{event_id}%",))
+            if cursor.fetchone()[0] > 0:
+                return True
+            cursor.execute("SELECT COUNT(*) FROM stock_movements WHERE event_id LIKE %s", (f"{event_id}%",))
+            if cursor.fetchone()[0] > 0:
+                return True
+            cursor.execute("SELECT COUNT(*) FROM debt_logs WHERE event_id LIKE %s", (f"{event_id}%",))
+            if cursor.fetchone()[0] > 0:
+                return True
+            return False
+        except Exception as e:
+            print(f"Error checking event commitment: {e}")
+            return False
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    def _reconstruct_success_reply(self, event_id):
+        """Query DB and format a success message for transactions recorded under event_id."""
+        from app.data.database import get_db_connection
+        from app.services.uuid_utils import uuid_to_bin
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            reply_lines = []
+
+            # Fetch transactions
+            cursor.execute(
+                "SELECT category, amount FROM transactions WHERE event_id LIKE %s AND action != 'payment'",
+                (f"{event_id}%",)
+            )
+            for tx in cursor.fetchall():
+                reply_lines.append(f"✅ Recorded: {tx['category']} — ₦{int(tx['amount']):,}")
+
+            # Fetch stock movements
+            cursor.execute(
+                "SELECT p.name as product, m.movement_type, m.quantity, p.unit "
+                "FROM stock_movements m JOIN products p ON m.product_id = p.id "
+                "WHERE m.event_id LIKE %s",
+                (f"{event_id}%",)
+            )
+            for inv in cursor.fetchall():
+                cursor.execute(
+                    "SELECT quantity FROM products WHERE name = %s AND user_id = %s LIMIT 1",
+                    (inv['product'], uuid_to_bin(self.user_id))
+                )
+                prod_row = cursor.fetchone()
+                new_stock = int(prod_row['quantity']) if prod_row else 0
+                unit = inv['unit'] or 'units'
+                if new_stock < 0:
+                    reply_lines.append(f"📦 {inv['product']}: recorded ✓ — tracked stock is now {new_stock} {unit}. "
+                                       f"Log your purchases (e.g. \"bought 50 {unit} of {inv['product']}\") to reconcile.")
+                else:
+                    reply_lines.append(f"📦 Inventory Updated: {inv['product']} stock level is now {new_stock} {unit}.")
+
+            # Fetch debt logs
+            cursor.execute(
+                "SELECT person_name, action, amount, new_balance FROM debt_logs WHERE event_id LIKE %s",
+                (f"{event_id}%",)
+            )
+            for debt in cursor.fetchall():
+                action_lbl = "repaid" if debt['action'] == 'repayment' else "owes"
+                reply_lines.append(f"👥 Debt Ledger: {debt['person_name']} {action_lbl} ₦{int(debt['amount']):,}. Outstanding: ₦{int(debt['new_balance']):,}.")
+
+            if not reply_lines:
+                return "✅ Recorded successfully."
+
+            return "\n".join(reply_lines)
+        except Exception as e:
+            print(f"Error reconstructing success reply: {e}")
+            return "✅ Recorded successfully."
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
 
     def _is_shorthand(self, text):
         """Determines if a message is a single-word numeric shorthand."""
@@ -763,8 +952,9 @@ class IntakeAgent:
                 cursor.close()
                 conn.close()
 
-    def _publish_intake(self, intent, extracted_data, confidence):
+    def _publish_intake(self, intent, extracted_data, confidence, event_id=None):
         """Serialize and publish intake payload using IntakePayload Pydantic model."""
+        import uuid
         from app.services.validators import UnifiedResponseModel, TransactionModel
         from app.agents.event_schemas import IntakePayload, IntakeEventPayload
         
@@ -796,13 +986,13 @@ class IntakeAgent:
             parsed_data = extracted_data.get('parsed', {})
             nlp_parsed = UnifiedResponseModel(**parsed_data)
 
-        event = IntakePayload(
-            user_id=self.user_id,
-            session_id=session_id,
-            business_id=business_id,
-            source_agent="IntakeAgent",
-            event_type=event_type,
-            payload=IntakeEventPayload(
+        event_args = {
+            "user_id": self.user_id,
+            "session_id": session_id,
+            "business_id": business_id,
+            "source_agent": "IntakeAgent",
+            "event_type": event_type,
+            "payload": IntakeEventPayload(
                 intent=intent,
                 confidence_score=confidence,
                 raw_text=raw_text,
@@ -810,7 +1000,11 @@ class IntakeAgent:
                 fast_path_transaction=fast_path_tx,
                 nlp_parsed=nlp_parsed
             )
-        )
+        }
+        if event_id is not None:
+            event_args["event_id"] = uuid.UUID(event_id) if isinstance(event_id, str) else event_id
+
+        event = IntakePayload(**event_args)
         # Hand off to the Ledger agent in the room; the reply is collected out-of-band.
         # Callers keep their `results[0] if results else ...` shape, so wrap as a list.
         reply = self._band_send_collect([LEDGER_HANDLE], event.model_dump(mode='json'))

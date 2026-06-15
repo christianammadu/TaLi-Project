@@ -145,6 +145,7 @@ class LedgerAgent:
         max_attempts = len(retry_delays) + 1
 
         for attempt in range(1, max_attempts + 1):
+            db_start = time.time()
             conn = get_db_connection()
             try:
                 conn.start_transaction()
@@ -502,6 +503,8 @@ class LedgerAgent:
                         conn.close()
                     except Exception:
                         pass
+                db_time_ms = int((time.time() - db_start) * 1000)
+                print(f"[PERF] DB Latency: {db_time_ms}ms")
 
     def _is_authorized(self):
         """Validate if the user exists in database permissions."""

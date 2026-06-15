@@ -59,9 +59,23 @@ def _log_outgoing(sender, text):
 
 def send_text(sender, text):
     """Send a text reply via the sender's own channel. Returns the transport response."""
-    resp = channel_for(sender).send_text(sender, text)
-    _log_outgoing(sender, text)
-    return resp
+    import time
+    max_retries = 3
+    retry_delay = 1.0
+    api_start = time.time()
+    for attempt in range(1, max_retries + 1):
+        try:
+            resp = channel_for(sender).send_text(sender, text)
+            _log_outgoing(sender, text)
+            api_time_ms = int((time.time() - api_start) * 1000)
+            print(f"[PERF] Channel API Latency: {api_time_ms}ms (attempt {attempt})")
+            return resp
+        except Exception as e:
+            print(f"[send_text Attempt {attempt} Failed] Error: {e}")
+            if attempt == max_retries:
+                print(f"[CRITICAL] Confirmation message could not be delivered to {sender}: {text}")
+                raise e
+            time.sleep(retry_delay * attempt)
 
 
 def send_document(sender, file_path, filename, caption=None):

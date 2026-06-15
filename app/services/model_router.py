@@ -236,6 +236,7 @@ def chat_completion(role, messages, **params):
         model = _cfg(model_env, default_model)
         try:
             client = get_client(provider_name)
+            params.setdefault("timeout", 6.0)
             resp = client.chat.completions.create(model=model, messages=messages, **params)
             usage = getattr(resp, "usage", None)
             pt = getattr(usage, "prompt_tokens", 0) or 0

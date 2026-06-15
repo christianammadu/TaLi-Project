@@ -1,17 +1,42 @@
 from contextlib import contextmanager
 
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, pooling
 from flask import current_app
 
+_pool = None
+
 def get_db_connection():
-    """Returns an active secure connection to your MySQL Server."""
-    return mysql.connector.connect(
-        host=current_app.config['DB_HOST'],
-        user=current_app.config['DB_USER'],
-        password=current_app.config['DB_PASSWORD'],
-        database=current_app.config['DB_NAME']
-    )
+    """Returns an active secure pooled connection to your MySQL Server."""
+    global _pool
+    if _pool is None:
+        try:
+            _pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="tali_pool",
+                pool_size=10,
+                host=current_app.config['DB_HOST'],
+                user=current_app.config['DB_USER'],
+                password=current_app.config['DB_PASSWORD'],
+                database=current_app.config['DB_NAME']
+            )
+        except Exception as e:
+            print(f"Error creating connection pool: {e}")
+            return mysql.connector.connect(
+                host=current_app.config['DB_HOST'],
+                user=current_app.config['DB_USER'],
+                password=current_app.config['DB_PASSWORD'],
+                database=current_app.config['DB_NAME']
+            )
+    try:
+        return _pool.get_connection()
+    except Exception as e:
+        print(f"Pool connection failed: {e}. Falling back to direct connection.")
+        return mysql.connector.connect(
+            host=current_app.config['DB_HOST'],
+            user=current_app.config['DB_USER'],
+            password=current_app.config['DB_PASSWORD'],
+            database=current_app.config['DB_NAME']
+        )
 
 
 @contextmanager
