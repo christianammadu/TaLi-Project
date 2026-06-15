@@ -5,6 +5,7 @@ Receives user messages, normalizes shorthand, resolves NL, logs AI calls, and es
 
 import json
 import os
+import re
 import uuid
 from datetime import date
 from mysql.connector import Error
@@ -56,6 +57,33 @@ def _wants_statement(text_lower):
     if ' to ' in text_lower or ' from ' in text_lower or ' for ' in text_lower:
         return True
     return False
+
+
+# Local read-query detection (no LLM): so "what's in stock" / "what's my balance" answer
+# even when the NLP model is down. Guards keep these from swallowing write commands
+# ("add 10 bags") or transactions that carry an amount ("i bought stock 5000").
+_WRITE_VERBS = {'add', 'added', 'remove', 'removed', 'set', 'sold', 'sell', 'sale',
+                'bought', 'buy', 'purchase', 'purchased', 'spent', 'paid', 'repay', 'repayment'}
+_STOCK_QUERY_KW = ('inventory', 'in stock', 'stock level', 'stock count', 'available stock',
+                   'current stock', 'remaining stock', 'stock balance', 'my stock', 'stock left',
+                   'have in stock', 'left in stock', 'what do i have', 'what do i have left')
+_BALANCE_QUERY_KW = ('balance', 'net position', 'cash position', 'how much do i have')
+
+
+def _looks_like_query(text_lower):
+    """A lookup question, not a write: not verb-led and carrying no 3+ digit amount."""
+    first = text_lower.split()[0] if text_lower.split() else ''
+    return first not in _WRITE_VERBS and not re.search(r'\d{3,}', text_lower)
+
+
+def _is_stock_query(text_lower):
+    if text_lower in ('stock', 'stocks', 'inventory'):
+        return True
+    return _looks_like_query(text_lower) and any(kw in text_lower for kw in _STOCK_QUERY_KW)
+
+
+def _is_balance_query(text_lower):
+    return _looks_like_query(text_lower) and any(kw in text_lower for kw in _BALANCE_QUERY_KW)
 
 
 def _items_missing_amount(parsed):
@@ -166,6 +194,34 @@ class IntakeAgent:
                 confidence=1.0
             )
             return results[0] if results else "❌ Snapshot failed."
+
+        # 1a. Read-queries (stock / balance) classified locally so they answer even when
+        #     the NLP model is unavailable — no LLM round-trip needed for a plain lookup.
+        elif _is_stock_query(text_lower):
+            payload = {
+                "intents": ["query"], "confidence": 1.0, "needs_review": False, "status": "ok",
+                "query": {"query_type": "stock", "type": None, "category": None,
+                          "currency": None, "period_start": None, "period_end": None},
+            }
+            results = self._publish_intake(
+                intent="query",
+                extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
+                confidence=1.0,
+            )
+            return results[0] if results else "❌ Couldn't fetch your stock right now."
+
+        elif _is_balance_query(text_lower):
+            payload = {
+                "intents": ["query"], "confidence": 1.0, "needs_review": False, "status": "ok",
+                "query": {"query_type": "balance", "type": None, "category": None,
+                          "currency": None, "period_start": None, "period_end": None},
+            }
+            results = self._publish_intake(
+                intent="query",
+                extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
+                confidence=1.0,
+            )
+            return results[0] if results else "❌ Couldn't fetch your balance right now."
 
         elif any(kw in text_lower for kw in ('cost', 'billing', 'finops', 'api spend')):
             payload = {
