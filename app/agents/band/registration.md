@@ -54,9 +54,9 @@ layer) or stay in the agents? Also account for the already-split out-of-band pat
 
 - ✅ Connector seam defined (`band_client.py`): `send / on_message / read_context / collect_reply`.
 - ✅ `stub` backend (fire-and-forget, reply-by-correlation_id) — lets WP-03/04/05 build offline; covered by `tests/test_band_client.py`.
-- ✅ `live` backend — implemented as **in-process orchestration + a best-effort Band-room mirror** (see below).
+- ✅ `live` backend — implemented + **verified end-to-end against the real Band API** (in-process orchestration + a real room mirror with auto-provisioning). See below.
 
-## Going live — `_LiveBackend` (implemented)
+## Going live — `_LiveBackend` (implemented & verified)
 
 The agents are **local** (the Ledger writes our MySQL; all agent logic is in `app/agents/`),
 so Band is the **coordination/audit surface**, not an autonomous runtime. `band-sdk`'s
@@ -65,24 +65,48 @@ Flask webhook doesn't have — the Round-2 REST decision above. So `_LiveBackend
 
 1. **Inherits the stub** — synchronous in-process `@mention` dispatch + `collect_reply`, so the
    webhook still gets its answer reliably (no polling, no async runtime).
-2. **Mirrors every handoff into the real Band room** via `POST {BAND_MESSAGE_PATH}` (default
-   `/api/v1/agent/chats/{chat_id}/messages`) under the **sending agent's `X-API-Key`**,
-   translating the internal `@tali-*` mentions to each agent's real handle. So `app.band.ai`
-   shows the four participants and the `intake → ledger → compliance → cfo` handoffs.
-3. The mirror is **best-effort**: a room-post failure only logs — bookkeeping never breaks.
-   A `404` self-disables the mirror with a one-line hint (your tenant's send path differs →
-   set `BAND_MESSAGE_PATH`). The send path is the one detail not publicly documented (band.ai
-   blocks scraping; the SDK hides it behind its WS runtime), hence the override.
+2. **Mirrors every handoff into the real Band room** over REST, under the sending agent's
+   `X-API-Key`, so `app.band.ai` shows the four participants and the
+   `intake → ledger → compliance → cfo` handoffs.
+
+### Verified REST surface (from `thenvoi-client-rest` 0.0.7; auth = `X-API-Key`)
+```
+GET   /api/v1/agent/me                                  → agent identity (id, handle)
+GET   /api/v1/agent/chats                               → chats the agent is a participant of
+POST  /api/v1/agent/chats                {"chat":{}}    → create a room (agent = owner)
+GET   /api/v1/agent/chats/{id}                          → 200 iff this agent is a member
+POST  /api/v1/agent/chats/{id}/participants
+            {"participant":{"participant_id":<agent_id>,"role":"member"}}
+POST  /api/v1/agent/chats/{id}/messages
+            {"message":{"content":"@owner/slug …","mentions":[{"id":<agent_id>,"handle":"owner/slug"}]}}
+POST  /api/v1/agent/chats/{id}/events
+            {"event":{"content":"…","message_type":"task|thought|tool_call|tool_result|error"}}
+GET   /api/v1/agent/chats/{id}/context                  → the agent's SCOPED view of the room
+```
+Two gotchas the implementation handles: **(a)** a message may only `@mention` agents already
+in the room (`422 mentioned_participant_not_in_room` otherwise) — so non-participant targets
+(the gateway/human terminal reply) are posted as an **event** instead; **(b)** `…/context` is
+each agent's *scoped* view (you only see messages you're in) — the **human** watching the room
+in the UI sees the full transcript.
+
+### Room resolution (auto-provision)
+`get_band_client()` is called per request, so the resolved room is cached **per process**
+(`_LIVE_ROOM_CACHE`) — without that we'd create a room per message. On first send `_LiveBackend`:
+1. If `BAND_ROOM_ID` is set **and** the owner agent (`@tali-intake`) is already a member
+   (`GET /agent/chats/{id}` → 200) → use it. *(This is the stable path — add the 4 agents to
+   your room in the Band UI and it's used directly.)*
+2. Else **auto-provisions** an agent-owned room, adds the other three as participants, and logs
+   `watch it at https://app.band.ai/chat/<id>`. (Agents can't self-join a human-owned room via
+   the agent API, so a room you created in the UI without adding them falls back to this.)
+
+The mirror is best-effort: any room failure only logs — bookkeeping always proceeds in-process.
 
 **To switch on:**
 ```
 BAND_BACKEND=live
-BAND_ROOM_ID=<the room all four agents are participants of>
-BAND_INTAKE_AGENT_ID / _API_KEY   (+ LEDGER / CFO / COMPLIANCE)   # already set
-BAND_INTAKE_HANDLE=@your-intake-handle   (+ LEDGER / CFO / COMPLIANCE)  # if different from @tali-*
-AIML_API_KEY=<key>                # so the CFO actually runs on the frontier model
-# optional: BAND_MESSAGE_PATH=...  if your tenant's send endpoint differs from the default
+BAND_*_AGENT_ID / _API_KEY            # the four agents (already set)
+BAND_*_HANDLE=@owner/slug             # the agent's real handle (GET /agent/me → "handle"); maps internally
+AIML_API_KEY=<key>                    # so the CFO runs on the frontier model
+BAND_ROOM_ID=<your room>              # optional; only used if you add the 4 agents to it in the UI,
+                                      # otherwise the gateway auto-provisions + logs a room URL
 ```
-Handles are mapped internally → no code change needed for different handles; just set
-`BAND_*_HANDLE`. The config (handle→creds + room + path) is assembled by
-`band_client._live_config_from_app()` and passed into `_LiveBackend` automatically.

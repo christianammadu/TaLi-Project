@@ -29,6 +29,7 @@ Two backends, chosen by ``BAND_BACKEND``:
 """
 
 import json
+import threading
 import time
 import uuid
 
@@ -82,27 +83,40 @@ class _StubBackend:
         return None
 
 
-# --- Live backend: in-process orchestration + a best-effort Band-room mirror ---
+# --- Live backend: in-process orchestration + a real Band-room mirror ---
 #
 # The agents are LOCAL (the Ledger writes our MySQL), so Band is the coordination/
-# audit surface, not an autonomous runtime. We therefore keep the stub's reliable,
-# synchronous in-process @mention dispatch + reply collection (the REST-over-sync-Flask
-# decision in registration.md) and additionally MIRROR each handoff into the real Band
-# room via REST — under the sending agent's API key, translating the internal @tali-*
-# handles to each agent's real handle on the tenant. The mirror is best-effort: a room
-# post failure never breaks bookkeeping. (band-sdk's persistent-WebSocket runtime is
-# deliberately not used — it needs a long-running process the sync webhook doesn't have.)
+# audit surface, not an autonomous runtime — band-sdk's persistent-WebSocket runtime
+# needs a long-running process the sync Flask webhook doesn't have (registration.md).
+# So _LiveBackend keeps the stub's reliable synchronous in-process @mention dispatch +
+# reply collection, and MIRRORS each handoff into the real Band room over REST (verified
+# against thenvoi-client-rest 0.0.7):
+#   create room  POST   /api/v1/agent/chats                       {"chat":{}}
+#   add member   POST   /api/v1/agent/chats/{id}/participants     {"participant":{participant_id, role}}
+#   message      POST   /api/v1/agent/chats/{id}/messages         {"message":{content, mentions:[{id,handle}]}}
+#   event        POST   /api/v1/agent/chats/{id}/events           {"event":{content, message_type}}
+#   auth: X-API-Key.
+# A message may only @mention agents already in the room, so the gateway uses the
+# configured room when its agents are members, else AUTO-PROVISIONS an agent-owned room
+# and adds the peers. The resolved room is cached per-process (get_band_client is called
+# per request — without the cache we'd create a room per message). Best-effort: a room
+# failure only logs; bookkeeping always proceeds in-process.
+
+# process-wide cache of the resolved room id (keyed by tenant + configured room + agents)
+_LIVE_ROOM_CACHE = {}
+_LIVE_LOCK = threading.Lock()
+
 
 class _LiveBackend(_StubBackend):
     REST_DEFAULT = "https://app.band.ai"
-    PATH_DEFAULT = "/api/v1/agent/chats/{chat_id}/messages"
+    MESSAGES_DEFAULT = "/api/v1/agent/chats/{chat_id}/messages"
 
     def __init__(self, config=None):
         super().__init__()
         cfg = config or {}
         self.rest_url = (cfg.get("rest_url") or self.REST_DEFAULT).rstrip("/")
-        self.room_id = cfg.get("room_id") or ""
-        self.message_path = cfg.get("message_path") or self.PATH_DEFAULT
+        self.configured_room = cfg.get("room_id") or ""
+        self.messages_path = cfg.get("message_path") or self.MESSAGES_DEFAULT
         # internal handle -> {"agent_id", "api_key", "remote_handle"}
         self.agents = cfg.get("agents", {})
         if not self.agents:
@@ -116,53 +130,116 @@ class _LiveBackend(_StubBackend):
         except Exception as e:  # pragma: no cover
             self._requests = None
             print(f"[Band live] 'requests' unavailable ({e}); room mirror disabled.")
-        self._mirror_on = bool(self.room_id) and self._requests is not None
-        if not self.room_id:
-            print("[Band live] BAND_ROOM_ID unset — agents run in-process only "
-                  "(set BAND_ROOM_ID to mirror handoffs into the Band room).")
+        self._mirror_on = self._requests is not None
 
-    def _remote_handle(self, internal):
-        """internal @tali-* handle -> the agent's real @handle on the tenant."""
-        return (self.agents.get(internal) or {}).get("remote_handle") or internal
+    # --- small REST helpers (X-API-Key auth) ---
+    def _post(self, path, api_key, payload):
+        return self._requests.post(self.rest_url + path,
+                                   headers={"X-API-Key": api_key, "Content-Type": "application/json"},
+                                   json=payload, timeout=12)
 
-    def _post_creds(self, sender):
-        """Creds of the posting agent. The gateway/human aren't registered Band agents,
-        so fall back to any registered agent's key so the message still appears."""
-        return self.agents.get(sender) or next(iter(self.agents.values()), {})
+    def _get(self, path, api_key, params=None):
+        return self._requests.get(self.rest_url + path, headers={"X-API-Key": api_key},
+                                  params=params or {}, timeout=12)
+
+    def _owner(self):
+        """The provisioning/owner agent — prefer Intake, else any configured agent."""
+        return self.agents.get("@tali-intake") or next(iter(self.agents.values()))
+
+    def _agent_id(self, internal):
+        return (self.agents.get(internal) or {}).get("agent_id")
+
+    def _handle(self, internal):
+        """Remote handle without the leading '@' (the mentions API stores owner/slug)."""
+        return ((self.agents.get(internal) or {}).get("remote_handle") or internal).lstrip("@")
+
+    def _cache_key(self):
+        ids = tuple(sorted((c.get("agent_id") or "") for c in self.agents.values()))
+        return (self.rest_url, self.configured_room, ids)
+
+    def _resolve_room(self):
+        """Return a real room the agents can post to (cached per process). Prefer the
+        configured room if the owner agent is a member; otherwise provision one + add peers."""
+        key = self._cache_key()
+        with _LIVE_LOCK:
+            if key in _LIVE_ROOM_CACHE:
+                return _LIVE_ROOM_CACHE[key]
+            room = self._provision_locked()
+            _LIVE_ROOM_CACHE[key] = room   # cache even None so we don't retry every message
+            return room
+
+    def _provision_locked(self):
+        owner = self._owner()
+        okey = owner.get("api_key")
+        if not okey:
+            return None
+        # 1) Use the configured room if the owner agent is already a participant of it.
+        if self.configured_room:
+            try:
+                r = self._get(f"/api/v1/agent/chats/{self.configured_room}", okey)
+                if r.status_code == 200:
+                    print(f"[Band live] using configured room {self.configured_room}")
+                    return self.configured_room
+                print(f"[Band live] configured room {self.configured_room} not joinable by the "
+                      f"agents ({r.status_code}); provisioning an agent-owned room instead. "
+                      f"(Add the 4 agents to that room in the Band UI to use it directly.)")
+            except Exception as e:
+                print(f"[Band live] configured-room check failed ({e}); provisioning instead.")
+        # 2) Provision an agent-owned coordination room and add the other agents.
+        try:
+            r = self._post("/api/v1/agent/chats", okey, {"chat": {}})
+            if r.status_code not in (200, 201):
+                print(f"[Band live] room provisioning failed ({r.status_code}: {r.text[:120]}); mirror off.")
+                return None
+            room = (r.json().get("data") or {}).get("id")
+            for internal, creds in self.agents.items():
+                if creds is owner or not creds.get("agent_id"):
+                    continue
+                pr = self._post(f"/api/v1/agent/chats/{room}/participants", okey,
+                                {"participant": {"participant_id": creds["agent_id"], "role": "member"}})
+                if pr.status_code >= 400:
+                    print(f"[Band live] add participant {internal} -> {pr.status_code}: {pr.text[:100]}")
+            print(f"[Band live] provisioned coordination room — watch it at {self.rest_url}/chat/{room}")
+            return room
+        except Exception as e:
+            print(f"[Band live] provisioning error ({e}); mirror off.")
+            return None
 
     def send(self, room_id, mentions, body, correlation_id=None, sender=None, terminal=False):
         # 1) Authoritative: synchronous in-process dispatch + reply capture (inherited).
         mid = super().send(room_id, mentions, body, correlation_id=correlation_id,
                            sender=sender, terminal=terminal)
-        # 2) Best-effort: mirror the handoff into the real Band room for visibility/audit.
+        # 2) Best-effort: mirror the handoff into the real Band room.
         if self._mirror_on:
             try:
-                self._mirror(room_id or self.room_id, mentions, body, sender)
+                self._mirror(mentions, body, sender)
             except Exception as e:
                 print(f"[Band live] room mirror error (continuing in-process): {e}")
         return mid
 
-    def _mirror(self, room_id, mentions, body, sender):
-        creds = self._post_creds(sender)
-        api_key = creds.get("api_key")
-        if not (room_id and api_key):
+    def _mirror(self, mentions, body, sender):
+        room = self._resolve_room()
+        if not room:
             return
-        mention_str = " ".join(self._remote_handle(m) for m in (mentions or []))
+        api_key = (self.agents.get(sender) or self._owner()).get("api_key")
+        if not api_key:
+            return
         text = body if isinstance(body, str) else json.dumps(body, default=str, ensure_ascii=False)
-        content = (mention_str + ("\n" if mention_str else "") + text).strip()
-        url = self.rest_url + self.message_path.format(chat_id=room_id)
-        r = self._requests.post(
-            url,
-            headers={"X-API-Key": api_key, "Content-Type": "application/json"},
-            json={"content": content},
-            timeout=10,
-        )
-        if r.status_code == 404:
-            self._mirror_on = False  # wrong endpoint for this tenant — stop retrying, stay functional
-            print(f"[Band live] room mirror disabled — POST {self.message_path} returned 404. "
-                  f"Set BAND_MESSAGE_PATH to your tenant's send endpoint (see registration.md).")
-        elif r.status_code >= 400:
-            print(f"[Band live] room mirror POST {r.status_code} for {sender} (continuing in-process).")
+        # only @mention targets that are participant agents (you can't mention non-members)
+        targets = [(self._agent_id(m), self._handle(m)) for m in (mentions or []) if self._agent_id(m)]
+        if targets:
+            content = " ".join(f"@{h}" for _, h in targets) + "\n" + text
+            path = self.messages_path.format(chat_id=room)
+            payload = {"message": {"content": content,
+                                   "mentions": [{"id": aid, "handle": h} for aid, h in targets]}}
+        else:
+            # no participant target (e.g. -> gateway/human terminal reply): record as an event
+            path = f"/api/v1/agent/chats/{room}/events"
+            payload = {"event": {"content": text[:6000], "message_type": "task"}}
+        r = self._post(path, api_key, payload)
+        if r.status_code >= 400:
+            print(f"[Band live] mirror {r.status_code} ({'msg' if targets else 'event'}) "
+                  f"from {sender}: {r.text[:140]}")
 
 
 # --- Facade + factory ------------------------------------------------------
