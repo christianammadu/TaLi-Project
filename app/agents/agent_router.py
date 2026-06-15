@@ -15,7 +15,7 @@ from app.agents.band import get_band_client
 from app.agents.agent_1_intake import IntakeAgent, LEDGER_HANDLE, CFO_HANDLE
 from app.agents.agent_2_ledger import LedgerAgent
 from app.agents.agent_3_cfo import CFOAgent
-from app.auth import get_active_session
+from app.auth import get_active_session, get_user_by_sender, get_user_by_phone
 from app.data.database import get_db_connection
 
 
@@ -55,7 +55,6 @@ class AgentRouter:
         # 1. Verify active session at the gateway entry point.
         session = get_active_session(self.sender_id)
         if not session:
-            from app.auth import get_user_by_sender, get_user_by_phone
             user = get_user_by_sender(self.sender_id) or get_user_by_phone(self.sender_id)
             if user:
                 return "🔒 Your session's timed out. Type *login* to pick up where you left off."
