@@ -77,6 +77,16 @@ class Config:
     BAND_CFO_API_KEY = os.getenv("BAND_CFO_API_KEY", "")
     BAND_COMPLIANCE_AGENT_ID = os.getenv("BAND_COMPLIANCE_AGENT_ID", "")
     BAND_COMPLIANCE_API_KEY = os.getenv("BAND_COMPLIANCE_API_KEY", "")
+    # Each agent's @handle on YOUR Band tenant (default = the internal contract handle).
+    # The live backend posts to the room under each agent and translates the internal
+    # @tali-* mentions to these, so registered agents with different handles still work.
+    BAND_INTAKE_HANDLE = os.getenv("BAND_INTAKE_HANDLE", "@tali-intake")
+    BAND_LEDGER_HANDLE = os.getenv("BAND_LEDGER_HANDLE", "@tali-ledger")
+    BAND_CFO_HANDLE = os.getenv("BAND_CFO_HANDLE", "@tali-cfo")
+    BAND_COMPLIANCE_HANDLE = os.getenv("BAND_COMPLIANCE_HANDLE", "@tali-compliance")
+    # REST path for posting a message into a room (live mirror). Overridable in case your
+    # Band tenant's endpoint differs; {chat_id} is filled with BAND_ROOM_ID.
+    BAND_MESSAGE_PATH = os.getenv("BAND_MESSAGE_PATH", "/api/v1/agent/chats/{chat_id}/messages")
 
     # --- Multi-channel identity (WP-02 / G-IDENTITY) ---
     # TTL (minutes) for single-use deep-link binding tokens (Telegram onboarding + Path B /link).

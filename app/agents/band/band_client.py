@@ -28,6 +28,7 @@ Two backends, chosen by ``BAND_BACKEND``:
     identity confirmation (open question #1).
 """
 
+import json
 import time
 import uuid
 
@@ -81,58 +82,87 @@ class _StubBackend:
         return None
 
 
-# --- Live backend (scaffold — pending creds + identity confirmation) -------
+# --- Live backend: in-process orchestration + a best-effort Band-room mirror ---
+#
+# The agents are LOCAL (the Ledger writes our MySQL), so Band is the coordination/
+# audit surface, not an autonomous runtime. We therefore keep the stub's reliable,
+# synchronous in-process @mention dispatch + reply collection (the REST-over-sync-Flask
+# decision in registration.md) and additionally MIRROR each handoff into the real Band
+# room via REST — under the sending agent's API key, translating the internal @tali-*
+# handles to each agent's real handle on the tenant. The mirror is best-effort: a room
+# post failure never breaks bookkeeping. (band-sdk's persistent-WebSocket runtime is
+# deliberately not used — it needs a long-running process the sync webhook doesn't have.)
 
-class _LiveBackend:
-    """Real band.ai / Thenvoi over REST. Endpoints per docs.band.ai — confirm before use.
-
-    Reply collection polls ``read_context`` for the terminal message tagged with the
-    correlation id (carried in message metadata). The `band-sdk` package is imported
-    lazily so the stub path never requires it to be installed.
-    """
-
-    REST_DEFAULT = "https://app.band.ai/"
+class _LiveBackend(_StubBackend):
+    REST_DEFAULT = "https://app.band.ai"
+    PATH_DEFAULT = "/api/v1/agent/chats/{chat_id}/messages"
 
     def __init__(self, config=None):
+        super().__init__()
         cfg = config or {}
-        self.rest_url = (cfg.get("BAND_REST_URL") or self.REST_DEFAULT).rstrip("/")
-        self.agents = cfg.get("agents", {})   # handle -> {"agent_id":..., "api_key":...}
+        self.rest_url = (cfg.get("rest_url") or self.REST_DEFAULT).rstrip("/")
+        self.room_id = cfg.get("room_id") or ""
+        self.message_path = cfg.get("message_path") or self.PATH_DEFAULT
+        # internal handle -> {"agent_id", "api_key", "remote_handle"}
+        self.agents = cfg.get("agents", {})
         if not self.agents:
             raise RuntimeError(
-                "BAND_BACKEND=live but no agent credentials configured "
-                "(register agents on app.band.ai and set BAND_*_AGENT_ID / BAND_*_API_KEY)."
+                "BAND_BACKEND=live but no agent credentials configured — set "
+                "BAND_*_AGENT_ID / BAND_*_API_KEY (see app/agents/band/registration.md)."
             )
-        import requests  # local import; only the live path needs it
-        self._requests = requests
+        try:
+            import requests  # local import; only the live path needs it
+            self._requests = requests
+        except Exception as e:  # pragma: no cover
+            self._requests = None
+            print(f"[Band live] 'requests' unavailable ({e}); room mirror disabled.")
+        self._mirror_on = bool(self.room_id) and self._requests is not None
+        if not self.room_id:
+            print("[Band live] BAND_ROOM_ID unset — agents run in-process only "
+                  "(set BAND_ROOM_ID to mirror handoffs into the Band room).")
 
-    def _api_key(self, sender):
-        return (self.agents.get(sender) or {}).get("api_key", "")
+    def _remote_handle(self, internal):
+        """internal @tali-* handle -> the agent's real @handle on the tenant."""
+        return (self.agents.get(internal) or {}).get("remote_handle") or internal
 
-    def read_context(self, room_id, limit=50, as_agent=None):
-        # GET /api/v1/agent/chats/{chat_id}/context  (X-API-Key)
-        url = f"{self.rest_url}/api/v1/agent/chats/{room_id}/context"
-        r = self._requests.get(url, headers={"X-API-Key": self._api_key(as_agent)},
-                               params={"limit": str(limit)}, timeout=15)
-        r.raise_for_status()
-        return r.json()
+    def _post_creds(self, sender):
+        """Creds of the posting agent. The gateway/human aren't registered Band agents,
+        so fall back to any registered agent's key so the message still appears."""
+        return self.agents.get(sender) or next(iter(self.agents.values()), {})
 
     def send(self, room_id, mentions, body, correlation_id=None, sender=None, terminal=False):
-        # POST the message as `sender`, @mentioning `mentions`. Exact path per docs.band.ai
-        # (the SDK's thenvoi_send_message tool dispatches to REST under the hood).
-        raise NotImplementedError(
-            "Live send is pending Band credentials + endpoint confirmation (open question #1). "
-            "Use BAND_BACKEND=stub until WP-02's live spike is signed off."
-        )
+        # 1) Authoritative: synchronous in-process dispatch + reply capture (inherited).
+        mid = super().send(room_id, mentions, body, correlation_id=correlation_id,
+                           sender=sender, terminal=terminal)
+        # 2) Best-effort: mirror the handoff into the real Band room for visibility/audit.
+        if self._mirror_on:
+            try:
+                self._mirror(room_id or self.room_id, mentions, body, sender)
+            except Exception as e:
+                print(f"[Band live] room mirror error (continuing in-process): {e}")
+        return mid
 
-    def collect_reply(self, correlation_id, timeout=30.0, poll=1.0, room_id=None, as_agent=None):
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            for m in self.read_context(room_id, as_agent=as_agent):
-                meta = m.get("metadata") or {}
-                if meta.get("correlation_id") == correlation_id and meta.get("terminal"):
-                    return m.get("content")
-            time.sleep(poll)
-        return None
+    def _mirror(self, room_id, mentions, body, sender):
+        creds = self._post_creds(sender)
+        api_key = creds.get("api_key")
+        if not (room_id and api_key):
+            return
+        mention_str = " ".join(self._remote_handle(m) for m in (mentions or []))
+        text = body if isinstance(body, str) else json.dumps(body, default=str, ensure_ascii=False)
+        content = (mention_str + ("\n" if mention_str else "") + text).strip()
+        url = self.rest_url + self.message_path.format(chat_id=room_id)
+        r = self._requests.post(
+            url,
+            headers={"X-API-Key": api_key, "Content-Type": "application/json"},
+            json={"content": content},
+            timeout=10,
+        )
+        if r.status_code == 404:
+            self._mirror_on = False  # wrong endpoint for this tenant — stop retrying, stay functional
+            print(f"[Band live] room mirror disabled — POST {self.message_path} returned 404. "
+                  f"Set BAND_MESSAGE_PATH to your tenant's send endpoint (see registration.md).")
+        elif r.status_code >= 400:
+            print(f"[Band live] room mirror POST {r.status_code} for {sender} (continuing in-process).")
 
 
 # --- Facade + factory ------------------------------------------------------
@@ -157,8 +187,48 @@ class BandClient:
         return self._backend.collect_reply(correlation_id, timeout=timeout)
 
 
+# Internal contract handles (must match the agent modules + registration.md) -> env prefix.
+_ROLES = (
+    ("@tali-intake", "BAND_INTAKE"),
+    ("@tali-ledger", "BAND_LEDGER"),
+    ("@tali-cfo", "BAND_CFO"),
+    ("@tali-compliance", "BAND_COMPLIANCE"),
+)
+
+
+def _live_config_from_app():
+    """Assemble the live backend config (handle→creds + room + path) from app config,
+    falling back to environment variables outside an app context."""
+    try:
+        from flask import current_app
+        get = current_app.config.get
+    except Exception:
+        import os
+        get = lambda k, d=None: os.getenv(k, d)
+    agents = {}
+    for internal, prefix in _ROLES:
+        agent_id = get(f"{prefix}_AGENT_ID", "") or ""
+        api_key = get(f"{prefix}_API_KEY", "") or ""
+        if agent_id or api_key:
+            agents[internal] = {
+                "agent_id": agent_id,
+                "api_key": api_key,
+                "remote_handle": get(f"{prefix}_HANDLE", internal) or internal,
+            }
+    return {
+        "rest_url": get("BAND_REST_URL", None) or get("THENVOI_REST_URL", None),
+        "room_id": get("BAND_ROOM_ID", "") or "",
+        "message_path": get("BAND_MESSAGE_PATH", None),
+        "agents": agents,
+    }
+
+
 def get_band_client(backend=None, config=None):
-    """Build a BandClient for the configured backend (``stub`` default, or ``live``)."""
+    """Build a BandClient for the configured backend (``stub`` default, or ``live``).
+
+    In ``live`` mode the handle→credentials config is assembled from app config when not
+    supplied, so every call site gets the live mirror without threading config through.
+    """
     if backend is None:
         try:
             from flask import current_app
@@ -168,5 +238,7 @@ def get_band_client(backend=None, config=None):
             backend = os.getenv("BAND_BACKEND", "stub")
     backend = (backend or "stub").lower()
     if backend == "live":
+        if config is None:
+            config = _live_config_from_app()
         return BandClient(_LiveBackend(config=config))
     return BandClient(_StubBackend())
