@@ -10,7 +10,7 @@ from decimal import Decimal
 from sqlalchemy import case, func, or_, select
 
 from app.data.db import session_scope
-from app.data.models import Category, Record, Transaction, User
+from app.data.models import Category, InventoryItem, InventoryMovement, Record, Transaction, User
 from app.services.uuid_utils import uuid7
 
 
@@ -359,3 +359,38 @@ def query_opening_balance(user_id, before_date):
     except Exception as e:
         print(f"Failed to query opening balance: {e}")
         return {}
+
+
+def query_stock_levels(user_id, limit=50):
+    """Current stock level per item, computed from ``inventory_movements`` — the SAME
+    source the ledger's stock check uses (stock_in − stock_out, adjustments as deltas),
+    so a "what's in stock" answer always agrees with what recording a sale will see.
+
+    Scoped by ``user_id`` (present on every movement, unlike business_id which is NULL
+    until provisioned). Returns a list of ``{item, unit, stock}`` ordered by name, or
+    ``None`` on failure.
+    """
+    try:
+        with session_scope() as s:
+            level = func.sum(case(
+                (InventoryMovement.movement_type == 'stock_in', InventoryMovement.quantity),
+                (InventoryMovement.movement_type == 'stock_out', -InventoryMovement.quantity),
+                (InventoryMovement.movement_type == 'adjustment', InventoryMovement.quantity),
+                else_=0,
+            )).label('stock')
+            stmt = (
+                select(InventoryItem.item_name, InventoryItem.unit, level)
+                .select_from(InventoryMovement)
+                .join(InventoryItem, InventoryItem.id == InventoryMovement.inventory_item_id)
+                .where(InventoryMovement.user_id == user_id)
+                .group_by(InventoryItem.id, InventoryItem.item_name, InventoryItem.unit)
+                .order_by(InventoryItem.item_name)
+                .limit(limit)
+            )
+            return [
+                {'item': r.item_name, 'unit': r.unit, 'stock': float(r.stock or 0)}
+                for r in s.execute(stmt).all()
+            ]
+    except Exception as e:
+        print(f"Failed to query stock levels: {e}")
+        return None

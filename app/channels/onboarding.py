@@ -67,9 +67,13 @@ def help_text(channel):
         "  • “Monthly report” — quick summary\n"
         "  • “Statement of my sales for June” — chat, PDF or Excel\n\n"
         "⚙️ Commands\n"
+        "  settings — view or change your name, currency or business\n"
+        "  set <field> <value> — e.g. “set currency USD”, “set name Ada”\n"
         f"  /link {other} — use TaLi on {other.title()} too (one shared ledger)\n"
         "  /unlink — disconnect this chat\n"
-        "  /help — show this message"
+        "  /help — show this message\n\n"
+        "✨ You're signed in automatically once this chat is linked — no login or "
+        "logout needed. Use /unlink to disconnect."
     )
 
 

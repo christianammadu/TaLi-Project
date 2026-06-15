@@ -120,7 +120,7 @@ class TransactionModel(BaseModel):
 
 
 class QueryModel(BaseModel):
-    query_type: Literal['sum', 'list', 'balance', 'count'] = 'sum'
+    query_type: Literal['sum', 'list', 'balance', 'count', 'stock'] = 'sum'
     type: Optional[Literal['income', 'expense']] = None
     category: Optional[str] = None
     currency: Optional[str] = None
@@ -132,7 +132,7 @@ class QueryModel(BaseModel):
     def coerce_query_type(cls, v):
         # Unknown query types fall back to 'sum' rather than rejecting the query.
         q = str(v).lower().strip() if v else ''
-        return q if q in ('sum', 'list', 'balance', 'count') else 'sum'
+        return q if q in ('sum', 'list', 'balance', 'count', 'stock') else 'sum'
 
     @field_validator('currency')
     @classmethod

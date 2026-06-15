@@ -279,6 +279,11 @@ class TestValidators(unittest.TestCase):
         self.assertTrue(is_valid)
         self.assertEqual(result['query_type'], 'sum')
 
+    def test_stock_query_type_preserved(self):
+        is_valid, result = self.validate_query({'query_type': 'stock'})
+        self.assertTrue(is_valid)
+        self.assertEqual(result['query_type'], 'stock')
+
     def test_query_bad_date_filter_cleared(self):
         parsed = {
             'query_type': 'list',
@@ -476,6 +481,36 @@ class TestTransactionAgentFastPath(unittest.TestCase):
         """Business text should NOT match shorthand detection."""
         text = "Bought fuel 2000"
         self.assertGreater(len(text.strip().split()), 1)
+
+
+class TestStockQuery(unittest.TestCase):
+    """Inventory-levels query: 'what's my available stock' → current stock per item
+    (not a purchase log). query_type='stock' routes to query_stock_levels + formatter."""
+
+    def test_format_stock_levels_lists_items_and_flags_out_of_stock(self):
+        from app.services.formatter import format_stock_levels
+        out = format_stock_levels([
+            {'item': 'rice', 'unit': 'bags', 'stock': 12},
+            {'item': 'satchel water', 'unit': 'bags', 'stock': -2},
+        ])
+        self.assertIn("Available stock", out)
+        self.assertIn("rice — 12 bags", out)
+        self.assertIn("out of stock", out)           # non-positive level flagged
+        self.assertIn("reconcile", out.lower())
+
+    def test_format_stock_levels_empty(self):
+        from app.services.formatter import format_stock_levels
+        self.assertIn("No stock tracked yet", format_stock_levels([]))
+
+    def test_handler_routes_stock_query_to_levels(self):
+        from unittest.mock import patch
+        from app.agents.transaction_agent import TransactionAgent
+        agent = TransactionAgent(user_id="u1", sender_id="s1")
+        with patch('app.agents.transaction_agent.query_stock_levels',
+                   return_value=[{'item': 'rice', 'unit': 'bags', 'stock': 5}]) as q:
+            out = agent.process("what's my available stock", {'intent': 'query', 'query_type': 'stock'})
+        q.assert_called_once_with("u1")
+        self.assertIn("rice — 5 bags", out)
 
 
 class TestReportingAgent(unittest.TestCase):

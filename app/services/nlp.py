@@ -39,7 +39,7 @@ INTENT RULES:
    Populate the "transaction" object. Enforce action to: "sale" (income), "purchase" (expense), "expense" (expense), "income" (income), "payment", "transfer", "other". Resolve numeric words/shorthand (2k=2000, 5h=500). Extract "currency" code (default "NGN", lookup symbols: ₦->NGN, $->USD, €->EUR, £->GBP). Find best matching "category" or default to "Miscellaneous".
 
 2. "query" (asking a financial question, e.g. "what are my purchases?", "how much did I sell?", "list my expenses", "what's my balance?"):
-   Add "query" to intents and populate the "query" object. query_type: "list" when the user wants individual items ("what are my purchases", "list..."), "sum" for totals ("how much..."), "balance" for net position, "count" for how many. type: "expense" for purchases/expenses, "income" for sales/income. Also set category, currency, period_start/period_end (YYYY-MM-DD) when stated.
+   Add "query" to intents and populate the "query" object. query_type: "list" when the user wants individual items ("what are my purchases", "list..."), "sum" for totals ("how much..."), "balance" for net position, "count" for how many, "stock" when the user asks about CURRENT INVENTORY LEVELS — what they have on hand / left ("what is my available stock", "what's in stock", "how much rice do I have left", "stock levels", "inventory", "what do I have"). type: "expense" for purchases/expenses, "income" for sales/income (leave null for "stock"). Also set category, currency, period_start/period_end (YYYY-MM-DD) when stated.
 
 3. "report" (requesting a SHORT TEXT summary for a day/week/month):
    Populate the "report" object. Period must be "daily", "weekly", "monthly". Resolve dates (default {today}). Use this ONLY for quick in-chat summaries, NOT downloadable documents.
@@ -77,7 +77,7 @@ Always return a JSON object with this exact structure (set unused keys to null/f
   "inventory": [], // array of inventory objects — ONE per stock movement (a buy adds, a sale removes)
   "debts": [], // array of debt objects
   "report": null, // or report object
-  "query": null, // or query object: {{"query_type": "sum|list|balance|count", "type": "income|expense"|null, "category": null, "currency": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null}}
+  "query": null, // or query object: {{"query_type": "sum|list|balance|count|stock", "type": "income|expense"|null, "category": null, "currency": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null}}
   "statement": null, // or statement object: {{"report_type": "transactions|cashflow|income_statement", "tx_type": "income|expense"|null, "action": null, "category": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null, "format": "pdf|xlsx|chat|both"|null}}
   "snapshot": false // true if snapshot intent is present
 }}
@@ -153,6 +153,15 @@ EXAMPLES:
     "needs_review": false,
     "status": "ok",
     "statement": {{"report_type": "income_statement", "tx_type": null, "action": null, "category": null, "period_start": "{today_year}-06-01", "period_end": "{today_year}-06-30", "format": "pdf"}}
+  }}
+
+- "What is my available stock?" / "what do I have left?" / "stock levels" (current inventory on hand)
+  {{
+    "intents": ["query"],
+    "confidence": 0.97,
+    "needs_review": false,
+    "status": "ok",
+    "query": {{"query_type": "stock", "type": null, "category": null, "currency": null, "period_start": null, "period_end": null}}
   }}
 
 - "How is my business doing?"

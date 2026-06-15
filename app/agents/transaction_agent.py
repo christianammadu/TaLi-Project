@@ -5,12 +5,13 @@ Focuses strictly on transaction processing logic, validators, database writes, a
 
 from datetime import date
 from app.services.validators import validate_transaction, validate_query
-from app.data.queries import record_transaction, query_sum, query_list, query_balance
+from app.data.queries import record_transaction, query_sum, query_list, query_balance, query_stock_levels
 from app.services.formatter import (
     format_transaction_saved,
     format_sum_query,
     format_list_query,
     format_balance,
+    format_stock_levels,
 )
 from app.services.utils import parse_shorthand
 
@@ -102,6 +103,12 @@ class TransactionAgent:
             return f"❌ Invalid query: {cleaned}"
 
         query_type = cleaned.get('query_type', 'sum')
+
+        if query_type == 'stock':
+            items = query_stock_levels(self.user_id)
+            if items is not None:
+                return format_stock_levels(items)
+            return "❌ Couldn't retrieve your stock levels. Please try again."
 
         if query_type == 'balance':
             result = query_balance(self.user_id)
