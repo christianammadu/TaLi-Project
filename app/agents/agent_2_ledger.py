@@ -369,7 +369,9 @@ class LedgerAgent:
                     inv_reply = json.loads(inv_reply_str)
                     if inv_reply.get('status') == 'clarification_needed':
                         conn.rollback()
-                        return inv_reply_str
+                        # Return the human question — never the raw JSON (this reply is
+                        # sent straight to the customer, it does not pass through the CFO).
+                        return inv_reply.get('question') or "I need a bit more detail to record that stock change."
                     inv_results.append(InventoryResult(**inv_reply))
                 if inv_results:
                     results['inventory'] = inv_results
@@ -381,7 +383,7 @@ class LedgerAgent:
                     debt_reply = json.loads(debt_reply_str)
                     if debt_reply.get('status') == 'clarification_needed':
                         conn.rollback()
-                        return debt_reply_str
+                        return debt_reply.get('question') or "I need a bit more detail to record that debt."
                     debt_results.append(DebtResult(**debt_reply))
                 if debt_results:
                     results['debts'] = debt_results
@@ -572,13 +574,12 @@ class LedgerAgent:
             movement_type = 'stock_in'
             movement_qty = quantity
         elif action == 'REMOVE':
+            # A confirmed sale must still record even when tracked stock is short — the
+            # merchant may not have logged their opening stock or every purchase. Let the
+            # level reflect the true position (it may go negative) so they can reconcile
+            # later by recording the missing purchases; the reply nudges them to do so.
+            # We do NOT block/roll back the entry on a stock shortfall.
             new_stock = current_stock - quantity
-            if new_stock < 0:
-                unit_label = db_unit if db_unit else "units"
-                return json.dumps({
-                    "status": "clarification_needed",
-                    "question": f"Insufficient stock! You only have {float(current_stock):.0f} {unit_label} of {item_name} in stock. How many did you sell/use?"
-                })
             movement_type = 'stock_out'
             movement_qty = quantity
         elif action == 'SET':

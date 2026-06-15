@@ -7,9 +7,29 @@ handle_ledger_update patched (its DB logic is unchanged + tested elsewhere).
 """
 
 import unittest
+from unittest import mock
 
 from app.agents.agent_3_cfo import CFOAgent, CFO_HANDLE, GATEWAY_HANDLE
 from app.agents.band.band_client import get_band_client
+
+
+def _split_routing_payload(new_stock):
+    """A split_routing success event: one sale + one stock-out leaving `new_stock`."""
+    return {
+        "source_agent": "LedgerAgent", "event_type": "transaction", "user_id": "user-1",
+        "payload": {
+            "transaction_id": "tx-1", "status": "success", "intent": "split_routing",
+            "raw_text": "sold 2 bags of satchel water 3000",
+            "data": {
+                "transactions": [{"id": "tx-1", "type": "income", "action": "sale", "amount": 3000,
+                                  "currency": "NGN", "item": "satchel water", "category": "Sales",
+                                  "description": "sold", "date": "2026-06-15"}],
+                "inventory": [{"product": "satchel water", "action": "REMOVE", "quantity": 2,
+                               "unit": "bags", "new_stock": new_stock}],
+                "debts": [],
+            },
+        },
+    }
 
 
 def _escalation_body():
@@ -52,6 +72,30 @@ class TestCFOBandPort(unittest.TestCase):
                "correlation_id": "u2"}
         reply = self.cfo.on_room_message(msg)
         self.assertEqual(reply, "✅ Recorded: Sales — ₦5,000")
+
+    def _run_ledger_update(self, payload):
+        """Drive handle_ledger_update past its DB idempotency check + threshold lookup."""
+        conn = mock.MagicMock()
+        conn.cursor.return_value.fetchone.return_value = None   # not yet processed
+        conn.is_connected.return_value = True
+        thresholds = {"low_stock_limit": 5, "high_debt_limit": 50000, "large_expense_flag": 100000}
+        with mock.patch("app.data.database.get_db_connection", return_value=conn), \
+             mock.patch.object(self.cfo, "_get_evaluated_thresholds", return_value=thresholds):
+            return self.cfo.handle_ledger_update(payload)
+
+    def test_oversold_stock_records_and_nudges_to_reconcile(self):
+        """A confirmed sale that drives stock negative still records, never returns raw JSON,
+        and reads as a reconcile nudge (not a confusing 'low (-2 left)' warning)."""
+        reply = self._run_ledger_update(_split_routing_payload(new_stock=-2))
+        self.assertIn("Recorded", reply)                 # the sale was honoured
+        self.assertIn("satchel water", reply)
+        self.assertIn("reconcile", reply.lower())        # gentle nudge, not a block
+        self.assertNotIn("is low", reply)                # negative != "low stock" warning
+        self.assertNotIn('"status"', reply)              # no JSON leaked
+
+    def test_positive_low_stock_still_warns(self):
+        reply = self._run_ledger_update(_split_routing_payload(new_stock=3))
+        self.assertIn("is low", reply)                   # 3 <= low_stock_limit(5) → warn
 
     def test_reply_is_collectable_end_to_end_through_the_room(self):
         # CFO registered as the @tali-cfo room handler; a forwarded escalation should
