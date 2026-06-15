@@ -54,4 +54,35 @@ layer) or stay in the agents? Also account for the already-split out-of-band pat
 
 - ✅ Connector seam defined (`band_client.py`): `send / on_message / read_context / collect_reply`.
 - ✅ `stub` backend (fire-and-forget, reply-by-correlation_id) — lets WP-03/04/05 build offline; covered by `tests/test_band_client.py`.
-- ⏳ `live` backend — `read_context` scaffolded over REST; `send` is `NotImplementedError` pending **(a)** confirmation that band.ai/Thenvoi is THIS hackathon's Band and **(b)** registered agent credentials (open question #1). The live reply round-trip is the WP-02 sign-off and is **not** done yet.
+- ✅ `live` backend — implemented as **in-process orchestration + a best-effort Band-room mirror** (see below).
+
+## Going live — `_LiveBackend` (implemented)
+
+The agents are **local** (the Ledger writes our MySQL; all agent logic is in `app/agents/`),
+so Band is the **coordination/audit surface**, not an autonomous runtime. `band-sdk`'s
+persistent-WebSocket model (`await agent.run()`) needs a long-running process the synchronous
+Flask webhook doesn't have — the Round-2 REST decision above. So `_LiveBackend`:
+
+1. **Inherits the stub** — synchronous in-process `@mention` dispatch + `collect_reply`, so the
+   webhook still gets its answer reliably (no polling, no async runtime).
+2. **Mirrors every handoff into the real Band room** via `POST {BAND_MESSAGE_PATH}` (default
+   `/api/v1/agent/chats/{chat_id}/messages`) under the **sending agent's `X-API-Key`**,
+   translating the internal `@tali-*` mentions to each agent's real handle. So `app.band.ai`
+   shows the four participants and the `intake → ledger → compliance → cfo` handoffs.
+3. The mirror is **best-effort**: a room-post failure only logs — bookkeeping never breaks.
+   A `404` self-disables the mirror with a one-line hint (your tenant's send path differs →
+   set `BAND_MESSAGE_PATH`). The send path is the one detail not publicly documented (band.ai
+   blocks scraping; the SDK hides it behind its WS runtime), hence the override.
+
+**To switch on:**
+```
+BAND_BACKEND=live
+BAND_ROOM_ID=<the room all four agents are participants of>
+BAND_INTAKE_AGENT_ID / _API_KEY   (+ LEDGER / CFO / COMPLIANCE)   # already set
+BAND_INTAKE_HANDLE=@your-intake-handle   (+ LEDGER / CFO / COMPLIANCE)  # if different from @tali-*
+AIML_API_KEY=<key>                # so the CFO actually runs on the frontier model
+# optional: BAND_MESSAGE_PATH=...  if your tenant's send endpoint differs from the default
+```
+Handles are mapped internally → no code change needed for different handles; just set
+`BAND_*_HANDLE`. The config (handle→creds + room + path) is assembled by
+`band_client._live_config_from_app()` and passed into `_LiveBackend` automatically.
