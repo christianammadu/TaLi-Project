@@ -27,11 +27,16 @@ def telegram_webhook():
 
     channel, native = split_address(msg.sender)
 
-    # 1. Onboarding + Path B link commands.
+    # 1. Onboarding + Path B link commands (/start, /link, /unlink, /help).
     if msg.command:
         reply = onboarding.handle_command(channel, native, msg.command, msg.command_arg)
         if reply:
             _tg.send_text(msg.sender, reply)
+        return jsonify(ok=True)
+
+    # 1b. Friendly bare "help"/"menu" (no slash) → the same command/capability list.
+    if msg.text.strip().lower() in ("help", "menu"):
+        _tg.send_text(msg.sender, onboarding.help_text(channel))
         return jsonify(ok=True)
 
     # 2. Must be a bound user to do anything else.

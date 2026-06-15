@@ -70,3 +70,15 @@ def test_unlink(monkeypatch):
     monkeypatch.setattr(onboarding.auth, "unlink_channel", lambda ch, cid: True)
     with _app().app_context():
         assert "Unlinked" in onboarding.handle_command("whatsapp", "234", "unlink", None)
+
+
+def test_help_lists_commands_and_capabilities():
+    with _app().app_context():
+        tg = onboarding.handle_command("telegram", "559", "help", None)
+        wa = onboarding.handle_command("whatsapp", "234", "help", None)
+    # Capabilities are listed…
+    assert "Sold rice 5000" in tg and "Statement" in tg
+    # …and the /link command points at the *other* channel for each side.
+    assert "/link whatsapp" in tg and "/link telegram" in wa
+    # Plain text only — no WhatsApp markdown that Telegram would render literally.
+    assert "*" not in tg and "_" not in tg
