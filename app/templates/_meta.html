@@ -1,0 +1,30 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ meta_title | default('TaLi — Bookkeeping over WhatsApp & Telegram') }}</title>
+<meta name="description" content="{{ meta_desc | default('Bookkeeping that lives in the chat you already use. Record sales, expenses, and stock automatically by texting TaLi on WhatsApp or Telegram.') }}">
+<meta name="keywords" content="{{ meta_keywords | default('bookkeeping, whatsapp bot, telegram bot, small business, accounting, Africa, inventory, ledger, financial tracking, cashflow') }}">
+<link rel="canonical" href="{{ canonical_url or request.url }}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ canonical_url or request.url }}">
+<meta property="og:title" content="{{ meta_title | default('TaLi — Bookkeeping over WhatsApp & Telegram') }}">
+<meta property="og:description" content="{{ meta_desc | default('Bookkeeping that lives in the chat you already use. Record sales, expenses, and stock automatically by texting TaLi on WhatsApp or Telegram.') }}">
+<meta property="og:image" content="{{ meta_image or url_for('static', filename='og-image.png', _external=True) }}">
+<meta property="og:site_name" content="TaLi">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="{{ canonical_url or request.url }}">
+<meta name="twitter:title" content="{{ meta_title | default('TaLi — Bookkeeping over WhatsApp & Telegram') }}">
+<meta name="twitter:description" content="{{ meta_desc | default('Bookkeeping that lives in the chat you already use. Record sales, expenses, and stock automatically by texting TaLi on WhatsApp or Telegram.') }}">
+<meta name="twitter:image" content="{{ meta_image or url_for('static', filename='og-image.png', _external=True) }}">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C2562F'/><g stroke='white' stroke-width='1.8' stroke-linecap='round'><line x1='7' y1='7' x2='7' y2='17'/><line x1='10.5' y1='7' x2='10.5' y2='17'/><line x1='14' y1='7' x2='14' y2='17'/><line x1='17.5' y1='7' x2='17.5' y2='17'/><line x1='5.5' y1='17' x2='19' y2='6.5'/></g></svg>">
+
+<!-- Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename=meta_css | default('landing.css')) }}">
+
+<!-- Theme Switcher Script -->
+<script>(function(){function eff(p){return (p==='light'||p==='dark')?p:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');}function apply(p){var d=document.documentElement;d.setAttribute('data-theme',eff(p));d.setAttribute('data-theme-pref',p);}var p;try{p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('tali-theme')||'system';}catch(e){p='dark';}apply(p);window.taliApply=apply;if(window.matchMedia){try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var q;try{q=localStorage.getItem('tali-theme')||'system';}catch(e){q='system';}if(q==='system')apply('system');});}catch(e){}}})();</script>

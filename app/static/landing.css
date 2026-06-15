@@ -345,11 +345,28 @@ footer{border-top:1px solid var(--bord);padding:56px 0 40px;position:relative;z-
 
 @media(max-width:920px){
   .hero{grid-template-columns:1fr;text-align:center}
-  .hero .lead,.hero-cta{margin-left:auto;margin-right:auto}.hero-meta{justify-content:center}
+  .hero .lead,.hero-cta{margin-left:auto;margin-right:auto}
+  .hero-cta{justify-content:center}
+  .hero-meta{justify-content:center}
+  .hero-meta > div{text-align:center}
   .grid-3,.grid-2,.price,.dash{grid-template-columns:1fr}
   .nav-links{display:none}
   .foot-grid{grid-template-columns:1fr 1fr}
   .legal{grid-template-columns:1fr}.legal-nav{position:static}
+  .dash{padding:24px 18px}
+  .cmp{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .cta-band{padding:40px 20px;margin:20px 0;border-radius:20px}
+  .foot-bottom{justify-content:center;text-align:center}
+}
+
+@media(max-width:520px){
+  .nav-cta .btn-g{display:none}
+  .wrap{padding:0 18px}
+}
+
+@media(max-width:480px){
+  .foot-grid{grid-template-columns:1fr;text-align:center}
+  .foot-grid p{margin:14px auto 0}
 }
 
 /* ============================================================
