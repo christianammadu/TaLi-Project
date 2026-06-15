@@ -10,6 +10,7 @@ Keeps the ``AgentRouter`` name + ``route(text, message_id)`` signature so
 """
 
 import json
+import os
 from mysql.connector import Error
 from app.agents.band import get_band_client
 from app.agents.agent_1_intake import IntakeAgent, LEDGER_HANDLE, CFO_HANDLE
@@ -66,9 +67,17 @@ class AgentRouter:
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor(dictionary=True)
+                # Claim the event atomically: a brand-new ('received'/'failed') row, OR a
+                # STALE 'processing' row whose previous attempt crashed before reaching
+                # processed/failed. Without the stale clause such an event would be dropped
+                # as a duplicate forever. stale_secs is a config int (>> sync processing time),
+                # embedded directly (sanitised via int(), injection-safe).
+                stale_secs = int(os.getenv("WEBHOOK_PROCESSING_STALE_SECONDS", "120"))
                 cursor.execute(
                     "UPDATE webhook_events SET status = 'processing', processed_at = NULL "
-                    "WHERE whatsapp_message_id = %s AND status IN ('received', 'failed')",
+                    "WHERE whatsapp_message_id = %s AND ("
+                    "status IN ('received', 'failed') "
+                    f"OR (status = 'processing' AND created_at < (NOW() - INTERVAL {stale_secs} SECOND)))",
                     (message_id,)
                 )
                 conn.commit()
