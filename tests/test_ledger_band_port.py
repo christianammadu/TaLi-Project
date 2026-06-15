@@ -71,6 +71,34 @@ class TestLedgerBandPort(unittest.TestCase):
         self.assertIn("compliance hold", res)
         gdb.assert_not_called()   # write transaction never opened on reject
 
+    def test_idempotency_drops_already_processed_event(self):
+        """If the event is already in processed_events, the ledger drops it (no re-write)."""
+        ev = SimpleNamespace(
+            correlation_id="c", session_id="s", user_id="user-1", business_id=None,
+            event_id="e1",
+            payload=SimpleNamespace(is_fast_path=True, raw_text="x",
+                                    fast_path_transaction=None, nlp_parsed=None),
+        )
+        self.ledger._is_authorized = lambda: True
+        self.ledger._build_review_proposal = lambda e: None   # not under test here
+
+        class _Cur:
+            def execute(self, *a, **k): pass
+            def fetchone(self): return {"event_id": "e1"}      # already-processed row
+            def close(self): pass
+
+        class _Conn:
+            def start_transaction(self): pass
+            def cursor(self, dictionary=False): return _Cur()
+            def rollback(self): pass
+            def commit(self): pass
+            def is_connected(self): return True
+            def close(self): pass
+
+        with mock.patch("app.agents.agent_2_ledger.get_db_connection", return_value=_Conn()):
+            res = self.ledger.handle_intake_payload(ev)
+        self.assertIn("Already processed", res)
+
     def test_emit_to_cfo_threads_user_correlation_id(self):
         self.ledger._user_cid = "user-9"
         self.ledger._emit_to_cfo({"status": "success"})

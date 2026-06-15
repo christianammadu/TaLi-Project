@@ -7,6 +7,7 @@ Constructing AgentRouter touches no DB; route() (which needs a session/DB) is no
 
 import importlib
 import unittest
+from unittest import mock
 
 from app.agents.agent_router import AgentRouter
 from app.agents.agent_2_ledger import LEDGER_HANDLE, CFO_HANDLE
@@ -44,6 +45,24 @@ class TestBandGateway(unittest.TestCase):
                               correlation_id="u1", sender="@tali-intake")
         reply = self.router.band.collect_reply("u1", timeout=2.0)
         self.assertEqual(reply, "🤔 didn't catch that")
+
+    def test_duplicate_webhook_is_dropped(self):
+        """An already-seen message_id (claim updates 0 rows, the row still exists) is
+        dropped without reaching Intake — webhook idempotency."""
+        class _Cur:
+            rowcount = 0                       # claim matched nothing (already processing/processed)
+            def execute(self, *a, **k): pass
+            def fetchone(self): return {"status": "processed"}
+            def close(self): pass
+        class _Conn:
+            def cursor(self, dictionary=False): return _Cur()
+            def commit(self): pass
+            def is_connected(self): return True
+            def close(self): pass
+        with mock.patch("app.agents.agent_router.get_active_session", return_value={"user_id": 1}), \
+             mock.patch("app.agents.agent_router.get_db_connection", return_value=_Conn()):
+            res = self.router.route("hello", message_id="m-dup")
+        self.assertEqual(res, "__DUPLICATE_DROP__")
 
     def test_cfo_posts_terminal_reply_to_gateway(self):
         self.router.band.send(self.router.cfo.room_id, [CFO_HANDLE], _escalation_body(),
