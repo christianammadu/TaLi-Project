@@ -110,13 +110,22 @@ def register():
     local = re.sub(r'\D', '', phone)
     phone = local if (cc and local.startswith(cc)) else (cc + local.lstrip('0'))
 
-    # Check if user is already registered and verified
+    # Check if user is already registered and verified.
+    # Registration creates a *new* account; an existing user who wants a second channel
+    # (e.g. add Telegram) does it from the channel they already have via Path B — the
+    # channel they're on is the auth anchor, so we never re-verify here (that would let
+    # anyone who knows your number link their own chat to your books).
     existing_user = get_user_by_phone(phone)
     if existing_user:
-        return render_template('register.html', step='phone', message=None,
-                               error='This phone number is already registered. '
-                                     'Send "login" on WhatsApp to get started.',
-                               phone=None)
+        wa = (current_app.config.get('WHATSAPP_PUBLIC_NUMBER') or '').strip().lstrip('+')
+        return render_template(
+            'register.html', step='phone', message=None,
+            error='You already have a TaLi account for this number. To use TaLi on '
+                  'Telegram too, open WhatsApp and send “/link telegram” — I’ll reply '
+                  'with a one-tap link to connect this chat to your existing books. '
+                  '(Just signing in? Send “login” on WhatsApp.)',
+            link_hint=(f'https://wa.me/{wa}?text=%2Flink%20telegram' if wa else None),
+            phone=None)
 
     # Create an unverified user if one doesn't exist yet.
     try:

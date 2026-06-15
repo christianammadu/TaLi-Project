@@ -22,6 +22,8 @@ from app.auth import (
 from sqlalchemy import select, update
 from app.data.db import session_scope
 from app.data.models import User
+from app.channels import onboarding
+from app.channels.base import parse_command, WHATSAPP
 
 webhook_bp = Blueprint('webhook', __name__)
 
@@ -141,7 +143,10 @@ def handle_help(sender):
         "• _\"Monthly report\"_ — quick summary\n"
         "• _\"Statement of my sales for June\"_ — chat, PDF or Excel\n\n"
         "*⚙️ Commands*\n"
-        "*login* · *logout* · *settings* · *help*"
+        "*login* · *logout* · *settings* · *help*\n\n"
+        "*🔗 Add Telegram*\n"
+        "Send */link telegram* — I'll reply with a one-tap link so you can use TaLi "
+        "on Telegram too, on the same books."
     )
 
 
@@ -464,7 +469,17 @@ def webhook():
                     handle_set(sender, text, session)
                     return jsonify({"status": "ok"}), 200
 
-                # 4b. Onboarding gate — until onboarding is complete, every other
+                # 4b. Cross-channel linking (Path B): /link <channel>, /unlink.
+                # The channel you're already on is the auth anchor — resolve the user,
+                # mint a one-time token, and hand back the other channel's deep-link.
+                cmd, cmd_arg = parse_command(text)
+                if cmd in ("link", "unlink"):
+                    reply = onboarding.handle_command(WHATSAPP, sender, cmd, cmd_arg)
+                    if reply:
+                        send_reply(sender, reply)
+                    return jsonify({"status": "ok"}), 200
+
+                # 4c. Onboarding gate — until onboarding is complete, every other
                 # message is an onboarding answer, not a transaction.
                 ob = get_onboarding_state(session['user_id'])
                 if ob and not ob['complete']:

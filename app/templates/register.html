@@ -32,6 +32,9 @@
     {% if error %}
     <div class="amsg err"><svg class="ic"><use href="#i-x"/></svg><span>{{ error }}</span></div>
     {% endif %}
+    {% if link_hint %}
+    <a href="{{ link_hint }}" class="btn btn-wa"><svg class="ic"><use href="#i-whatsapp"/></svg> Open WhatsApp to link</a>
+    {% endif %}
     {% if message %}
     <div class="amsg ok"><svg class="ic"><use href="#i-check-circle"/></svg><span>{{ message }}</span></div>
     {% endif %}
