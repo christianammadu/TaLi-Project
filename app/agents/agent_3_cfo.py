@@ -227,7 +227,8 @@ class CFOAgent:
         """
         from flask import current_app
         from app.data.database import get_db_connection
-        
+        from app.services.uuid_utils import uuid_to_bin
+
         # 1. System Defaults
         thresholds = {
             "low_stock_limit": float(current_app.config.get("DEFAULT_LOW_STOCK_LIMIT", 5)),
@@ -239,7 +240,7 @@ class CFOAgent:
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT alert_thresholds FROM users WHERE id = %s LIMIT 1", (self.user_id,))
+            cursor.execute("SELECT alert_thresholds FROM users WHERE id = %s LIMIT 1", (uuid_to_bin(self.user_id),))
             row = cursor.fetchone()
             if row and row['alert_thresholds']:
                 val = row['alert_thresholds']
