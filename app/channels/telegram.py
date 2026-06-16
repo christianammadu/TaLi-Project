@@ -46,11 +46,13 @@ class TelegramChannel(Channel):
             return None
         text = msg.get("text", "") or ""
         contact = msg.get("contact")
-        if contact and contact.get("user_id") == msg.get("from", {}).get("id"):
+        sender_id = msg.get("from", {}).get("id") if isinstance(msg.get("from"), dict) else None
+        if contact and contact.get("user_id") is not None and contact.get("user_id") == sender_id:
             command = "share_contact"
             command_arg = contact.get("phone_number")
         else:
             command, command_arg = parse_command(text)
+
         return InboundMessage(
             channel=TELEGRAM,
             sender=make_address(TELEGRAM, chat_id),

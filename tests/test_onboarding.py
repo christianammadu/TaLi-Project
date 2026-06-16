@@ -121,3 +121,14 @@ def test_share_contact_missing_or_invalid_arg(monkeypatch):
     assert "Failed" in reply_missing
     assert "Failed" in reply_invalid
 
+
+def test_share_contact_registration_failure(monkeypatch):
+    monkeypatch.setattr(onboarding.auth, "get_user_by_phone", lambda p: None)
+    monkeypatch.setattr(onboarding.auth, "register_user", lambda p: None)
+
+    with _app().app_context():
+        reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
+
+    assert "Failed to create an account" in reply
+
+
