@@ -295,11 +295,20 @@ class AgentRouter:
                             cursor.close()
                             conn.close()
 
-                    # Enforce system-wide timeout wrapper (8-10 seconds limit)
+                    # Enforce system-wide timeout wrapper (8-10 seconds limit). The nested
+                    # worker thread does NOT inherit this thread's Flask app context (it is
+                    # thread-local), so intake.process() must re-push it — otherwise its first
+                    # current_app use (DB config, Band backend, session lookup) raises "Working
+                    # outside of application context", the [Pipeline Failure] seen in prod.
                     response = None
+
+                    def _process_with_context():
+                        with app_obj.app_context():
+                            return self.intake.process(text_val)
+
                     try:
                         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as local_executor:
-                            future = local_executor.submit(self.intake.process, text_val)
+                            future = local_executor.submit(_process_with_context)
                             response = future.result(timeout=8.0)
                     except concurrent.futures.TimeoutError:
                         print(f"[AgentRouter] Pipeline Timeout: Job {job_key} exceeded MAX_REQUEST_LIFETIME (8.0s)")
