@@ -32,7 +32,18 @@ def telegram_webhook():
     if msg.command:
         reply = onboarding.handle_command(channel, native, msg.command, msg.command_arg)
         if reply:
-            _tg.send_text(msg.sender, reply)
+            if msg.command == "share_contact" and reply.startswith("✅"):
+                remove_kb = {"remove_keyboard": True}
+                _tg.send_text(msg.sender, reply, reply_markup=remove_kb)
+            elif reply == onboarding.onboarding_prompt():
+                kb = {
+                    "keyboard": [[{"text": "📱 Share Contact", "request_contact": True}]],
+                    "resize_keyboard": True,
+                    "one_time_keyboard": True
+                }
+                _tg.send_text(msg.sender, reply, reply_markup=kb)
+            else:
+                _tg.send_text(msg.sender, reply)
         return jsonify(ok=True)
 
     # 1b. Friendly bare "help"/"menu" (no slash) → the same command/capability list.
@@ -43,7 +54,12 @@ def telegram_webhook():
     # 2. Must be a bound user to do anything else.
     user = onboarding.resolve(channel, native)
     if not user:
-        _tg.send_text(msg.sender, onboarding.onboarding_prompt())
+        kb = {
+            "keyboard": [[{"text": "📱 Share Contact", "request_contact": True}]],
+            "resize_keyboard": True,
+            "one_time_keyboard": True
+        }
+        _tg.send_text(msg.sender, onboarding.onboarding_prompt(), reply_markup=kb)
         return jsonify(ok=True)
 
     # 3. Bound chat: auto-renew the session (the bind is the trust anchor), then run the gateway.

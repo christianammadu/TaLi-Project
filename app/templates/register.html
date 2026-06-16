@@ -76,6 +76,12 @@
       </button>
     </form>
 
+    <div style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--bord); display: flex; flex-direction: column; gap: 12px; text-align: center;">
+      <p style="font-size: 0.88rem; color: var(--ts); line-height: 1.5;">Don't have WhatsApp? Register instantly using our Telegram Bot</p>
+      <a href="{{ telegram_url }}" class="btn btn-tg"><svg class="ic"><use href="#i-telegram"/></svg> Register via Telegram</a>
+    </div>
+
+
     {% elif step == 'otp' %}
     <!-- STEP 2 · OTP -->
     <a href="{{ url_for('web.register') }}" class="back-link"><svg class="ic ic-sm"><use href="#i-arrow-left"/></svg> Change number</a>
