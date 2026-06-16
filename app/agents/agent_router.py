@@ -24,6 +24,14 @@ from app.data.database import get_db_connection
 _EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 
+def _pipeline_timeout_seconds():
+    try:
+        value = float(os.getenv("AGENT_PIPELINE_TIMEOUT_SECONDS", "20"))
+    except (TypeError, ValueError):
+        value = 20.0
+    return max(1.0, value)
+
+
 class AgentRouter:
     """Webhook→Band-room gateway. One shared connector; agents wired as room handlers.
 
@@ -53,6 +61,22 @@ class AgentRouter:
             return
         self.compliance = ComplianceAgent(self.user_id, self.sender_id, band=self.band)
         self.band.on_message(COMPLIANCE_HANDLE, self.compliance.on_room_message)
+
+    def _pending_confirmation_prompt(self):
+        """Return the pending confirmation prompt if timeout happened after parsing."""
+        try:
+            from app.services.formatter import format_confirmation
+            pending = self.intake._load_pending()
+            if not pending:
+                return None
+            payload = pending.get("parsed_json")
+            parsed = payload if isinstance(payload, dict) else json.loads(payload)
+            if not {"record_transaction", "inventory", "debt"}.intersection(parsed.get("intents", [])):
+                return None
+            return format_confirmation(parsed)
+        except Exception as exc:
+            print(f"[AgentRouter] pending confirmation lookup failed: {exc}")
+            return None
 
     def route(self, text, message_id=None, sync=False):
         """Authenticate, dedupe the webhook event, run Intake (which drives the room),
@@ -306,15 +330,29 @@ class AgentRouter:
                         with app_obj.app_context():
                             return self.intake.process(text_val)
 
+                    local_executor = None
                     try:
-                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as local_executor:
-                            future = local_executor.submit(_process_with_context)
-                            response = future.result(timeout=8.0)
+                        timeout_seconds = _pipeline_timeout_seconds()
+                        local_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+                        future = local_executor.submit(_process_with_context)
+                        response = future.result(timeout=timeout_seconds)
+                        local_executor.shutdown(wait=True)
                     except concurrent.futures.TimeoutError:
-                        print(f"[AgentRouter] Pipeline Timeout: Job {job_key} exceeded MAX_REQUEST_LIFETIME (8.0s)")
-                        alert_slow_request(f"job_{job_key}", 8000)
-                        response = RESPONSE_TIMEOUT
+                        timeout_seconds = _pipeline_timeout_seconds()
+                        print(f"[AgentRouter] Pipeline Timeout: Job {job_key} exceeded AGENT_PIPELINE_TIMEOUT_SECONDS ({timeout_seconds:.1f}s)")
+                        alert_slow_request(f"job_{job_key}", int(timeout_seconds * 1000))
+                        try:
+                            if local_executor is not None:
+                                local_executor.shutdown(wait=False, cancel_futures=True)
+                        except Exception:
+                            pass
+                        response = self._pending_confirmation_prompt() or RESPONSE_TIMEOUT
                     except Exception as exc:
+                        try:
+                            if local_executor is not None:
+                                local_executor.shutdown(wait=False, cancel_futures=True)
+                        except Exception:
+                            pass
                         print(f"[AgentRouter] Pipeline Failure: Job {job_key} crashed: {exc}")
                         alert_job_failed(job_key, str(exc))
                         response = RESPONSE_FAILED
