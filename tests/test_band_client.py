@@ -80,13 +80,54 @@ class TestBandStubConnector(unittest.TestCase):
 
 
 class TestBandLiveBackend(unittest.TestCase):
-    def test_live_backend_mirror_posts_to_messages_endpoint(self):
-        from unittest.mock import MagicMock
+    def test_live_backend_mirror_uses_band_sdk_clients(self):
+        from types import SimpleNamespace
         from app.agents.band.band_client import _LiveBackend
+
+        created_clients = {}
+
+        class Request(SimpleNamespace):
+            pass
+
+        class FakeMessages:
+            def __init__(self):
+                self.calls = []
+
+            def create_agent_chat_message(self, chat_id, *, message, request_options=None):
+                self.calls.append((chat_id, message, request_options))
+                return SimpleNamespace(data=SimpleNamespace(id="msg-1"))
+
+        class FakeEvents:
+            def __init__(self):
+                self.calls = []
+
+            def create_agent_chat_event(self, chat_id, *, event, request_options=None):
+                self.calls.append((chat_id, event, request_options))
+                return SimpleNamespace(data=SimpleNamespace(id="evt-1"))
+
+        class FakeRestClient:
+            def __init__(self, *, api_key, base_url, timeout):
+                self.api_key = api_key
+                self.base_url = base_url
+                self.timeout = timeout
+                self.agent_api_messages = FakeMessages()
+                self.agent_api_events = FakeEvents()
+                created_clients[api_key] = self
+
+        fake_sdk = {
+            "RestClient": FakeRestClient,
+            "ChatEventRequest": Request,
+            "ChatMessageRequest": Request,
+            "ChatMessageRequestMentionsItem": Request,
+            "ChatRoomRequest": Request,
+            "ParticipantRequest": Request,
+            "request_options": {"max_retries": 3},
+        }
 
         config = {
             "rest_url": "https://fake.band.ai",
             "room_id": "room-123",
+            "sdk": fake_sdk,
             "agents": {
                 "@tali-intake": {"agent_id": "intake-id", "api_key": "intake-key", "remote_handle": "tali/tali-intake"},
                 "@tali-cfo": {"agent_id": "cfo-id", "api_key": "cfo-key", "remote_handle": "tali/tali-cfo"}
@@ -95,38 +136,29 @@ class TestBandLiveBackend(unittest.TestCase):
 
         backend = _LiveBackend(config)
         backend._resolve_room = lambda: "room-123"
-
-        post_calls = []
-        def fake_post(url, headers, json, timeout):
-            post_calls.append((url, headers, json))
-            mock_resp = MagicMock()
-            mock_resp.status_code = 200
-            return mock_resp
-
-        backend._requests = MagicMock()
-        backend._requests.post = fake_post
         backend._mirror_on = True
 
         # Case 1: Send with targets (Intake mentions CFO)
         backend._mirror(["@tali-cfo"], "Hello CFO", sender="@tali-intake")
-        self.assertEqual(len(post_calls), 1)
-        url, headers, json_payload = post_calls[0]
-        self.assertEqual(url, "https://fake.band.ai/api/v1/agent/chats/room-123/messages")
-        self.assertEqual(headers["X-API-Key"], "intake-key")
-        self.assertIn("@tali/tali-cfo", json_payload["message"]["content"])
+        intake_client = created_clients["intake-key"]
+        self.assertEqual(intake_client.base_url, "https://fake.band.ai")
+        self.assertEqual(len(intake_client.agent_api_messages.calls), 1)
+        chat_id, message, options = intake_client.agent_api_messages.calls[0]
+        self.assertEqual(chat_id, "room-123")
+        self.assertIn("@tali/tali-cfo", message.content)
+        self.assertEqual(message.mentions[0].id, "cfo-id")
+        self.assertEqual(options, {"max_retries": 3})
 
         # Case 2: Send with no registered targets (CFO replies to gateway)
-        post_calls.clear()
         backend._mirror(["@tali-gateway"], "Terminal reply", sender="@tali-cfo")
-        self.assertEqual(len(post_calls), 1)
-        url, headers, json_payload = post_calls[0]
-        # Should post to messages path as a standard message instead of events path!
-        self.assertEqual(url, "https://fake.band.ai/api/v1/agent/chats/room-123/messages")
-        self.assertEqual(headers["X-API-Key"], "cfo-key")
-        self.assertIn("@tali-gateway", json_payload["message"]["content"])
-        self.assertIn("Terminal reply", json_payload["message"]["content"])
+        cfo_client = created_clients["cfo-key"]
+        self.assertEqual(len(cfo_client.agent_api_events.calls), 1)
+        chat_id, event, options = cfo_client.agent_api_events.calls[0]
+        self.assertEqual(chat_id, "room-123")
+        self.assertIn("@tali-gateway", event.content)
+        self.assertIn("Terminal reply", event.content)
+        self.assertEqual(event.message_type, "task")
 
 
 if __name__ == "__main__":
     unittest.main()
-

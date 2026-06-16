@@ -22,10 +22,9 @@ Two backends, chosen by ``BAND_BACKEND``:
     *cannot* rely on a synchronous return the way the retired ``BandSDK`` broker allowed.
     Replies arrive out-of-band via ``collect_reply``. Lets WP-03/04/05 be built/tested
     offline against the real async + reply-collection semantics.
-  * ``"live"`` — the real band.ai / Thenvoi platform over REST (and optionally the
-    `band-sdk` WebSocket runtime). Gated behind credentials; endpoints per docs.band.ai.
-    **Not exercised here** — WP-02's live round-trip is pending the user's Band creds +
-    identity confirmation (open question #1).
+  * ``"live"`` — the real band.ai platform through ``band-sdk``'s generated REST client.
+    Gated behind credentials; the synchronous Flask webhook still owns the local agent
+    execution, while Band owns the room, participants, messages, and audit trail.
 """
 
 import json
@@ -93,13 +92,12 @@ class _StubBackend:
 # audit surface, not an autonomous runtime — band-sdk's persistent-WebSocket runtime
 # needs a long-running process the sync Flask webhook doesn't have (registration.md).
 # So _LiveBackend keeps the stub's reliable synchronous in-process @mention dispatch +
-# reply collection, and MIRRORS each handoff into the real Band room over REST (verified
-# against thenvoi-client-rest 0.0.7):
-#   create room  POST   /api/v1/agent/chats                       {"chat":{}}
-#   add member   POST   /api/v1/agent/chats/{id}/participants     {"participant":{participant_id, role}}
-#   message      POST   /api/v1/agent/chats/{id}/messages         {"message":{content, mentions:[{id,handle}]}}
-#   event        POST   /api/v1/agent/chats/{id}/events           {"event":{content, message_type}}
-#   auth: X-API-Key.
+# reply collection, and MIRRORS each handoff into the real Band room through
+# ``band.client.rest.RestClient`` from band-sdk:
+#   create room  agent_api_chats.create_agent_chat(ChatRoomRequest())
+#   add member   agent_api_participants.add_agent_chat_participant(ParticipantRequest(...))
+#   message      agent_api_messages.create_agent_chat_message(ChatMessageRequest(...))
+#   event        agent_api_events.create_agent_chat_event(ChatEventRequest(...))
 # A message may only @mention agents already in the room, so the gateway uses the
 # configured room when its agents are members, else AUTO-PROVISIONS an agent-owned room
 # and adds the peers. The resolved room is cached per-process (get_band_client is called
@@ -128,23 +126,49 @@ class _LiveBackend(_StubBackend):
                 "BAND_BACKEND=live but no agent credentials configured — set "
                 "BAND_*_AGENT_ID / BAND_*_API_KEY (see app/agents/band/registration.md)."
             )
-        try:
-            import requests  # local import; only the live path needs it
-            self._requests = requests
-        except Exception as e:  # pragma: no cover
-            self._requests = None
-            print(f"[Band live] 'requests' unavailable ({e}); room mirror disabled.")
-        self._mirror_on = self._requests is not None
+        injected_sdk = cfg.get("sdk")
+        if injected_sdk is not None:
+            self._sdk = injected_sdk
+        else:
+            try:
+                from band.client.rest import (  # local import; only live mode needs band-sdk
+                    DEFAULT_REQUEST_OPTIONS,
+                    ChatEventRequest,
+                    ChatMessageRequest,
+                    ChatMessageRequestMentionsItem,
+                    ChatRoomRequest,
+                    ParticipantRequest,
+                    RestClient,
+                )
+                self._sdk = {
+                    "RestClient": RestClient,
+                    "ChatEventRequest": ChatEventRequest,
+                    "ChatMessageRequest": ChatMessageRequest,
+                    "ChatMessageRequestMentionsItem": ChatMessageRequestMentionsItem,
+                    "ChatRoomRequest": ChatRoomRequest,
+                    "ParticipantRequest": ParticipantRequest,
+                    "request_options": DEFAULT_REQUEST_OPTIONS,
+                }
+            except Exception as e:  # pragma: no cover
+                raise RuntimeError(
+                    "BAND_BACKEND=live requires band-sdk and its dependencies. "
+                    "Install requirements.txt before starting live Band orchestration."
+                ) from e
+        self._clients = {}
+        self._mirror_on = self._sdk is not None
 
-    # --- small REST helpers (X-API-Key auth) ---
-    def _post(self, path, api_key, payload):
-        return self._requests.post(self.rest_url + path,
-                                   headers={"X-API-Key": api_key, "Content-Type": "application/json"},
-                                   json=payload, timeout=12)
+    # --- small SDK helpers (X-API-Key auth handled by RestClient) ---
+    def _client(self, api_key):
+        if api_key not in self._clients:
+            self._clients[api_key] = self._sdk["RestClient"](
+                api_key=api_key,
+                base_url=self.rest_url,
+                timeout=12,
+            )
+        return self._clients[api_key]
 
-    def _get(self, path, api_key, params=None):
-        return self._requests.get(self.rest_url + path, headers={"X-API-Key": api_key},
-                                  params=params or {}, timeout=12)
+    def _request_options(self):
+        return self._sdk["request_options"]
 
     def _owner(self):
         """The provisioning/owner agent — prefer Intake, else any configured agent."""
@@ -180,29 +204,38 @@ class _LiveBackend(_StubBackend):
         # 1) Use the configured room if the owner agent is already a participant of it.
         if self.configured_room:
             try:
-                r = self._get(f"/api/v1/agent/chats/{self.configured_room}", okey)
-                if r.status_code == 200:
-                    print(f"[Band live] using configured room {self.configured_room}")
-                    return self.configured_room
-                print(f"[Band live] configured room {self.configured_room} not joinable by the "
-                      f"agents ({r.status_code}); provisioning an agent-owned room instead. "
-                      f"(Add the 4 agents to that room in the Band UI to use it directly.)")
+                self._client(okey).agent_api_chats.get_agent_chat(
+                    self.configured_room,
+                    request_options=self._request_options(),
+                )
+                print(f"[Band live] using configured room {self.configured_room}")
+                return self.configured_room
             except Exception as e:
-                print(f"[Band live] configured-room check failed ({e}); provisioning instead.")
+                print(f"[Band live] configured room {self.configured_room} not joinable by the "
+                      f"agents ({e}); provisioning an agent-owned room instead. "
+                      f"(Add the 4 agents to that room in the Band UI to use it directly.)")
         # 2) Provision an agent-owned coordination room and add the other agents.
         try:
-            r = self._post("/api/v1/agent/chats", okey, {"chat": {}})
-            if r.status_code not in (200, 201):
-                print(f"[Band live] room provisioning failed ({r.status_code}: {r.text[:120]}); mirror off.")
-                return None
-            room = (r.json().get("data") or {}).get("id")
+            client = self._client(okey)
+            response = client.agent_api_chats.create_agent_chat(
+                chat=self._sdk["ChatRoomRequest"](),
+                request_options=self._request_options(),
+            )
+            room = response.data.id
             for internal, creds in self.agents.items():
                 if creds is owner or not creds.get("agent_id"):
                     continue
-                pr = self._post(f"/api/v1/agent/chats/{room}/participants", okey,
-                                {"participant": {"participant_id": creds["agent_id"], "role": "member"}})
-                if pr.status_code >= 400:
-                    print(f"[Band live] add participant {internal} -> {pr.status_code}: {pr.text[:100]}")
+                try:
+                    client.agent_api_participants.add_agent_chat_participant(
+                        room,
+                        participant=self._sdk["ParticipantRequest"](
+                            participant_id=creds["agent_id"],
+                            role="member",
+                        ),
+                        request_options=self._request_options(),
+                    )
+                except Exception as e:
+                    print(f"[Band live] add participant {internal} failed: {e}")
             print(f"[Band live] provisioned coordination room — watch it at {self.rest_url}/chat/{room}")
             return room
         except Exception as e:
@@ -244,22 +277,35 @@ class _LiveBackend(_StubBackend):
         # only @mention targets that are participant agents (you can't mention non-members)
         targets = [(self._agent_id(m), self._handle(m)) for m in (mentions or []) if self._agent_id(m)]
         
-        path = self.messages_path.format(chat_id=room)
+        client = self._client(api_key)
         if targets:
             content = " ".join(f"@{h}" for _, h in targets) + "\n" + text
-            payload = {"message": {"content": content,
-                                   "mentions": [{"id": aid, "handle": h} for aid, h in targets]}}
+            mention_items = [
+                self._sdk["ChatMessageRequestMentionsItem"](id=aid, handle=h)
+                for aid, h in targets
+            ]
+            client.agent_api_messages.create_agent_chat_message(
+                room,
+                message=self._sdk["ChatMessageRequest"](
+                    content=content,
+                    mentions=mention_items,
+                ),
+                request_options=self._request_options(),
+            )
         else:
-            # no participant target (e.g. -> gateway/human terminal reply): send as a regular chat message so it reflects in the UI
+            # no participant target (e.g. -> gateway/human terminal reply): record as an event.
             content = ""
             if mentions:
                 content += " ".join(f"@{m.lstrip('@')}" for m in mentions) + "\n"
             content += text
-            payload = {"message": {"content": content, "mentions": []}}
-            
-        r = self._post(path, api_key, payload)
-        if r.status_code >= 400:
-            print(f"[Band live] mirror {r.status_code} (msg) from {sender}: {r.text[:140]}")
+            client.agent_api_events.create_agent_chat_event(
+                room,
+                event=self._sdk["ChatEventRequest"](
+                    content=content[:6000],
+                    message_type="task",
+                ),
+                request_options=self._request_options(),
+            )
 
 
 
