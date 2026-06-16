@@ -11,6 +11,7 @@ Keeps the ``AgentRouter`` name + ``route(text, message_id)`` signature so
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from mysql.connector import Error
 from app.agents.band import get_band_client
 from app.agents.agent_1_intake import IntakeAgent, LEDGER_HANDLE, CFO_HANDLE
@@ -18,6 +19,9 @@ from app.agents.agent_2_ledger import LedgerAgent
 from app.agents.agent_3_cfo import CFOAgent
 from app.auth import get_active_session, get_user_by_sender, get_user_by_phone
 from app.data.database import get_db_connection
+
+# ThreadPoolExecutor for backpressure control and thread worker reuse (max 10 concurrent tasks)
+_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 
 class AgentRouter:
@@ -50,9 +54,16 @@ class AgentRouter:
         self.compliance = ComplianceAgent(self.user_id, self.sender_id, band=self.band)
         self.band.on_message(COMPLIANCE_HANDLE, self.compliance.on_room_message)
 
-    def route(self, text, message_id=None):
+    def route(self, text, message_id=None, sync=False):
         """Authenticate, dedupe the webhook event, run Intake (which drives the room),
-        and return the collected reply. Same contract as the pre-Band router."""
+        and return the collected reply. Same contract as the pre-Band router.
+        """
+        import hashlib
+        import time
+        import uuid
+        from app.services.uuid_utils import uuid_to_bin
+        from app.services.constants import RESPONSE_TOO_MANY_REQUESTS, RESPONSE_TIMEOUT, RESPONSE_FAILED
+
         # 1. Verify active session at the gateway entry point.
         session = get_active_session(self.sender_id)
         if not session:
@@ -61,6 +72,52 @@ class AgentRouter:
                 return "🔒 Your session's timed out. Type *login* to pick up where you left off."
             return ("👋 Hi, I'm TaLi — your pocket bookkeeper.\n\n"
                     "You're not set up yet. Type *register* to get your sign-up link.")
+
+        # 1b. Enforce Request-Level Idempotency Key System
+        # Hashing window: 1-minute bucket to prevent YES spam / duplicate webhook repeats
+        time_bucket = int(time.time()) // 60
+        raw_key = f"{self.user_id}:{message_id or ''}:{time_bucket}"
+        idempotency_key = hashlib.sha256(raw_key.encode()).hexdigest()
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO processed_requests (idempotency_key) VALUES (%s)",
+                (idempotency_key,)
+            )
+            conn.commit()
+        except Error:
+            # Idempotency key already exists. Skip execution entirely.
+            if 'conn' in locals() and conn.is_connected():
+                conn.rollback()
+            print(f"[AgentRouter] Duplicate request drop: key={idempotency_key}")
+            return "__DUPLICATE_DROP__"
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+        user_id_bin = uuid_to_bin(self.user_id)
+
+        # 1c. Load Safety & Backpressure Control (Cap active jobs per user at 3)
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM background_jobs WHERE user_id = %s AND status IN ('pending', 'processing')",
+                (user_id_bin,)
+            )
+            active_jobs = cursor.fetchone()[0]
+            if active_jobs >= 3:
+                print(f"[AgentRouter Backpressure] Throttling user {self.user_id}: {active_jobs} active requests.")
+                return RESPONSE_TOO_MANY_REQUESTS
+        except Error as e:
+            print(f"[AgentRouter Throttling Check Error] {e}")
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
 
         # 2. Webhook deduplication + processing-state check (atomic transition).
         if message_id:
@@ -106,41 +163,178 @@ class AgentRouter:
                     cursor.close()
                     conn.close()
 
-        # 3. Drive the flow through Intake (which sends into the room + collects the reply).
+        # 2b. Durable SQL Job queue insertion
+        job_id = uuid.uuid4().hex
         try:
-            response = self.intake.process(text)
-            if message_id:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO background_jobs (id, user_id, sender_id, text, message_id, status) "
+                "VALUES (%s, %s, %s, %s, %s, 'pending')",
+                (job_id, user_id_bin, self.sender_id, text, message_id)
+            )
+            conn.commit()
+        except Error as e:
+            print(f"[AgentRouter Queue Error] Failed to write job to DB: {e}")
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+        # Check Flask app context and testing flag to determine synchronous execution
+        sync_execution = False
+        try:
+            from flask import current_app
+            if current_app:
+                if current_app.config.get('TESTING', False) or current_app.testing:
+                    sync_execution = True
+            else:
+                sync_execution = True
+        except RuntimeError:
+            sync_execution = True
+
+        if sync or sync_execution:
+            # 3. Drive the flow through Intake synchronously
+            try:
+                # Update job status
                 try:
                     conn = get_db_connection()
                     cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE whatsapp_message_id = %s",
-                        (message_id,)
-                    )
+                    cursor.execute("UPDATE background_jobs SET status = 'processing' WHERE id = %s", (job_id,))
                     conn.commit()
-                except Error as e:
-                    print(f"[AgentRouter Update Status Error] {e}")
+                except Error:
+                    pass
                 finally:
                     if 'conn' in locals() and conn.is_connected():
                         cursor.close()
                         conn.close()
-            return response
-        except Exception as err:
-            if message_id:
+
+                response = self.intake.process(text)
+
+                # Update job status
                 try:
                     conn = get_db_connection()
                     cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
-                        "WHERE whatsapp_message_id = %s",
-                        (message_id,)
-                    )
+                    cursor.execute("UPDATE background_jobs SET status = 'completed' WHERE id = %s", (job_id,))
                     conn.commit()
-                except Error as e:
-                    print(f"[AgentRouter Failure Update Error] {e}")
+                except Error:
+                    pass
                 finally:
                     if 'conn' in locals() and conn.is_connected():
                         cursor.close()
                         conn.close()
-            raise err
+
+                if message_id:
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "UPDATE webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP "
+                            "WHERE whatsapp_message_id = %s",
+                            (message_id,)
+                        )
+                        conn.commit()
+                    except Error as e:
+                        print(f"[AgentRouter Update Status Error] {e}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+                return response
+            except Exception as err:
+                # Update job status to failed
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE background_jobs SET status = 'failed' WHERE id = %s", (job_id,))
+                    conn.commit()
+                except Error:
+                    pass
+                finally:
+                    if 'conn' in locals() and conn.is_connected():
+                        cursor.close()
+                        conn.close()
+
+                if message_id:
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "UPDATE webhook_events SET status = 'failed', processed_at = CURRENT_TIMESTAMP "
+                            "WHERE whatsapp_message_id = %s",
+                            (message_id,)
+                        )
+                        conn.commit()
+                    except Error as e:
+                        print(f"[AgentRouter Failure Update Error] {e}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+                raise err
+        else:
+            # 3. Drive the flow through Intake asynchronously in the background thread pool
+            from flask import current_app
+            app = current_app._get_current_object()
+
+            def async_worker(app_obj, text_val, msg_id, job_key):
+                with app_obj.app_context():
+                    import concurrent.futures
+                    from app.services.alerts import alert_slow_request, alert_job_failed
+
+                    # Update job status
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE background_jobs SET status = 'processing' WHERE id = %s", (job_key,))
+                        conn.commit()
+                    except Error as e:
+                        print(f"Error marking job processing: {e}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+
+                    # Enforce system-wide timeout wrapper (8-10 seconds limit)
+                    response = None
+                    try:
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as local_executor:
+                            future = local_executor.submit(self.intake.process, text_val)
+                            response = future.result(timeout=8.0)
+                    except concurrent.futures.TimeoutError:
+                        print(f"[AgentRouter] Pipeline Timeout: Job {job_key} exceeded MAX_REQUEST_LIFETIME (8.0s)")
+                        alert_slow_request(f"job_{job_key}", 8000)
+                        response = RESPONSE_TIMEOUT
+                    except Exception as exc:
+                        print(f"[AgentRouter] Pipeline Failure: Job {job_key} crashed: {exc}")
+                        alert_job_failed(job_key, str(exc))
+                        response = RESPONSE_FAILED
+
+                    try:
+                        if response:
+                            from app.channels.registry import send_text
+                            send_text(self.sender_id, response)
+                        
+                        status = 'completed' if response != RESPONSE_FAILED and response != RESPONSE_TIMEOUT else 'failed'
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE background_jobs SET status = %s WHERE id = %s", (status, job_key))
+                        conn.commit()
+
+                        if msg_id:
+                            status_val = 'processed' if status == 'completed' else 'failed'
+                            cursor.execute(
+                                "UPDATE webhook_events SET status = %s, processed_at = CURRENT_TIMESTAMP "
+                                "WHERE whatsapp_message_id = %s",
+                                (status_val, msg_id)
+                            )
+                            conn.commit()
+                    except Exception as post_err:
+                        print(f"Error executing final status updates for job {job_key}: {post_err}")
+                    finally:
+                        if 'conn' in locals() and conn.is_connected():
+                            cursor.close()
+                            conn.close()
+
+            _EXECUTOR.submit(async_worker, app, text, message_id, job_id)
+            return "__ASYNC_STARTED__"

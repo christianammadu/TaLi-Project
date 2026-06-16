@@ -1,17 +1,44 @@
 from contextlib import contextmanager
 
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, pooling
 from flask import current_app
 
+_pool = None
+
 def get_db_connection():
-    """Returns an active secure connection to your MySQL Server."""
-    return mysql.connector.connect(
-        host=current_app.config['DB_HOST'],
-        user=current_app.config['DB_USER'],
-        password=current_app.config['DB_PASSWORD'],
-        database=current_app.config['DB_NAME']
-    )
+    """Returns an active secure pooled connection to your MySQL Server."""
+    global _pool
+    if _pool is None:
+        try:
+            _pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="tali_pool",
+                pool_size=10,
+                host=current_app.config['DB_HOST'],
+                user=current_app.config['DB_USER'],
+                password=current_app.config['DB_PASSWORD'],
+                database=current_app.config['DB_NAME']
+            )
+        except Exception as e:
+            print(f"Error creating connection pool: {e}")
+            return mysql.connector.connect(
+                host=current_app.config['DB_HOST'],
+                user=current_app.config['DB_USER'],
+                password=current_app.config['DB_PASSWORD'],
+                database=current_app.config['DB_NAME']
+            )
+    try:
+        return _pool.get_connection()
+    except Exception as e:
+        from app.services.alerts import alert_db_pool_saturation
+        alert_db_pool_saturation()
+        print(f"Pool connection failed: {e}. Falling back to direct connection.")
+        return mysql.connector.connect(
+            host=current_app.config['DB_HOST'],
+            user=current_app.config['DB_USER'],
+            password=current_app.config['DB_PASSWORD'],
+            database=current_app.config['DB_NAME']
+        )
 
 
 @contextmanager
@@ -546,6 +573,45 @@ def init_db(app):
             )
             print(f"Cleaned up legacy categories: {old_defaults_to_delete}")
 
+        # --- PRODUCTION HARDENING TABLES ---
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS processed_requests (
+                idempotency_key VARCHAR(100) PRIMARY KEY,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS background_jobs (
+                id VARCHAR(50) PRIMARY KEY,
+                user_id BINARY(16) NOT NULL,
+                sender_id VARCHAR(50) NOT NULL,
+                text TEXT NOT NULL,
+                message_id VARCHAR(100) NULL,
+                status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS transaction_state (
+                event_id VARCHAR(100) PRIMARY KEY,
+                user_id BINARY(16) NOT NULL,
+                state ENUM('RECEIVED', 'PENDING_CONFIRMATION', 'CONFIRMED', 'PROCESSING_LEDGER', 'COMPLETED', 'FAILED') NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS pending_deliveries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sender_id VARCHAR(50) NOT NULL,
+                message_text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         conn.commit()
         print("MySQL Tables Initialized successfully.")
 
@@ -567,6 +633,26 @@ def init_db(app):
             print(f"Could not ensure channel-identity tables: {ce}")
     except Error as e:
         print(f"MySQL Table Initialization failed: {e}")
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def set_transaction_state(event_id, user_id, state):
+    """Update the transaction state machine (Saga Pattern) atomically in the DB."""
+    try:
+        from app.services.uuid_utils import uuid_to_bin
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO transaction_state (event_id, user_id, state) "
+            "VALUES (%s, %s, %s) "
+            "ON DUPLICATE KEY UPDATE state = VALUES(state)",
+            (str(event_id), uuid_to_bin(user_id), state)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Error setting transaction state: {e}")
     finally:
         if 'conn' in locals() and conn.is_connected():
             cursor.close()

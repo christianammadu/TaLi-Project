@@ -66,20 +66,21 @@ INTENT RULES:
 7. "unknown": If message doesn't relate to financial systems.
 
 UNIFIED JSON RESPONSE SCHEMA:
-Always return a JSON object with this exact structure (set unused keys to null/false/empty arrays):
+Always return a JSON object. To save output tokens and reduce latency, entirely omit any keys that are empty arrays, false, or null (for example, if there are no inventory changes, do not include 'inventory'; if there are no debts, do not include 'debts'; if needs_review is false, omit 'needs_review'; if status is ok, omit 'question'; if snapshot is false, omit 'snapshot'). Only return the keys that actually contain non-empty data.
+Structure of fields when present:
 {{
   "intents": ["record_transaction", "inventory", "debt", "query", "report"], // array of intents detected (can be empty)
   "confidence": 0.95, // float between 0.0 and 1.0 representing classification confidence
-  "needs_review": false, // set true if phrasing is highly complex, contradictory, or requires human review
-  "status": "ok", // "clarification_needed" if crucial details are missing (e.g. name or amount in non-full_payment actions); "unknown" if the message has no financial intent (e.g. a greeting); "error" on internal failure
-  "question": null, // clarification question string if status is "clarification_needed"
-  "transactions": [], // array of transaction objects — ONE per distinct economic event. "Bought X and sold Y" = TWO transactions.
-  "inventory": [], // array of inventory objects — ONE per stock movement (a buy adds, a sale removes)
-  "debts": [], // array of debt objects
-  "report": null, // or report object
-  "query": null, // or query object: {{"query_type": "sum|list|balance|count|stock", "type": "income|expense"|null, "category": null, "currency": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null}}
-  "statement": null, // or statement object: {{"report_type": "transactions|cashflow|income_statement", "tx_type": "income|expense"|null, "action": null, "category": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null, "format": "pdf|xlsx|chat|both"|null}}
-  "snapshot": false // true if snapshot intent is present
+  "needs_review": false, // set true if phrasing is highly complex, contradictory, or requires human review (omit if false)
+  "status": "ok", // "clarification_needed" if crucial details are missing; "unknown" if no financial intent; "error" on internal failure
+  "question": null, // clarification question string if status is "clarification_needed" (omit if null)
+  "transactions": [], // array of transaction objects — ONE per distinct economic event (omit if empty)
+  "inventory": [], // array of inventory objects — ONE per stock movement (omit if empty)
+  "debts": [], // array of debt objects (omit if empty)
+  "report": null, // report object (omit if null)
+  "query": null, // query object (omit if null): {{"query_type": "sum|list|balance|count|stock", "type": "income|expense"|null, "category": null, "currency": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null}}
+  "statement": null, // statement object (omit if null): {{"report_type": "transactions|cashflow|income_statement", "tx_type": "income|expense"|null, "action": null, "category": null, "period_start": "YYYY-MM-DD"|null, "period_end": "YYYY-MM-DD"|null, "format": "pdf|xlsx|chat|both"|null}}
+  "snapshot": false // true if snapshot intent is present (omit if false)
 }}
 
 EXAMPLES:
@@ -209,6 +210,8 @@ def parse_message(text, user_id):
     The response includes 'action' (sale/purchase/expense/income/payment/transfer)
     and 'item' fields for granular transaction classification.
     """
+    import time
+    start_time = time.time()
     try:
         categories = get_categories_for_user(user_id)
         system_prompt = build_system_prompt(categories)
@@ -226,6 +229,9 @@ def parse_message(text, user_id):
             temperature=0.1,
             max_tokens=700,
         )
+
+        latency_ms = int((time.time() - start_time) * 1000)
+        print(f"[PERF] NLP API Latency: {latency_ms}ms")
 
         parsed = json.loads(result["content"])
         parsed['_usage'] = result["usage"]

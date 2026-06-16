@@ -15,7 +15,7 @@ from app.channels.telegram import TelegramChannel
 
 telegram_bp = Blueprint("telegram", __name__)
 _tg = TelegramChannel()
-_SUPPRESS = ("__DUPLICATE_DROP__", "__ERROR_HANDLED_SAGA__")
+_SUPPRESS = ("__DUPLICATE_DROP__", "__ERROR_HANDLED_SAGA__", "__ASYNC_STARTED__")
 
 
 @telegram_bp.route("/webhook/telegram", methods=["POST"])
