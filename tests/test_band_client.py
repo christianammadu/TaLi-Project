@@ -79,5 +79,54 @@ class TestBandStubConnector(unittest.TestCase):
                          {"approved": True, "reason": "ok"})    # but still collectable
 
 
+class TestBandLiveBackend(unittest.TestCase):
+    def test_live_backend_mirror_posts_to_messages_endpoint(self):
+        from unittest.mock import MagicMock
+        from app.agents.band.band_client import _LiveBackend
+
+        config = {
+            "rest_url": "https://fake.band.ai",
+            "room_id": "room-123",
+            "agents": {
+                "@tali-intake": {"agent_id": "intake-id", "api_key": "intake-key", "remote_handle": "tali/tali-intake"},
+                "@tali-cfo": {"agent_id": "cfo-id", "api_key": "cfo-key", "remote_handle": "tali/tali-cfo"}
+            }
+        }
+
+        backend = _LiveBackend(config)
+        backend._resolve_room = lambda: "room-123"
+
+        post_calls = []
+        def fake_post(url, headers, json, timeout):
+            post_calls.append((url, headers, json))
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            return mock_resp
+
+        backend._requests = MagicMock()
+        backend._requests.post = fake_post
+        backend._mirror_on = True
+
+        # Case 1: Send with targets (Intake mentions CFO)
+        backend._mirror(["@tali-cfo"], "Hello CFO", sender="@tali-intake")
+        self.assertEqual(len(post_calls), 1)
+        url, headers, json_payload = post_calls[0]
+        self.assertEqual(url, "https://fake.band.ai/api/v1/agent/chats/room-123/messages")
+        self.assertEqual(headers["X-API-Key"], "intake-key")
+        self.assertIn("@tali/tali-cfo", json_payload["message"]["content"])
+
+        # Case 2: Send with no registered targets (CFO replies to gateway)
+        post_calls.clear()
+        backend._mirror(["@tali-gateway"], "Terminal reply", sender="@tali-cfo")
+        self.assertEqual(len(post_calls), 1)
+        url, headers, json_payload = post_calls[0]
+        # Should post to messages path as a standard message instead of events path!
+        self.assertEqual(url, "https://fake.band.ai/api/v1/agent/chats/room-123/messages")
+        self.assertEqual(headers["X-API-Key"], "cfo-key")
+        self.assertIn("@tali-gateway", json_payload["message"]["content"])
+        self.assertIn("Terminal reply", json_payload["message"]["content"])
+
+
 if __name__ == "__main__":
     unittest.main()
+
