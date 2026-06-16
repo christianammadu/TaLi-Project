@@ -44,6 +44,33 @@ def test_parse_update_ignores_groups_edits_and_empty():
     assert TelegramChannel.parse_update({}) is None
 
 
+def test_parse_update_contact():
+    contact_update = {
+        "message": {
+            "message_id": 42,
+            "chat": {"id": 559912345, "type": "private"},
+            "from": {"id": 12345},
+            "contact": {"phone_number": "+2348123456789", "user_id": 12345}
+        }
+    }
+    m = TelegramChannel.parse_update(contact_update)
+    assert m.command == "share_contact"
+    assert m.command_arg == "+2348123456789"
+
+    # spoofed user_id
+    spoofed_update = {
+        "message": {
+            "message_id": 42,
+            "chat": {"id": 559912345, "type": "private"},
+            "from": {"id": 12345},
+            "contact": {"phone_number": "+2348123456789", "user_id": 99999}
+        }
+    }
+    m2 = TelegramChannel.parse_update(spoofed_update)
+    assert m2.command is None
+
+
+
 def test_verify_secret():
     assert TelegramChannel.verify_secret("s3cret", "s3cret") is True
     assert TelegramChannel.verify_secret("wrong", "s3cret") is False

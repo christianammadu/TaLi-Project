@@ -95,6 +95,29 @@ def handle_command(channel, native_id, command, arg):
             return "✅ Linked! Now just tell me what happened — like “Sold rice 5000” — and I'll keep the books."
         return "⚠️ That link has expired or was already used. Get a fresh one and tap again."
 
+    if command == "share_contact":
+        if not arg:
+            return "Failed to retrieve phone number from shared contact."
+        import re
+        phone = re.sub(r'\D', '', str(arg))
+        if not phone:
+            return "Failed to parse phone number."
+        
+        from app.auth import get_user_by_phone, register_user, link_channel, open_session
+        existing_user = get_user_by_phone(phone)
+        if existing_user:
+            link_channel(existing_user["id"], channel, native_id)
+            open_session(make_address(channel, native_id), existing_user["id"])
+            return "✅ Successfully linked your Telegram account to your existing TaLi account! You can now start bookkeeping."
+        else:
+            user_id = register_user(phone)
+            if user_id:
+                link_channel(user_id, channel, native_id)
+                open_session(make_address(channel, native_id), user_id)
+                return "✅ Welcome to TaLi! Your account has been created successfully. You can now start bookkeeping directly in this chat!"
+            else:
+                return "⚠️ Failed to create an account. Please try again."
+
     if command == "link":
         target = (arg or "").strip().lower()
         if target not in (WHATSAPP, TELEGRAM) or target == channel:

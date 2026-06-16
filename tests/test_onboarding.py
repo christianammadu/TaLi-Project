@@ -82,3 +82,42 @@ def test_help_lists_commands_and_capabilities():
     assert "/link whatsapp" in tg and "/link telegram" in wa
     # Plain text only — no WhatsApp markdown that Telegram would render literally.
     assert "*" not in tg and "_" not in tg
+
+
+def test_share_contact_existing_user(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(onboarding.auth, "get_user_by_phone", lambda p: {"id": "user-existing"})
+    monkeypatch.setattr(onboarding.auth, "link_channel", lambda uid, ch, cid: seen.update(link=(uid, ch, cid)))
+    monkeypatch.setattr(onboarding.auth, "open_session", lambda sender, uid: seen.update(session=(sender, uid)))
+
+    with _app().app_context():
+        reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
+
+    assert "linked your Telegram account" in reply
+    assert seen["link"] == ("user-existing", "telegram", "559")
+    assert seen["session"] == ("tg:559", "user-existing")
+
+
+def test_share_contact_new_user(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(onboarding.auth, "get_user_by_phone", lambda p: None)
+    monkeypatch.setattr(onboarding.auth, "register_user", lambda p: (seen.update(register=p), "user-new")[1])
+    monkeypatch.setattr(onboarding.auth, "link_channel", lambda uid, ch, cid: seen.update(link=(uid, ch, cid)))
+    monkeypatch.setattr(onboarding.auth, "open_session", lambda sender, uid: seen.update(session=(sender, uid)))
+
+    with _app().app_context():
+        reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
+
+    assert "Welcome to TaLi" in reply
+    assert seen["register"] == "2348123456789"
+    assert seen["link"] == ("user-new", "telegram", "559")
+    assert seen["session"] == ("tg:559", "user-new")
+
+
+def test_share_contact_missing_or_invalid_arg(monkeypatch):
+    with _app().app_context():
+        reply_missing = onboarding.handle_command("telegram", "559", "share_contact", None)
+        reply_invalid = onboarding.handle_command("telegram", "559", "share_contact", "abc")
+    assert "Failed" in reply_missing
+    assert "Failed" in reply_invalid
+

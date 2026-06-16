@@ -45,7 +45,12 @@ class TelegramChannel(Channel):
         if chat_id is None:
             return None
         text = msg.get("text", "") or ""
-        command, command_arg = parse_command(text)
+        contact = msg.get("contact")
+        if contact and contact.get("user_id") == msg.get("from", {}).get("id"):
+            command = "share_contact"
+            command_arg = contact.get("phone_number")
+        else:
+            command, command_arg = parse_command(text)
         return InboundMessage(
             channel=TELEGRAM,
             sender=make_address(TELEGRAM, chat_id),
@@ -75,10 +80,13 @@ class TelegramChannel(Channel):
         return bool(header_value) and hmac.compare_digest(header_value, secret)
 
     # ----- outbound -----
-    def send_text(self, sender, text):
+    def send_text(self, sender, text, reply_markup=None):
         chat_id = split_address(sender)[1]
+        payload = {"chat_id": chat_id, "text": text}
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
         try:
-            r = requests.post(self._api("sendMessage"), json={"chat_id": chat_id, "text": text}, timeout=15)
+            r = requests.post(self._api("sendMessage"), json=payload, timeout=15)
             print(f"Telegram sendMessage: {r.status_code} - {r.text[:200]}")
             return r
         except requests.RequestException as e:
