@@ -18,9 +18,13 @@ def _app():
 def test_parse_command():
     assert parse_command("/start abc") == ("redeem", "abc")
     assert parse_command("/start") == ("start", None)
+    assert parse_command("/start register") == ("start", None)
     assert parse_command("LINK-xyz") == ("redeem", "xyz")
     assert parse_command("/link telegram") == ("link", "telegram")
     assert parse_command("/unlink") == ("unlink", None)
+    assert parse_command("/login") == ("login", None)
+    assert parse_command("/logout") == ("logout", None)
+    assert parse_command("/settings") == ("settings", None)
     assert parse_command("/link@TaLiBot whatsapp") == ("link", "whatsapp")   # group @suffix stripped
     assert parse_command("Sold rice 5000") == (None, None)
 
@@ -60,6 +64,14 @@ def test_link_from_bound_user_returns_other_channel_deeplink(monkeypatch):
     assert "https://t.me/TaLiBot?start=TOK" in reply
 
 
+def test_link_whatsapp_from_telegram_user_returns_whatsapp_deeplink(monkeypatch):
+    monkeypatch.setattr(onboarding.auth, "resolve_channel_user", lambda ch, cid: {"id": "user-1"})
+    monkeypatch.setattr(onboarding.auth, "issue_binding_token", lambda uid, target_channel=None: "TOK")
+    with _app().app_context():
+        reply = onboarding.handle_command("telegram", "559", "link", "whatsapp")
+    assert "https://wa.me/2348000000000?text=LINK-TOK" in reply
+
+
 def test_link_from_unbound_user_prompts(monkeypatch):
     monkeypatch.setattr(onboarding.auth, "resolve_channel_user", lambda ch, cid: None)
     with _app().app_context():
@@ -84,17 +96,33 @@ def test_help_lists_commands_and_capabilities():
     assert "*" not in tg and "_" not in tg
 
 
-def test_share_contact_existing_user(monkeypatch):
+def test_share_contact_existing_whatsapp_user_redirects_to_whatsapp(monkeypatch):
     seen = {}
     monkeypatch.setattr(onboarding.auth, "get_user_by_phone", lambda p: {"id": "user-existing"})
+    monkeypatch.setattr(onboarding.auth, "resolve_channel_user", lambda ch, cid: None)
+    monkeypatch.setattr(onboarding.auth, "get_user_channel_links", lambda uid: {"whatsapp"})
     monkeypatch.setattr(onboarding.auth, "link_channel", lambda uid, ch, cid: seen.update(link=(uid, ch, cid)))
     monkeypatch.setattr(onboarding.auth, "open_session", lambda sender, uid: seen.update(session=(sender, uid)))
 
     with _app().app_context():
         reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
 
-    assert "linked your Telegram account" in reply
-    assert seen["link"] == ("user-existing", "telegram", "559")
+    assert "already has a TaLi account" in reply
+    assert "https://wa.me/2348000000000?text=/link%20telegram" in reply
+    assert "link" not in seen
+    assert "session" not in seen
+
+
+def test_share_contact_existing_linked_telegram_user_opens_session(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(onboarding.auth, "get_user_by_phone", lambda p: {"id": "user-existing"})
+    monkeypatch.setattr(onboarding.auth, "resolve_channel_user", lambda ch, cid: {"id": "user-existing"})
+    monkeypatch.setattr(onboarding.auth, "open_session", lambda sender, uid: seen.update(session=(sender, uid)))
+
+    with _app().app_context():
+        reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
+
+    assert "already linked" in reply
     assert seen["session"] == ("tg:559", "user-existing")
 
 
@@ -130,5 +158,3 @@ def test_share_contact_registration_failure(monkeypatch):
         reply = onboarding.handle_command("telegram", "559", "share_contact", "2348123456789")
 
     assert "Failed to create an account" in reply
-
-

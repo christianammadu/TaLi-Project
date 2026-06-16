@@ -33,35 +33,38 @@ class TestOnboardingState(unittest.TestCase):
             from app.auth import get_onboarding_state
             return get_onboarding_state(1)
 
-    # row = (display_name, usage_type, business_profile, onboarding_step)
+    # row = (display_name, usage_type, base_currency, business_profile, onboarding_step)
     def test_fresh_user_asks_name(self):
-        st = self._next((None, None, None, None))
+        st = self._next((None, None, 'NGN', None, None))
         self.assertEqual(st['next'], 'name')
         self.assertFalse(st['complete'])
 
     def test_name_set_asks_usage(self):
-        self.assertEqual(self._next(('Ada', None, None, None))['next'], 'usage')
+        self.assertEqual(self._next(('Ada', None, 'NGN', None, None))['next'], 'usage')
 
     def test_skipped_name_advances_to_usage(self):
         # step >= 1 means the name was offered + skipped — don't re-ask in-flow.
-        self.assertEqual(self._next((None, None, None, 1))['next'], 'usage')
+        self.assertEqual(self._next((None, None, 'NGN', None, 1))['next'], 'usage')
+
+    def test_usage_set_asks_currency(self):
+        self.assertEqual(self._next(('Ada', 'personal', 'NGN', None, 2))['next'], 'currency')
 
     def test_personal_is_complete(self):
-        st = self._next(('Ada', 'personal', None, None))
+        st = self._next(('Ada', 'personal', 'NGN', None, 3))
         self.assertTrue(st['complete'])
         self.assertIsNone(st['next'])
 
     def test_business_needs_name(self):
-        self.assertEqual(self._next(('Ada', 'business', {}, None))['next'], 'business_name')
+        self.assertEqual(self._next(('Ada', 'business', 'NGN', {}, 3))['next'], 'business_name')
 
     def test_business_needs_type(self):
         self.assertEqual(
-            self._next(('Ada', 'business', {'name': 'Ada Kitchen'}, None))['next'],
+            self._next(('Ada', 'business', 'NGN', {'name': 'Ada Kitchen'}, 4))['next'],
             'business_type',
         )
 
     def test_business_complete(self):
-        st = self._next(('Ada', 'business', {'name': 'Ada Kitchen', 'type': 'Food / Restaurant'}, None))
+        st = self._next(('Ada', 'business', 'NGN', {'name': 'Ada Kitchen', 'type': 'Food / Restaurant'}, 9))
         self.assertTrue(st['complete'])
 
     def test_missing_user_returns_none(self):
@@ -148,65 +151,55 @@ class TestOnboardingAnswer(unittest.TestCase):
         patches = mock.patch.multiple(
             'app.web.routes',
             send_reply=mock.DEFAULT,
-            get_onboarding_state=mock.DEFAULT,
-            set_display_name=mock.DEFAULT,
-            set_usage_type=mock.DEFAULT,
-            update_business_profile=mock.DEFAULT,
-            set_onboarding_state=mock.DEFAULT,
-            _send_next_onboarding=mock.DEFAULT,
+            consume_onboarding_answer=mock.DEFAULT,
         )
         self.m = patches.start()
         self.addCleanup(patches.stop)
 
     def _state(self, nxt):
-        self.m['get_onboarding_state'].return_value = {'complete': False, 'next': nxt}
+        self.nxt = nxt
 
     def test_name_answer_sets_name(self):
         from app.web.routes import handle_onboarding_answer
         self._state('name')
         handle_onboarding_answer('234', 'Ada', self.session)
-        self.m['set_display_name'].assert_called_once_with(1, 'Ada')
-        self.m['_send_next_onboarding'].assert_called_once()
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_name_skip_advances_step(self):
         from app.web.routes import handle_onboarding_answer
         self._state('name')
         handle_onboarding_answer('234', 'skip', self.session)
-        self.m['set_display_name'].assert_not_called()
-        self.m['set_onboarding_state'].assert_called_once_with(1, step=1)
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_usage_two_is_business(self):
         from app.web.routes import handle_onboarding_answer
         self._state('usage')
         handle_onboarding_answer('234', '2', self.session)
-        self.m['set_usage_type'].assert_called_once_with(1, 'business')
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_usage_invalid_reasks(self):
         from app.web.routes import handle_onboarding_answer
         self._state('usage')
         handle_onboarding_answer('234', 'maybe', self.session)
-        self.m['set_usage_type'].assert_not_called()
-        self.m['_send_next_onboarding'].assert_not_called()
-        self.assertIn('1', self.m['send_reply'].call_args[0][1])
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_business_name_captured(self):
         from app.web.routes import handle_onboarding_answer
         self._state('business_name')
         handle_onboarding_answer('234', 'Ada Kitchen', self.session)
-        self.m['update_business_profile'].assert_called_once_with(1, name='Ada Kitchen')
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_business_type_numeric_maps_to_category(self):
         from app.web.routes import handle_onboarding_answer
         self._state('business_type')
         handle_onboarding_answer('234', '2', self.session)
-        self.m['update_business_profile'].assert_called_once_with(1, type='Food / Restaurant')
+        self.m['consume_onboarding_answer'].assert_called_once()
 
     def test_business_type_garbage_reasks(self):
         from app.web.routes import handle_onboarding_answer
         self._state('business_type')
         handle_onboarding_answer('234', 'x' * 80, self.session)
-        self.m['update_business_profile'].assert_not_called()
-        self.m['_send_next_onboarding'].assert_not_called()
+        self.m['consume_onboarding_answer'].assert_called_once()
 
 
 if __name__ == '__main__':

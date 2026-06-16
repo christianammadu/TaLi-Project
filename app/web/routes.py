@@ -12,16 +12,13 @@ from app.auth import (
     validate_access_code,
     end_session,
     create_pending_session,
-    set_display_name,
-    set_usage_type,
-    update_business_profile,
     get_onboarding_state,
-    set_onboarding_state,
-    ONBOARDING_DONE,
 )
 from app.channels import onboarding
 from app.channels.account_settings import render_settings, apply_setting
 from app.channels.base import parse_command, WHATSAPP
+from app.channels.onboarding_flow import handle_onboarding_answer as consume_onboarding_answer
+from app.channels.onboarding_flow import send_next_onboarding as send_onboarding_prompt
 
 webhook_bp = Blueprint('webhook', __name__)
 
@@ -32,11 +29,6 @@ SIX_DIGIT_PATTERN = re.compile(r'^\d{6}$')
 PUBLIC_COMMANDS = {'login', '/login'}
 REGISTRATION_COMMANDS = {'register', '/register', 'signup', '/signup'}
 AUTH_COMMANDS = {'logout', '/logout', 'help', '/help', 'settings', '/settings'}
-
-# Onboarding business-category menu (matches design D-01).
-BUSINESS_TYPES = {'1': 'Retail / Shop', '2': 'Food / Restaurant', '3': 'Services', '4': 'Other'}
-SKIP_WORDS = {'skip', '/skip'}
-
 
 def send_unregistered_welcome(sender):
     """One consistent first-contact message for unregistered numbers."""
@@ -157,75 +149,17 @@ def handle_help(sender):
 def _send_next_onboarding(sender, user_id):
     """Send the next onboarding question, or the completion message if done.
     Returns True when onboarding is complete."""
-    state = get_onboarding_state(user_id)
-    if state is None:
-        send_reply(sender, "❌ Something went wrong. Type *login* to try again.")
-        return False
-
-    nxt = state['next']
-    if nxt == 'name':
-        send_reply(sender, "👋 *Welcome to TaLi!*\n"
-                           "I'll keep your books right here in the chat.\n\n"
-                           "First — what should I call you? _(or reply *skip*)_")
-    elif nxt == 'usage':
-        send_reply(sender, "Are you using TaLi for *personal* or *business*?\n\n"
-                           "Reply *1* for Personal\nReply *2* for Business")
-    elif nxt == 'business_name':
-        send_reply(sender, "Great — let's set up your business. What's the *business name*?")
-    elif nxt == 'business_type':
-        send_reply(sender, "And what kind of business is it?\n\n"
-                           "1️⃣ Retail / Shop\n2️⃣ Food / Restaurant\n3️⃣ Services\n4️⃣ Other")
-    else:
-        # Complete — mark done and send a personalised wrap-up.
-        set_onboarding_state(user_id, step=ONBOARDING_DONE)
-        name = state.get('display_name')
-        greet = f"All set, *{name}*!" if name else "All set!"
-        biz = (state.get('business_profile') or {}).get('name')
-        line2 = f"*{biz}* is ready to go.\n\n" if biz else "\n"
-        send_reply(sender, f"✅ {greet}\n{line2}"
-                           "Just tell me what happened, in your own words:\n"
-                           "• _\"Sold rice 5000\"_\n"
-                           "• _\"Bought fuel 2k\"_\n"
-                           "• _\"What's my balance?\"_\n\n"
-                           "Type *help* for everything I can do, or *settings* to make changes.")
-        return True
-    return False
+    return send_onboarding_prompt(
+        user_id,
+        lambda text: send_reply(sender, text),
+        markdown=True,
+        error_text="❌ Something went wrong. Type *login* to try again.",
+    )
 
 
 def handle_onboarding_answer(sender, text, session):
     """Process one onboarding answer based on the current pending question."""
-    user_id = session['user_id']
-    state = get_onboarding_state(user_id)
-    if state is None or state['complete']:
-        return  # nothing to do; caller will fall through
-    nxt = state['next']
-    answer = text.strip()
-    low = answer.lower()
-
-    if nxt == 'name':
-        if low in SKIP_WORDS:
-            # Skip the name — advance past it so we don't re-ask in-flow (re-asked later).
-            set_onboarding_state(user_id, step=1)
-        else:
-            set_display_name(user_id, answer)
-    elif nxt == 'usage':
-        if low in ('1', 'personal', 'p'):
-            set_usage_type(user_id, 'personal')
-        elif low in ('2', 'business', 'b'):
-            set_usage_type(user_id, 'business')
-        else:
-            send_reply(sender, "Please reply *1* for Personal or *2* for Business.")
-            return
-    elif nxt == 'business_name':
-        update_business_profile(user_id, name=answer)
-    elif nxt == 'business_type':
-        biz_type = BUSINESS_TYPES.get(low) or (answer if len(answer) <= 50 else None)
-        if not biz_type:
-            send_reply(sender, "Please reply *1*–*4* to pick a category.")
-            return
-        update_business_profile(user_id, type=biz_type)
-
-    _send_next_onboarding(sender, user_id)
+    consume_onboarding_answer(session['user_id'], text, lambda reply: send_reply(sender, reply), markdown=True)
 
 
 # --- Settings (WP-04) ---
@@ -348,6 +282,17 @@ def webhook():
                     handle_access_code(sender, text)
                     return jsonify({"status": "ok"}), 200
 
+                # 2b. First-time channel binding from the web registration/link flow.
+                cmd, cmd_arg = parse_command(text)
+                if cmd == "redeem":
+                    reply = onboarding.handle_command(WHATSAPP, sender, cmd, cmd_arg)
+                    if reply:
+                        send_reply(sender, reply)
+                    user = onboarding.resolve(WHATSAPP, sender)
+                    if user and reply and reply.startswith("✅ Linked"):
+                        _send_next_onboarding(sender, user["id"])
+                    return jsonify({"status": "ok"}), 200
+
                 if not session:
                     # Not authenticated. Check if user is registered.
                     user = get_user_by_sender(sender) or get_user_by_phone(sender)
@@ -380,7 +325,6 @@ def webhook():
                 # 4b. Cross-channel linking (Path B): /link <channel>, /unlink.
                 # The channel you're already on is the auth anchor — resolve the user,
                 # mint a one-time token, and hand back the other channel's deep-link.
-                cmd, cmd_arg = parse_command(text)
                 if cmd in ("link", "unlink"):
                     reply = onboarding.handle_command(WHATSAPP, sender, cmd, cmd_arg)
                     if reply:

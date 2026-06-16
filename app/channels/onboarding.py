@@ -29,6 +29,12 @@ def whatsapp_deeplink(token):
     return f"https://wa.me/{number}?text=LINK-{token}"
 
 
+def whatsapp_prefill(text):
+    from urllib.parse import quote
+    number = current_app.config.get("WHATSAPP_PUBLIC_NUMBER", "")
+    return f"https://wa.me/{number}?text={quote(text)}"
+
+
 def _deeplink_for(channel, token):
     return telegram_deeplink(token) if channel == TELEGRAM else whatsapp_deeplink(token)
 
@@ -48,6 +54,15 @@ def help_text(channel):
     the bot's voice.
     """
     other = WHATSAPP if channel == TELEGRAM else TELEGRAM
+    session_lines = (
+        "  /login — renew this linked Telegram session\n"
+        "  /logout — close this session; the chat stays linked\n"
+        "  /unlink — disconnect this chat\n"
+        if channel == TELEGRAM else
+        "  login — sign in again\n"
+        "  logout — close this session\n"
+        "  /unlink — disconnect this chat\n"
+    )
     return (
         "📖 TaLi — your pocket bookkeeper\n"
         "Just tell me what happened, in your own words:\n\n"
@@ -70,10 +85,9 @@ def help_text(channel):
         "  settings — view or change your name, currency or business\n"
         "  set <field> <value> — e.g. “set currency USD”, “set name Ada”\n"
         f"  /link {other} — use TaLi on {other.title()} too (one shared ledger)\n"
-        "  /unlink — disconnect this chat\n"
+        f"{session_lines}"
         "  /help — show this message\n\n"
-        "✨ You're signed in automatically once this chat is linked — no login or "
-        "logout needed. Use /unlink to disconnect."
+        "✨ One linked chat can add the other with /link."
     )
 
 
@@ -102,13 +116,28 @@ def handle_command(channel, native_id, command, arg):
         phone = re.sub(r'\D', '', str(arg))
         if not phone:
             return "Failed to parse phone number."
-        
+
         from app.auth import get_user_by_phone, register_user, link_channel, open_session
         existing_user = get_user_by_phone(phone)
         if existing_user:
-            link_channel(existing_user["id"], channel, native_id)
-            open_session(make_address(channel, native_id), existing_user["id"])
-            return "✅ Successfully linked your Telegram account to your existing TaLi account! You can now start bookkeeping."
+            linked = auth.resolve_channel_user(channel, native_id)
+            if linked and linked["id"] == existing_user["id"]:
+                open_session(make_address(channel, native_id), existing_user["id"])
+                return "✅ This Telegram chat is already linked. You can keep bookkeeping here."
+
+            links = auth.get_user_channel_links(existing_user["id"])
+            whatsapp_anchor = WHATSAPP in links or TELEGRAM not in links
+            if channel == TELEGRAM and whatsapp_anchor:
+                return (
+                    "This phone number already has a TaLi account. To protect your books, "
+                    "open WhatsApp from the account you already use and send /link telegram:\n"
+                    f"{whatsapp_prefill('/link telegram')}"
+                )
+
+            return (
+                "This phone number already has a TaLi account. Open the chat app you already "
+                "use with TaLi and send the link command for this channel."
+            )
         else:
             user_id = register_user(phone)
             if user_id:

@@ -6,11 +6,9 @@ transport (WhatsApp ``send_reply`` / Telegram ``send_text``). Lifted out of
 ``web/routes.py`` so Telegram gets settings too (matches design D-01).
 """
 
-import re
+from sqlalchemy import select
 
-from sqlalchemy import select, update
-
-from app.auth import set_display_name, set_usage_type, update_business_profile
+from app.auth import set_base_currency, set_display_name, set_usage_type, update_business_profile
 from app.data.db import session_scope
 from app.data.models import User
 
@@ -39,20 +37,16 @@ def _read_settings(user_id):
 
 
 def _set_base_currency(user_id, code):
-    try:
-        with session_scope() as s:
-            res = s.execute(update(User).where(User.id == user_id).values(base_currency=code))
-            return res.rowcount > 0
-    except Exception as e:
-        print(f"Failed to set currency: {e}")
-        return False
+    return set_base_currency(user_id, code)
 
 
-def render_settings(user_id):
+def render_settings(user_id, channel=None):
     """The settings menu text (matches design D-01), or an error line."""
     cfg = _read_settings(user_id)
     if cfg is None:
         return "❌ Couldn't load your settings. Please try again."
+    markdown = channel != "telegram"
+    b = lambda value: f"*{value}*" if markdown else value
     name = cfg['display_name'] or 'Not set'
     usage = (cfg['usage_type'] or 'Not set').capitalize()
     biz = cfg['business_profile']
@@ -61,18 +55,36 @@ def render_settings(user_id):
     else:
         biz_line = 'n/a (personal)'
     low_stock = cfg['alert_thresholds'].get('low_stock_limit', 5)
+    business_example = "set business Ada's Kitchen"
+    if channel == "telegram":
+        commands = (
+            "Commands:\n"
+            "• /login - renew this linked Telegram session\n"
+            "• /logout - close the current session only\n"
+            "• /unlink - disconnect this Telegram chat\n"
+            "• /help - show what TaLi can do"
+        )
+    else:
+        commands = (
+            "Commands:\n"
+            "• *login* - sign in again\n"
+            "• *logout* - close this session\n"
+            "• */unlink* - disconnect this chat\n"
+            "• *help* - show what TaLi can do"
+        )
     return (
-        "⚙️ *Your settings*\n\n"
+        f"⚙️ {b('Your settings')}\n\n"
         f"1. Name — {name}\n"
         f"2. Usage — {usage}\n"
         f"3. Business — {biz_line}\n"
         f"4. Currency — {cfg['base_currency']}\n"
         f"5. Alerts — Low stock < {low_stock}\n\n"
         "To change one, type e.g.:\n"
-        "• *set name Ada*\n"
-        "• *set currency USD*\n"
-        "• *set type business*\n"
-        "• *set business Ada's Kitchen*"
+        f"• {b('set name Ada')}\n"
+        f"• {b('set currency USD')}\n"
+        f"• {b('set type business')}\n"
+        f"• {b(business_example)}\n\n"
+        f"{commands}"
     )
 
 
@@ -89,7 +101,7 @@ def apply_setting(user_id, text):
         return f"✅ Name updated to *{value}*." if ok else "❌ Couldn't update your name."
     elif field == 'currency':
         code = value.upper().strip()
-        if not re.fullmatch(r'[A-Z]{3}', code):
+        if len(code) != 3 or not code.isalpha():
             return "Please give a 3-letter currency code, e.g. *set currency USD*."
         ok = _set_base_currency(user_id, code)
         return (f"✅ Currency updated to *{code}*.\nNew transactions will use {code}."

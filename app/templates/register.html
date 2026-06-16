@@ -38,7 +38,26 @@
     {% endif %}
 
     {% if step == 'phone' %}
-    <!-- STEP 1 · phone -->
+    <!-- STEP 1 · channel choice -->
+    <div class="channel-choice" aria-label="Choose where to continue">
+      <a href="{{ telegram_url }}" class="channel-option channel-tg">
+        <span class="channel-icon"><svg class="ic"><use href="#i-telegram"/></svg></span>
+        <span class="channel-copy">
+          <strong>Continue with Telegram</strong>
+          <span>No web form. Telegram will ask you to share your phone number.</span>
+        </span>
+        <svg class="ic channel-arrow"><use href="#i-arrow-right"/></svg>
+      </a>
+
+      <div class="channel-option channel-wa" role="group" aria-labelledby="whatsapp-register-label">
+        <span class="channel-icon"><svg class="ic"><use href="#i-whatsapp"/></svg></span>
+        <span class="channel-copy">
+          <strong id="whatsapp-register-label">Continue with WhatsApp</strong>
+          <span>Enter your WhatsApp number and verify it with a code.</span>
+        </span>
+      </div>
+    </div>
+
     <form method="POST" action="{{ url_for('web.register') }}" id="phoneForm">
       <div class="field">
         <label class="field-label">Phone number</label>
@@ -75,12 +94,6 @@
         <div class="spinner"></div>
       </button>
     </form>
-
-    <div style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--bord); display: flex; flex-direction: column; gap: 12px; text-align: center;">
-      <p style="font-size: 0.88rem; color: var(--ts); line-height: 1.5;">Don't have WhatsApp? Register instantly using our Telegram Bot</p>
-      <a href="{{ telegram_url }}" class="btn btn-tg"><svg class="ic"><use href="#i-telegram"/></svg> Register via Telegram</a>
-    </div>
-
 
     {% elif step == 'otp' %}
     <!-- STEP 2 · OTP -->

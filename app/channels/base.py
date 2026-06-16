@@ -45,9 +45,11 @@ def parse_command(text):
 
     Normalizes both channels' conventions:
       ``/start <token>`` (Telegram) and ``LINK-<token>`` (WhatsApp prefill) → ``("redeem", token)``
+      ``/start register``          → ``("start", None)``  — native Telegram registration
       ``/start`` (bare)            → ``("start", None)``  — onboarding prompt
       ``/link <channel>``          → ``("link", "<channel>")``  — Path B cross-channel link
       ``/unlink``                  → ``("unlink", None)``
+      ``/login`` / ``/logout``     → session helpers where a channel supports them
     Anything else → ``(None, None)`` (a normal bookkeeping message).
     """
     t = (text or "").strip()
@@ -58,8 +60,10 @@ def parse_command(text):
         cmd = parts[0].split("@")[0].lower()        # strip @botname suffix Telegram adds in groups
         arg = parts[1].strip() if len(parts) > 1 else None
         if cmd == "start":
+            if arg and arg.lower() in ("register", "signup"):
+                return "start", None
             return ("redeem", arg) if arg else ("start", None)
-        if cmd in ("link", "unlink", "help"):
+        if cmd in ("link", "unlink", "help", "login", "logout", "settings"):
             return cmd, (arg.lower() if arg else None)
     return None, None
 

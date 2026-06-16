@@ -348,7 +348,9 @@ VALID_USAGE_TYPES = ('personal', 'business')
 # Onboarding step constants — the resumable position marker. NULL/None = not started.
 ONBOARDING_NAME = 0        # name offered (may have been skipped)
 ONBOARDING_USAGE = 1       # usage type chosen
-ONBOARDING_BIZ_NAME = 2    # business name captured
+ONBOARDING_CURRENCY = 2    # base currency chosen
+ONBOARDING_BIZ_NAME = 3    # business name captured
+ONBOARDING_BIZ_TYPE = 4    # business category captured
 ONBOARDING_DONE = 9        # onboarding complete
 
 
@@ -381,6 +383,22 @@ def set_usage_type(user_id, usage):
             return res.rowcount > 0
     except Exception as e:
         print(f"Failed to set usage type: {e}")
+        return False
+
+
+def set_base_currency(user_id, code):
+    """Set a user's base currency. Returns True on success."""
+    code = (code or '').strip().upper()
+    if len(code) != 3 or not code.isalpha():
+        return False
+    try:
+        with session_scope() as s:
+            res = s.execute(
+                update(User).where(User.id == user_id).values(base_currency=code)
+            )
+            return res.rowcount > 0
+    except Exception as e:
+        print(f"Failed to set currency: {e}")
         return False
 
 
@@ -432,9 +450,9 @@ def get_onboarding_state(user_id):
     """Return the user's onboarding progress and the next field to ask for, or None
     on lookup failure. Shape:
 
-        {'complete': bool, 'next': 'name'|'usage'|'business_name'|'business_type'|None,
+        {'complete': bool, 'next': 'name'|'usage'|'currency'|'business_name'|'business_type'|None,
          'step': int|None, 'display_name': str|None, 'usage_type': str|None,
-         'business_profile': dict}
+         'base_currency': str, 'business_profile': dict}
 
     `next` is computed from what's already on the record (the record IS the state),
     so the flow resumes at the first unanswered question. Name is skippable: once
@@ -443,12 +461,13 @@ def get_onboarding_state(user_id):
     try:
         with session_scope() as s:
             row = s.execute(
-                select(User.display_name, User.usage_type, User.business_profile, User.onboarding_step)
+                select(User.display_name, User.usage_type, User.base_currency,
+                       User.business_profile, User.onboarding_step)
                 .where(User.id == user_id)
             ).first()
             if not row:
                 return None
-            display_name, usage_type, profile, step = row
+            display_name, usage_type, base_currency, profile, step = row
             profile = profile or {}
 
             # Name first — unless it was already offered (step advanced) and skipped.
@@ -456,6 +475,8 @@ def get_onboarding_state(user_id):
                 nxt = 'name'
             elif not usage_type:
                 nxt = 'usage'
+            elif step is None or step < ONBOARDING_CURRENCY + 1:
+                nxt = 'currency'
             elif usage_type == 'business' and not profile.get('name'):
                 nxt = 'business_name'
             elif usage_type == 'business' and not profile.get('type'):
@@ -469,6 +490,7 @@ def get_onboarding_state(user_id):
                 'step': step,
                 'display_name': display_name,
                 'usage_type': usage_type,
+                'base_currency': base_currency or 'NGN',
                 'business_profile': profile,
             }
     except Exception as e:
@@ -519,6 +541,30 @@ def link_channel(user_id, channel, channel_user_id):
     except Exception as e:
         print(f"Failed to link channel: {e}")
         return False
+
+
+def get_user_channel_links(user_id):
+    """Return the channels already linked to a user.
+
+    Includes the legacy WhatsApp link table so older WhatsApp-first users still count
+    as WhatsApp-anchored for cross-channel linking decisions.
+    """
+    try:
+        channels = set()
+        with session_scope() as s:
+            rows = s.execute(
+                select(ChannelAccount.channel).where(ChannelAccount.user_id == user_id)
+            ).all()
+            channels.update(row[0] for row in rows if row[0])
+            legacy = s.execute(
+                select(WhatsappAccount.sender_id).where(WhatsappAccount.user_id == user_id).limit(1)
+            ).first()
+            if legacy:
+                channels.add("whatsapp")
+        return channels
+    except Exception as e:
+        print(f"Failed to get user channel links: {e}")
+        return set()
 
 
 def unlink_channel(channel, channel_user_id):

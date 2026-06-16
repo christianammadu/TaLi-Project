@@ -33,7 +33,7 @@ def inject_channel_links():
     register = url_for('web.register')
     return {
         'whatsapp_url': f'https://wa.me/{number}' if number else register,
-        'telegram_url': f'https://t.me/{username}' if username else register,
+        'telegram_url': f'https://t.me/{username}?start=register' if username else register,
     }
 
 
