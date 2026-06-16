@@ -55,10 +55,15 @@ def init_engine(app):
     ``wait_timeout``.
     """
     global _engine
+    # Pool sizing is bounded by the host's max_user_connections (PythonAnywhere caps
+    # this user at 9). These conservative defaults hold at most pool_size idle
+    # connections and burst to pool_size + max_overflow, leaving headroom for the raw
+    # short-lived path (app/data/database.py), the MySQL console, and scheduled tasks.
+    # Raise via DB_POOL_SIZE / DB_MAX_OVERFLOW only if the account's limit is increased.
     _engine = create_engine(
         build_database_url(app.config),
-        pool_size=int(app.config.get("DB_POOL_SIZE", 10)),
-        max_overflow=int(app.config.get("DB_MAX_OVERFLOW", 5)),
+        pool_size=int(app.config.get("DB_POOL_SIZE", 2)),
+        max_overflow=int(app.config.get("DB_MAX_OVERFLOW", 2)),
         pool_pre_ping=True,
         pool_recycle=int(app.config.get("DB_POOL_RECYCLE", 1800)),
         future=True,

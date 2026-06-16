@@ -1,44 +1,28 @@
 from contextlib import contextmanager
 
 import mysql.connector
-from mysql.connector import Error, pooling
+from mysql.connector import Error
 from flask import current_app
 
-_pool = None
 
 def get_db_connection():
-    """Returns an active secure pooled connection to your MySQL Server."""
-    global _pool
-    if _pool is None:
-        try:
-            _pool = mysql.connector.pooling.MySQLConnectionPool(
-                pool_name="tali_pool",
-                pool_size=10,
-                host=current_app.config['DB_HOST'],
-                user=current_app.config['DB_USER'],
-                password=current_app.config['DB_PASSWORD'],
-                database=current_app.config['DB_NAME']
-            )
-        except Exception as e:
-            print(f"Error creating connection pool: {e}")
-            return mysql.connector.connect(
-                host=current_app.config['DB_HOST'],
-                user=current_app.config['DB_USER'],
-                password=current_app.config['DB_PASSWORD'],
-                database=current_app.config['DB_NAME']
-            )
-    try:
-        return _pool.get_connection()
-    except Exception as e:
-        from app.services.alerts import alert_db_pool_saturation
-        alert_db_pool_saturation()
-        print(f"Pool connection failed: {e}. Falling back to direct connection.")
-        return mysql.connector.connect(
-            host=current_app.config['DB_HOST'],
-            user=current_app.config['DB_USER'],
-            password=current_app.config['DB_PASSWORD'],
-            database=current_app.config['DB_NAME']
-        )
+    """Return a short-lived MySQL connection (deliberately NOT pooled).
+
+    The host (PythonAnywhere) caps this MySQL user at 9 concurrent connections — a
+    budget the SQLAlchemy engine pool (``app/data/db.py``) already draws from. An
+    earlier ``mysql.connector`` pool here (``pool_size=10``) opened all 10 connections
+    eagerly at construction and blew straight past that cap (MySQL error 1226), which
+    then failed on every request and re-tried the build each call because the global
+    stayed unset (incident 2026-06-16). A fresh connection per call keeps the raw
+    path's footprint to ~1 at a time; callers (and ``db_cursor``) close it, freeing
+    the slot. Keep the two pools' combined ceiling under 9.
+    """
+    return mysql.connector.connect(
+        host=current_app.config['DB_HOST'],
+        user=current_app.config['DB_USER'],
+        password=current_app.config['DB_PASSWORD'],
+        database=current_app.config['DB_NAME'],
+    )
 
 
 @contextmanager
