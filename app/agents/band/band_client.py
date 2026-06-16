@@ -213,13 +213,25 @@ class _LiveBackend(_StubBackend):
         # 1) Authoritative: synchronous in-process dispatch + reply capture (inherited).
         mid = super().send(room_id, mentions, body, correlation_id=correlation_id,
                            sender=sender, terminal=terminal)
-        # 2) Best-effort: mirror the handoff into the real Band room.
+        # 2) Best-effort: mirror the handoff into the real Band room asynchronously.
         if self._mirror_on:
             try:
-                self._mirror(mentions, body, sender)
+                t = threading.Thread(
+                    target=self._mirror_safe,
+                    args=(mentions, body, sender),
+                    name=f"band-mirror-{mid[:8]}"
+                )
+                t.daemon = True
+                t.start()
             except Exception as e:
-                print(f"[Band live] room mirror error (continuing in-process): {e}")
+                print(f"[Band live] failed to start mirror thread: {e}")
         return mid
+
+    def _mirror_safe(self, mentions, body, sender):
+        try:
+            self._mirror(mentions, body, sender)
+        except Exception as e:
+            print(f"[Band live] room mirror error (continuing in-process): {e}")
 
     def _mirror(self, mentions, body, sender):
         room = self._resolve_room()
@@ -231,19 +243,24 @@ class _LiveBackend(_StubBackend):
         text = body if isinstance(body, str) else json.dumps(body, default=str, ensure_ascii=False)
         # only @mention targets that are participant agents (you can't mention non-members)
         targets = [(self._agent_id(m), self._handle(m)) for m in (mentions or []) if self._agent_id(m)]
+        
+        path = self.messages_path.format(chat_id=room)
         if targets:
             content = " ".join(f"@{h}" for _, h in targets) + "\n" + text
-            path = self.messages_path.format(chat_id=room)
             payload = {"message": {"content": content,
                                    "mentions": [{"id": aid, "handle": h} for aid, h in targets]}}
         else:
-            # no participant target (e.g. -> gateway/human terminal reply): record as an event
-            path = f"/api/v1/agent/chats/{room}/events"
-            payload = {"event": {"content": text[:6000], "message_type": "task"}}
+            # no participant target (e.g. -> gateway/human terminal reply): send as a regular chat message so it reflects in the UI
+            content = ""
+            if mentions:
+                content += " ".join(f"@{m.lstrip('@')}" for m in mentions) + "\n"
+            content += text
+            payload = {"message": {"content": content, "mentions": []}}
+            
         r = self._post(path, api_key, payload)
         if r.status_code >= 400:
-            print(f"[Band live] mirror {r.status_code} ({'msg' if targets else 'event'}) "
-                  f"from {sender}: {r.text[:140]}")
+            print(f"[Band live] mirror {r.status_code} (msg) from {sender}: {r.text[:140]}")
+
 
 
 # --- Facade + factory ------------------------------------------------------
