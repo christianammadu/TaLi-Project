@@ -68,6 +68,9 @@ class Config:
     BAND_REST_URL = os.getenv("THENVOI_REST_URL", "https://app.band.ai/")
     BAND_WS_URL = os.getenv("THENVOI_WS_URL", "wss://app.band.ai/api/v1/socket/websocket")
     BAND_ROOM_ID = os.getenv("BAND_ROOM_ID", "")
+    # Optional tenant REST key from Settings → REST API Keys. If present, the live
+    # backend uses it for Band REST calls and keeps per-agent keys as fallback.
+    BAND_API_KEY = os.getenv("BAND_API_KEY", "")
     # Per-agent credentials (agent_id + X-API-Key), registered on app.band.ai (Pro).
     BAND_INTAKE_AGENT_ID = os.getenv("BAND_INTAKE_AGENT_ID", "")
     BAND_INTAKE_API_KEY = os.getenv("BAND_INTAKE_API_KEY", "")

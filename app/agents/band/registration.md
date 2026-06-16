@@ -98,6 +98,7 @@ The mirror is best-effort: any room failure only logs — bookkeeping always pro
 **To switch on:**
 ```
 BAND_BACKEND=live
+BAND_API_KEY=<tenant REST key>        # optional but recommended if per-agent keys 403
 BAND_INTAKE_AGENT_ID / BAND_INTAKE_API_KEY
 BAND_LEDGER_AGENT_ID / BAND_LEDGER_API_KEY
 BAND_CFO_AGENT_ID / BAND_CFO_API_KEY

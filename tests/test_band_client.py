@@ -127,6 +127,7 @@ class TestBandLiveBackend(unittest.TestCase):
         config = {
             "rest_url": "https://fake.band.ai",
             "room_id": "room-123",
+            "api_key": "tenant-rest-key",
             "sdk": fake_sdk,
             "agents": {
                 "@tali-intake": {"agent_id": "intake-id", "api_key": "intake-key", "remote_handle": "tali/tali-intake"},
@@ -140,7 +141,7 @@ class TestBandLiveBackend(unittest.TestCase):
 
         # Case 1: Send with targets (Intake mentions CFO)
         backend._mirror(["@tali-cfo"], "Hello CFO", sender="@tali-intake")
-        intake_client = created_clients["intake-key"]
+        intake_client = created_clients["tenant-rest-key"]
         self.assertEqual(intake_client.base_url, "https://fake.band.ai")
         self.assertEqual(len(intake_client.agent_api_messages.calls), 1)
         chat_id, message, options = intake_client.agent_api_messages.calls[0]
@@ -151,7 +152,7 @@ class TestBandLiveBackend(unittest.TestCase):
 
         # Case 2: Send with no registered targets (CFO replies to gateway)
         backend._mirror(["@tali-gateway"], "Terminal reply", sender="@tali-cfo")
-        cfo_client = created_clients["cfo-key"]
+        cfo_client = created_clients["tenant-rest-key"]
         self.assertEqual(len(cfo_client.agent_api_events.calls), 1)
         chat_id, event, options = cfo_client.agent_api_events.calls[0]
         self.assertEqual(chat_id, "room-123")

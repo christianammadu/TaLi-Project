@@ -119,6 +119,7 @@ class _LiveBackend(_StubBackend):
         self.rest_url = (cfg.get("rest_url") or self.REST_DEFAULT).rstrip("/")
         self.configured_room = cfg.get("room_id") or ""
         self.messages_path = cfg.get("message_path") or self.MESSAGES_DEFAULT
+        self.shared_api_key = cfg.get("api_key") or ""
         # internal handle -> {"agent_id", "api_key", "remote_handle"}
         self.agents = cfg.get("agents", {})
         if not self.agents:
@@ -174,6 +175,16 @@ class _LiveBackend(_StubBackend):
         """The provisioning/owner agent — prefer Intake, else any configured agent."""
         return self.agents.get("@tali-intake") or next(iter(self.agents.values()))
 
+    def _api_key_for(self, internal=None):
+        """Prefer a tenant REST key when configured; fall back to per-agent keys."""
+        if self.shared_api_key:
+            return self.shared_api_key
+        if internal:
+            key = (self.agents.get(internal) or {}).get("api_key")
+            if key:
+                return key
+        return self._owner().get("api_key")
+
     def _agent_id(self, internal):
         return (self.agents.get(internal) or {}).get("agent_id")
 
@@ -183,7 +194,8 @@ class _LiveBackend(_StubBackend):
 
     def _cache_key(self):
         ids = tuple(sorted((c.get("agent_id") or "") for c in self.agents.values()))
-        return (self.rest_url, self.configured_room, ids)
+        auth = "shared" if self.shared_api_key else "per-agent"
+        return (self.rest_url, self.configured_room, ids, auth)
 
     def _resolve_room(self):
         """Return a real room the agents can post to (cached per process). Prefer the
@@ -198,7 +210,7 @@ class _LiveBackend(_StubBackend):
 
     def _provision_locked(self):
         owner = self._owner()
-        okey = owner.get("api_key")
+        okey = self._api_key_for()
         if not okey:
             return None
         # 1) Use the configured room if the owner agent is already a participant of it.
@@ -270,7 +282,7 @@ class _LiveBackend(_StubBackend):
         room = self._resolve_room()
         if not room:
             return
-        api_key = (self.agents.get(sender) or self._owner()).get("api_key")
+        api_key = self._api_key_for(sender)
         if not api_key:
             return
         text = body if isinstance(body, str) else json.dumps(body, default=str, ensure_ascii=False)
@@ -363,6 +375,7 @@ def _live_config_from_app():
         "rest_url": get("BAND_REST_URL", None) or get("THENVOI_REST_URL", None),
         "room_id": get("BAND_ROOM_ID", "") or "",
         "message_path": get("BAND_MESSAGE_PATH", None),
+        "api_key": get("BAND_API_KEY", "") or "",
         "agents": agents,
     }
 
