@@ -435,6 +435,8 @@ class IntakeAgent:
         for attempt in range(retry_count):
             try:
                 parsed = parse_message(text, self.user_id)
+                if parsed.get("status") == "error":
+                    break
                 from app.services.validators import UnifiedResponseModel, dump_model
                 validated = UnifiedResponseModel(**parsed)
                 parsed = dump_model(validated)

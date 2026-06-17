@@ -208,6 +208,11 @@ def _ceiling():
         return 0.0
 
 
+def _disabled_providers():
+    raw = _cfg("MODEL_ROUTER_DISABLED_PROVIDERS", "") or ""
+    return {name.strip().lower() for name in raw.split(",") if name.strip()}
+
+
 def _estimate_cost(provider_name, prompt_tokens, completion_tokens):
     prov = PROVIDERS[provider_name]
     i = float(os.getenv(f"{provider_name.upper()}_INPUT_COST_PER_MILLION", prov.input_cost) or prov.input_cost)
@@ -225,8 +230,12 @@ def chat_completion(role, messages, **params):
     ceiling = _ceiling()
     errors = []
     chain = ROLE_ROUTES.get(role, ROLE_ROUTES[DEFAULT_ROLE])
+    disabled = _disabled_providers()
 
     for provider_name, model_env, default_model in chain:
+        if provider_name in disabled:
+            errors.append((provider_name, "skipped: disabled by MODEL_ROUTER_DISABLED_PROVIDERS"))
+            continue
         # Spend guard: once over the ceiling, skip paid partner providers and let the
         # chain drop to OpenAI (the last entry), which we still attempt.
         if ceiling and _spent_usd >= ceiling and provider_name != "openai":

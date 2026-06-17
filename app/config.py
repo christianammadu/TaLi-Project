@@ -60,6 +60,7 @@ class Config:
     # Optional per-process spend ceiling (USD); 0 = unlimited. Enforced by the router so a
     # demo run can't blow the small AI/ML credit (Round 2 risk).
     MODEL_ROUTER_SPEND_CEILING_USD = float(os.getenv("MODEL_ROUTER_SPEND_CEILING_USD", "0"))
+    MODEL_ROUTER_DISABLED_PROVIDERS = os.getenv("MODEL_ROUTER_DISABLED_PROVIDERS", "")
     AGENT_PIPELINE_TIMEOUT_SECONDS = float(os.getenv("AGENT_PIPELINE_TIMEOUT_SECONDS", "20"))
 
     # --- Band platform (WP-02 / G-BAND-CONTRACT) ---

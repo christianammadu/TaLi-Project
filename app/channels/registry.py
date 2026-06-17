@@ -39,8 +39,9 @@ def _log_outgoing(sender, text):
     try:
         from app.data.database import get_db_connection
         from app.auth import get_active_session
+        from app.services.uuid_utils import uuid_to_bin
         session = get_active_session(sender)
-        user_id = session['user_id'] if session else None
+        user_id = uuid_to_bin(session['user_id']) if session else None
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(

@@ -28,11 +28,10 @@ def inject_channel_links():
     buttons never render as dead links in dev.
     """
     from flask import url_for
-    number = (current_app.config.get('WHATSAPP_PUBLIC_NUMBER') or '').strip().lstrip('+')
     username = (current_app.config.get('TELEGRAM_BOT_USERNAME') or '').strip().lstrip('@')
     register = url_for('web.register')
     return {
-        'whatsapp_url': f'https://wa.me/{number}' if number else register,
+        'whatsapp_url': register,
         'telegram_url': f'https://t.me/{username}?start=register' if username else register,
     }
 

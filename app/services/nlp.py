@@ -247,12 +247,18 @@ def parse_message(text, user_id):
     except json.JSONDecodeError as e:
         print(f"NLP JSON parse error: {e}")
         return {
-            "intent": "error",
+            "intents": ["unknown"],
+            "confidence": 0.0,
+            "needs_review": True,
+            "status": "error",
             "reply": "I had trouble understanding that. Could you rephrase it?"
         }
     except Exception as e:
         print(f"NLP API error: {e}")
         return {
-            "intent": "error",
+            "intents": ["unknown"],
+            "confidence": 0.0,
+            "needs_review": True,
+            "status": "error",
             "reply": "⚠️ The intelligence service is temporarily unavailable. Please try again shortly."
         }

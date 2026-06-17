@@ -176,14 +176,17 @@ class _LiveBackend(_StubBackend):
         return self.agents.get("@tali-intake") or next(iter(self.agents.values()))
 
     def _api_key_for(self, internal=None):
-        """Prefer a tenant REST key when configured; fall back to per-agent keys."""
-        if self.shared_api_key:
-            return self.shared_api_key
+        """Return an agent-auth key for Band's ``agent_api_*`` endpoints.
+
+        Tenant REST keys can exist in the Band UI, but these generated SDK calls reject
+        them with "This endpoint requires agent authentication". Prefer the sender or
+        owner agent key; keep the shared key only as a last-resort fallback.
+        """
         if internal:
             key = (self.agents.get(internal) or {}).get("api_key")
             if key:
                 return key
-        return self._owner().get("api_key")
+        return self._owner().get("api_key") or self.shared_api_key
 
     def _agent_id(self, internal):
         return (self.agents.get(internal) or {}).get("agent_id")
