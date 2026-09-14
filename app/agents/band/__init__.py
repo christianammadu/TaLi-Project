@@ -1,10 +1,9 @@
-"""Band coordination layer (WP-02 / freeze gate G-BAND-CONTRACT).
+"""Multi-Agent Orchestration layer.
 
-Exposes the connector seam the agent ports (WP-03/04/05) build against, plus the
-backend factory. See `band_client.py` for the contract and `registration.md` for
-agent handles + the WS-vs-REST decision.
+Exposes the connector seam the agent ports build against, plus the factory.
 """
 
 from app.agents.band.band_client import BandClient, get_band_client
+from app.agents.orchestrator import OrchestratorClient, get_orchestrator
 
-__all__ = ["BandClient", "get_band_client"]
+__all__ = ["BandClient", "get_band_client", "OrchestratorClient", "get_orchestrator"]

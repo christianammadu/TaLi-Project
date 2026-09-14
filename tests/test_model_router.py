@@ -47,13 +47,12 @@ class TestModelRouter(unittest.TestCase):
 
     # --- route() ordering ---
 
+    # --- route() ordering ---
+
     def test_role_chains_primary_and_fallback(self):
-        self.assertEqual(model_router.route("intake")[0][0], "featherless")
-        self.assertEqual(model_router.route("cfo")[0][0], "aiml")
-        self.assertEqual(model_router.route("escalation")[0][0], "aiml")
-        # Every chain terminates in OpenAI as the fallback.
         for role in ("intake", "cfo", "escalation", "compliance", "format"):
-            self.assertEqual(model_router.route(role)[-1][0], "openai")
+            self.assertEqual(model_router.route(role)[0][0], "openai")
+            self.assertEqual(model_router.route(role)[1][0], "aiml")
 
     def test_unknown_role_defaults_to_intake_chain(self):
         self.assertEqual(model_router.route("nonsense"), model_router.route(model_router.DEFAULT_ROLE))
@@ -61,8 +60,9 @@ class TestModelRouter(unittest.TestCase):
     # --- get_client() binding ---
 
     def test_get_client_binds_role_primary_provider(self):
-        self.assertIn("featherless", str(model_router.get_client("intake").base_url))
-        self.assertIn("aimlapi", str(model_router.get_client("cfo").base_url))
+        self.assertIn("openai", str(model_router.get_client("intake").base_url))
+        self.assertIn("aimlapi", str(model_router.get_client("aiml").base_url))
+        self.assertIn("featherless", str(model_router.get_client("featherless").base_url))
         self.assertIn("openai", str(model_router.get_client("openai").base_url))
 
     def test_get_client_rejects_unknown(self):
@@ -74,21 +74,21 @@ class TestModelRouter(unittest.TestCase):
     def test_primary_provider_used_on_success(self):
         model_router.get_client = lambda name: _FakeClient(lambda **kw: _FakeResp('{"p":"%s"}' % name))
         res = model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
-        self.assertEqual(res["provider"], "featherless")
+        self.assertEqual(res["provider"], "openai")
         self.assertEqual(res["attempts"], 1)
-        self.assertEqual(res["content"], '{"p":"featherless"}')
+        self.assertEqual(res["content"], '{"p":"openai"}')
 
-    def test_falls_back_to_openai_when_primary_errors(self):
+    def test_falls_back_to_aiml_when_primary_errors(self):
         def factory(name):
             def fn(**kw):
-                if name == "openai":
+                if name == "aiml":
                     return _FakeResp('{"ok": true}')
                 raise TimeoutError(f"{name} unavailable")
             return _FakeClient(fn)
         model_router.get_client = factory
 
         res = model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
-        self.assertEqual(res["provider"], "openai")   # Featherless failed -> OpenAI fallback
+        self.assertEqual(res["provider"], "aiml")   # OpenAI failed -> AI/ML backup
         self.assertEqual(res["attempts"], 2)
         self.assertEqual(res["content"], '{"ok": true}')
 
@@ -103,15 +103,8 @@ class TestModelRouter(unittest.TestCase):
 
     def test_openai_cost_is_estimated_from_usage(self):
         model_router.get_client = lambda name: _FakeClient(lambda **kw: _FakeResp("{}"))
-        # Force the openai branch by failing the partner provider.
-        def factory(name):
-            def fn(**kw):
-                if name == "openai":
-                    return _FakeResp("{}")
-                raise TimeoutError("down")
-            return _FakeClient(fn)
-        model_router.get_client = factory
         res = model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
+        self.assertEqual(res["provider"], "openai")
         # 10 prompt @0.15/M + 5 completion @0.60/M
         self.assertAlmostEqual(res["estimated_cost"], 10 * 0.150 / 1_000_000 + 5 * 0.600 / 1_000_000)
 
@@ -140,8 +133,8 @@ class TestModelRouterHealth(unittest.TestCase):
         model_router.chat_completion("intake", [{"role": "user", "content": "hi"}])
         rep = model_router.health_report()
         self.assertEqual(rep["status"], "up")
-        self.assertEqual(rep["last_ok_provider"], "featherless")
-        self.assertIsNotNone(rep["providers"]["featherless"]["last_ok"])
+        self.assertEqual(rep["last_ok_provider"], "openai")
+        self.assertIsNotNone(rep["providers"]["openai"]["last_ok"])
 
     def test_down_after_all_fail_surfaces_error(self):
         def fail(name):

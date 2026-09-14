@@ -663,7 +663,7 @@ class IntakeAgent:
                 (self.sender_id,)
             )
             return cursor.fetchone()
-        except Error as e:
+        except (Error, Exception) as e:
             print(f"Error loading pending confirmation: {e}")
             return None
         finally:
@@ -689,7 +689,6 @@ class IntakeAgent:
         """Commit (YES) or discard (NO) a pending parsed write."""
         import json
         from mysql.connector import Error
-        from app.data.database import get_db_connection
         from app.services.uuid_utils import uuid_to_bin
 
         # Human-in-the-loop (WP-08): record the human's decision in-room for the audit trail.
@@ -790,8 +789,6 @@ class IntakeAgent:
 
     def _reset_recording_flag(self):
         """Reset the _recording flag to False in pending_confirmations."""
-        from app.data.database import get_db_connection
-        from mysql.connector import Error
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
@@ -819,7 +816,6 @@ class IntakeAgent:
 
     def _check_event_committed(self, event_id):
         """Check if any database record associated with event_id was committed."""
-        from app.data.database import get_db_connection
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -843,7 +839,6 @@ class IntakeAgent:
 
     def _reconstruct_success_reply(self, event_id):
         """Query DB and format a success message for transactions recorded under event_id."""
-        from app.data.database import get_db_connection
         from app.services.uuid_utils import uuid_to_bin
         try:
             conn = get_db_connection()

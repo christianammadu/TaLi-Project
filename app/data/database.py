@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import mysql.connector
 from mysql.connector import Error
-from flask import current_app
+from flask import current_app, has_app_context
 
 
 def get_db_connection():
@@ -17,11 +17,25 @@ def get_db_connection():
     path's footprint to ~1 at a time; callers (and ``db_cursor``) close it, freeing
     the slot. Keep the two pools' combined ceiling under 9.
     """
+    if has_app_context():
+        cfg = current_app.config
+        host = cfg.get('DB_HOST')
+        user = cfg.get('DB_USER')
+        password = cfg.get('DB_PASSWORD')
+        database = cfg.get('DB_NAME')
+    else:
+        from app.config import Config
+        host = Config.DB_HOST
+        user = Config.DB_USER
+        password = Config.DB_PASSWORD
+        database = Config.DB_NAME
+
     return mysql.connector.connect(
-        host=current_app.config['DB_HOST'],
-        user=current_app.config['DB_USER'],
-        password=current_app.config['DB_PASSWORD'],
-        database=current_app.config['DB_NAME'],
+        host=host,
+        user=user,
+        password=password,
+        database=database,
+        connection_timeout=2,
     )
 
 
@@ -63,7 +77,8 @@ def init_db(app):
             host=app.config['DB_HOST'],
             user=app.config['DB_USER'],
             password=app.config['DB_PASSWORD'],
-            database=app.config['DB_NAME']
+            database=app.config['DB_NAME'],
+            connection_timeout=2,
         )
         cursor = conn.cursor()
 

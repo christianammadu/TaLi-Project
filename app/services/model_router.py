@@ -45,19 +45,22 @@ PROVIDERS = {
     "openai": _Provider("openai", "", "", "OPENAI_API_KEY", 0.150, 0.600),
 }
 
-# role → ordered chain of (provider, model_env, default_model). OpenAI is always the
-# terminal fallback so any role degrades gracefully when a partner provider is down.
+# role → ordered chain of (provider, model_env, default_model).
+# OpenAI is the primary provider; AI/ML API is the backup (with Featherless as tertiary).
 ROLE_ROUTES = {
-    "intake":     [("featherless", "FEATHERLESS_INTAKE_MODEL", "Qwen/Qwen2.5-72B-Instruct"),
-                   ("openai", "OPENAI_MODEL", "gpt-4o-mini")],
-    "escalation": [("aiml", "AIML_ESCALATION_MODEL", "gpt-4o"),
-                   ("openai", "OPENAI_MODEL", "gpt-4o-mini")],
-    "cfo":        [("aiml", "AIML_CFO_MODEL", "gpt-4o"),
-                   ("openai", "OPENAI_MODEL", "gpt-4o-mini")],
-    "compliance": [("featherless", "FEATHERLESS_COMPLIANCE_MODEL", "mistralai/Mistral-Small-24B-Instruct-2501"),
-                   ("openai", "OPENAI_MODEL", "gpt-4o-mini")],
-    "format":     [("featherless", "FEATHERLESS_COMPLIANCE_MODEL", "mistralai/Mistral-Small-24B-Instruct-2501"),
-                   ("openai", "OPENAI_MODEL", "gpt-4o-mini")],
+    "intake":     [("openai", "OPENAI_MODEL", "gpt-4o-mini"),
+                   ("aiml", "AIML_INTAKE_MODEL", "gpt-4o-mini"),
+                   ("featherless", "FEATHERLESS_INTAKE_MODEL", "Qwen/Qwen2.5-72B-Instruct")],
+    "escalation": [("openai", "OPENAI_MODEL", "gpt-4o"),
+                   ("aiml", "AIML_ESCALATION_MODEL", "gpt-4o")],
+    "cfo":        [("openai", "OPENAI_MODEL", "gpt-4o"),
+                   ("aiml", "AIML_CFO_MODEL", "gpt-4o")],
+    "compliance": [("openai", "OPENAI_MODEL", "gpt-4o-mini"),
+                   ("aiml", "AIML_COMPLIANCE_MODEL", "gpt-4o-mini"),
+                   ("featherless", "FEATHERLESS_COMPLIANCE_MODEL", "mistralai/Mistral-Small-24B-Instruct-2501")],
+    "format":     [("openai", "OPENAI_MODEL", "gpt-4o-mini"),
+                   ("aiml", "AIML_FORMAT_MODEL", "gpt-4o-mini"),
+                   ("featherless", "FEATHERLESS_COMPLIANCE_MODEL", "mistralai/Mistral-Small-24B-Instruct-2501")],
 }
 DEFAULT_ROLE = "intake"
 

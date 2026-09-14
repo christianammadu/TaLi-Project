@@ -558,6 +558,7 @@ class TestLocalReadQueryFastPath(unittest.TestCase):
         from app.agents.agent_1_intake import IntakeAgent
         from app.agents.band.band_client import get_band_client
         agent = IntakeAgent("u1", "s1", band=get_band_client(backend="stub"))
+        agent._load_pending = lambda: None
         with patch.object(agent, '_publish_intake', return_value=["📦 *Available stock*\n• rice — 5 bags"]) as pub, \
              patch('app.agents.agent_1_intake.parse_message') as parse:
             out = agent.process("What are my inventory")

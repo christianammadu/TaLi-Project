@@ -135,10 +135,10 @@ flowchart TD
  
 TaLi implements a native **Multi-provider Model Router** ([model_router.py](app/services/model_router.py)) that routes agent roles to optimized serverless endpoints:
  
-- **Featherless AI**: Powers our specialized open-source reasoning models. We use `Qwen/Qwen2.5-72B-Instruct` for natural language parsing (`intake`) and `mistralai/Mistral-Small-24B-Instruct-2501` for structured policy checks (`compliance`).
-- **AI/ML API**: Connects to frontier commercial models like `gpt-4o` for CFO analysis, cost forecasting, and complex escalation reasoning.
-- **Graceful Failovers**: Every routing chain has automatic fallbacks to OpenAI (`gpt-4o-mini`) in case of provider timeouts, 429s, or service outages, ensuring high availability.
-- **FinOps Spending Controls**: Tracks token usage and costs per model in real-time, enforcing a budget limit (`MODEL_ROUTER_SPEND_CEILING_USD`) to prevent runaway API spend.
+- **OpenAI (Primary)**: Serves as the primary provider across all roles (`gpt-4o-mini` for intake, format, and compliance auditing; `gpt-4o` for escalation and CFO analysis), ensuring high accuracy, low latency, and dependable structured outputs.
+- **AI/ML API (Secondary Backup)**: Serves as the primary failover provider with access to frontier open and commercial models, automatically engaged upon OpenAI rate limits or service hiccups.
+- **Featherless AI (Tertiary Backup)**: Provides open-source model fallback options (e.g. `Qwen/Qwen2.5-72B-Instruct`, `Mistral-Small-24B-Instruct-2501`) when configured.
+- **Graceful Failovers & FinOps Controls**: Every routing chain features automatic fallback across providers with real-time token tracking and cost ceilings (`MODEL_ROUTER_SPEND_CEILING_USD`) to prevent runaway API spend.
  
 ---
  
@@ -164,13 +164,14 @@ TaLi-Project/
 │   ├── __init__.py            # Flask app factory (pooled engine setup, routes, context)
 │   ├── config.py              # Environment configuration loader
 │   ├── auth.py                # OTP delivery, link minting, session validation
-│   ├── agents/                # Band room intelligence pipeline
+│   ├── agents/                # Multi-agent collaboration engine
+│   │   ├── orchestrator.py        # Native in-house orchestration engine & blackboard
 │   │   ├── agent_router.py        # Webhook→room gateway, session + event dedup
-│   │   ├── agent_1_intake.py      # NLP parse + classify (Featherless AI)
+│   │   ├── agent_1_intake.py      # NLP parse + classify
 │   │   ├── agent_2_ledger.py      # Propose→review→commit ledger writes
 │   │   ├── agent_3_cfo.py         # Reply composition, balances, stock alerts
 │   │   ├── compliance_agent.py    # Pre-commit policy audit + human-in-the-loop
-│   │   └── band/band_client.py    # Band connector (in-process stub + live REST)
+│   │   └── band/band_client.py    # Orchestration adapter & backward-compatibility shim
 │   ├── data/                  # Persistent data layers
 │   │   ├── db.py                  # SQLAlchemy engine & session scopes
 │   │   ├── models.py              # Declarative database models (Users, Ledger, Webhooks)

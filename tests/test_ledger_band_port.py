@@ -19,9 +19,12 @@ class TestLedgerBandPort(unittest.TestCase):
     def setUp(self):
         self.band = get_band_client(backend="stub")
         self.ledger = LedgerAgent("user-1", "sender-1", band=self.band)
+        self._patch_state = mock.patch("app.agents.agent_2_ledger.set_transaction_state")
+        self._patch_state.start()
         os.environ.pop("BAND_REVIEW_DEFAULT", None)
 
     def tearDown(self):
+        self._patch_state.stop()
         os.environ.pop("BAND_REVIEW_DEFAULT", None)
 
     def test_bandsdk_import_is_gone(self):

@@ -65,6 +65,7 @@ class MockRouterCursor:
         self.fetch_val = fetch_val
         self.raises_on_insert = raises_on_insert
         self.executed = []
+        self.rowcount = 1
 
     def execute(self, query, params=None):
         self.executed.append((query, params))
@@ -108,6 +109,8 @@ class TestTelegramFSM(unittest.TestCase):
     def setUp(self):
         self.app = Flask(__name__)
         self.app.config.update(TESTING=True)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
         self.band = get_band_client(backend="stub")
 
         # Mock set_transaction_state to avoid real DB access
@@ -120,6 +123,7 @@ class TestTelegramFSM(unittest.TestCase):
         ledger_module.set_transaction_state = lambda eid, uid, st: self.transaction_states.append((eid, uid, st))
 
     def tearDown(self):
+        self.ctx.pop()
         import app.agents.agent_1_intake as intake_module
         import app.agents.agent_2_ledger as ledger_module
         if hasattr(self, 'saved_set_state_intake') and self.saved_set_state_intake:

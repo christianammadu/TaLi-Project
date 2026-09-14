@@ -36,14 +36,24 @@ class TestFinOps(unittest.TestCase):
         model_router.reset_spend()
 
     def test_spend_split_by_provider_and_model(self):
-        model_router.chat_completion("intake", [{"role": "user", "content": "x"}])   # featherless
-        model_router.chat_completion("intake", [{"role": "user", "content": "x"}])   # featherless
-        model_router.chat_completion("cfo", [{"role": "user", "content": "x"}])       # aiml
+        # Primary calls attribute to openai
+        model_router.chat_completion("intake", [{"role": "user", "content": "x"}])
+        model_router.chat_completion("cfo", [{"role": "user", "content": "x"}])
+
+        # When OpenAI primary errors, fall back to aiml backup
+        def factory(name):
+            if name == "openai":
+                raise TimeoutError("openai timeout")
+            return _FakeClient(lambda **kw: _FakeResp())
+        model_router.get_client = factory
+        model_router.chat_completion("intake", [{"role": "user", "content": "x"}])
+
         rep = model_router.spend_report()
-        self.assertEqual({r["provider"] for r in rep["rows"]}, {"featherless", "aiml"})
+        self.assertEqual({r["provider"] for r in rep["rows"]}, {"openai", "aiml"})
         self.assertEqual(rep["total_calls"], 3)
-        self.assertEqual(rep["by_provider"]["featherless"]["calls"], 2)
-        self.assertGreater(rep["by_provider"]["aiml"]["cost"], 0)          # aiml rate > 0
+        self.assertEqual(rep["by_provider"]["openai"]["calls"], 2)
+        self.assertEqual(rep["by_provider"]["aiml"]["calls"], 1)
+        self.assertGreater(rep["by_provider"]["aiml"]["cost"], 0)
         self.assertAlmostEqual(rep["total_cost"], sum(r["cost"] for r in rep["rows"]))
 
     def test_reset_clears_accumulator(self):

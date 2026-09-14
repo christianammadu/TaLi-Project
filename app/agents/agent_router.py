@@ -132,7 +132,13 @@ class AgentRouter:
                 "SELECT COUNT(*) FROM background_jobs WHERE user_id = %s AND status IN ('pending', 'processing')",
                 (user_id_bin,)
             )
-            active_jobs = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            active_jobs = 0
+            if row:
+                if isinstance(row, (tuple, list)):
+                    active_jobs = row[0]
+                elif isinstance(row, dict):
+                    active_jobs = row.get("count", 0) or row.get("COUNT(*)", 0) or 0
             if active_jobs >= 3:
                 print(f"[AgentRouter Backpressure] Throttling user {self.user_id}: {active_jobs} active requests.")
                 return RESPONSE_TOO_MANY_REQUESTS
