@@ -1,0 +1,266 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-09-14T16:36:21Z",
+  "updated": "2026-09-14T18:24:00Z",
+  "goal": "Harden the multi-agent conversational pipeline (off-topic guardrails, compound multi-intent execution, fuzzy inventory matching) and build a platform stakeholder dashboard for AI fleet monitoring and compliance governance.",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:b0d1228816aac9aaee68195fc88d40e0ea07a926e3614b89c72197ef208a858b",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-09-14T16:36:21Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:0ea4bc8791a325b4378c4d7915db1c9b0a65bf96ad9ec02dd9ed3fd5a668e008",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:30Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:16fffeb251cf847769393e36356c94758ae78642ff829a9d7b773ffcbf4d46ce",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:e06fc530a8903aa455f3478226cd00ecd1cfb7b42ea5b0bcef8342b24a191eea",
+          "last_action": "init",
+          "last_written": "2026-09-14T16:36:21Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:4054127180c29bbce6bdbd28e9ea7f2a1f5aae2102e18daaae7eb8a47e6627ae",
+          "last_action": "review",
+          "last_written": "2026-09-14T18:12:52Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:8071ca637be4d5b0217a9035499f18da686c40c7f0e2e3909dad0b772f7e82ea",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:b4298cf64bf503989bfa910a4aaaad1b585b54fffb4bbd14447652831a522d25",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:31Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:e29bb1956ded1d078d1dec9feef8a1a3f86a004dd84fc06dda9613e485da3fb3",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:31Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:135b6dc98ef29c1edee72c9069f5b2752a3fe101214ee841446d809390cd90df",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:b729b969ca0aa351d1e27ac76e9612f5a21c190d62722a369c3b9a77b45cf5e7",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:31Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:b015abee25801e816f99f8d79fead42b852e3b9a2c027cfce89d1cbe9a49d7cf",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:b82eb92e9c4c3641b25d2a0202e3d787f8531fca70ffd2db0f5790a4ab21f88f",
+          "last_action": "review",
+          "last_written": "2026-09-14T18:12:52Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:9c8da89946895c18aabbad93311e1a96842868510df32b656e301f1143ac21f8",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:24a78febf8ae81734695e82e43b5525d89768c2869244a1cb3d7a49edb2c41a7",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:32Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:259ea2163f53eafc807042f3977a5ea0d9f6337e138d242b933920f829c05704",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:32Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:7ba059986113c37a02c66bfa122e5626125d2ccafe30b11ebedc90996c777b7a",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:33Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:4fcb1144a9ba46deceb6ef3b893d02e97e08c6a7b560651f3df2279298eb958c",
+          "last_action": "review",
+          "last_written": "2026-09-14T17:09:33Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:d2ed5567719909933572d2cf30adffcb49b32f9856c991a0fbedd14b2cdebfb3",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-14T16:36:21Z"
+        }
+      ]
+    },
+    "artifact/board.html": {
+      "generated_regions": [
+        {
+          "id": "board-data",
+          "hash": "sha256:492619bf730cc7fe1b8498174e82b7c882c2497921a7b8d80dd6a2eb58c13ca6",
+          "last_action": "refresh-board",
+          "last_written": "2026-09-14T18:23:59Z"
+        }
+      ],
+      "hash": "sha256:03659c46f1d87c3acdd01e474c27208687c5a6da7d870f096928441f4986ba34"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:2c50f3cb751e93822f0abb85c3360280cfccc1f5b871b32e986dd95052930fcd",
+          "last_action": "explorer",
+          "last_written": "2026-09-14T18:24:00Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:666067a6855e9fa4e0dcca68ecd6ad8b6d8219505a24c363c825f2bf109e5ec8",
+          "last_action": "explorer",
+          "last_written": "2026-09-14T18:24:00Z"
+        }
+      ],
+      "hash": "sha256:45dddbd81f8ae5c84e0a42d2e9c5c1377c59e1cd8d602633286421803877168e"
+    }
+  },
+  "ids": {
+    "G-01": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 1,
+      "title": "Conversational guardrails & prompt abuse defense",
+      "status": "folded"
+    },
+    "G-02": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 1,
+      "title": "Multi-intent compound statement execution",
+      "status": "folded"
+    },
+    "G-03": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 1,
+      "title": "Robust inventory canonicalization & fuzzy SQL lookup",
+      "status": "folded"
+    },
+    "G-04": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 1,
+      "title": "Platform stakeholder & AI fleet observability dashboard",
+      "status": "folded"
+    },
+    "WP-01": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 1,
+      "title": "Conversational Guardrail Pre-Filter & Throttling",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "WP-02": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 2,
+      "title": "Multi-Intent Compound Split-Routing & Composite CFO",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "WP-03": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 1,
+      "title": "Canonical Inventory Prompt Injection & Fuzzy SQL Matcher",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "WP-04": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 3,
+      "title": "Admin Flask Blueprint & Stakeholder Session Auth",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "WP-05": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 4,
+      "title": "AI Fleet Observability & FinOps Spend Panel",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "WP-06": {
+      "doc": "05-tracking.md",
+      "kind": "wp",
+      "wave": 4,
+      "title": "Compliance Review Queue Web Hub & Room Resumption",
+      "status": "queued",
+      "tier": "sonnet"
+    },
+    "G-05": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 2,
+      "title": "Pidgin & colloquial defense against guardrail false positives",
+      "status": "folded"
+    },
+    "G-06": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 2,
+      "title": "Compound statement atomic rollback on partial mutation failure",
+      "status": "folded"
+    },
+    "G-07": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 2,
+      "title": "Multi-match disambiguation for fuzzy inventory items",
+      "status": "folded"
+    },
+    "G-08": {
+      "doc": "04-discussion.md",
+      "kind": "gap",
+      "round": 2,
+      "title": "Stakeholder admin authentication security & cookie hardening",
+      "status": "folded"
+    }
+  },
+  "designs": {},
+  "subplans": {},
+  "research": {
+    "02-research-external.md": {
+      "stamped": "2026-09-14"
+    },
+    "03-research-internal.md": {
+      "stamped": "2026-09-14"
+    }
+  }
+}
