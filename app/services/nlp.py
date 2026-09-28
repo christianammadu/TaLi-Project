@@ -136,6 +136,21 @@ EXAMPLES:
     ]
   }}
 
+- "Sold 5 bags of rice 30k, how many bags left and what is my balance?" (Sale transaction + inventory decrement + balance query)
+  {{
+    "intents": ["record_transaction", "inventory", "query"],
+    "confidence": 0.96,
+    "needs_review": false,
+    "status": "ok",
+    "transactions": [
+      {{"type": "income", "action": "sale", "amount": 30000, "currency": "NGN", "item": "rice", "category": "Sales", "description": "sold 5 bags of rice", "date": "{today}"}}
+    ],
+    "inventory": [
+      {{"action": "REMOVE", "product": "rice", "quantity": 5, "unit": "bags"}}
+    ],
+    "query": {{"query_type": "balance"}}
+  }}
+
 - "Bought 6 bags of rice at 400 per one and sold 4 for 6000" (TWO separate transactions — a purchase AND a sale — and TWO stock movements)
   {{
     "intents": ["record_transaction", "inventory"],
