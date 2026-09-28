@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#080C14] text-slate-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Command & Governance{% endblock %} — TaLi Admin</title>
+
+  <!-- Google Fonts: Fraunces & Hanken Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#C2562F',
+              hover: '#D66338',
+              muted: '#7A351C',
+              surface: '#1A1311',
+            },
+            obsidian: {
+              950: '#05070B',
+              900: '#080C14',
+              850: '#0B101A',
+              800: '#0F1523',
+              700: '#182032',
+              600: '#232D42',
+            }
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js & HTMX -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+  <style>
+    body { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    .font-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    /* Subtle dot-grid ambient background */
+    .bg-grid {
+      background-size: 32px 32px;
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #080C14; }
+    ::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C2562F; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex overflow-hidden bg-obsidian-900 text-slate-200">
+
+  <!-- Mobile Sidebar Backdrop (toggled via JS) -->
+  <div id="mobile-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
+  <!-- Sidebar Navigation Drawer -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-obsidian-850 border-r border-obsidian-700/80 flex flex-col transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0 lg:static">
+    <!-- Brand Wordmark Header -->
+    <div class="h-16 flex items-center justify-between px-6 border-b border-obsidian-700/60 bg-obsidian-950/40">
+      <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 group">
+        <span class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white font-serif font-bold text-lg shadow-lg shadow-brand/20 group-hover:scale-105 transition-transform">
+          T
+        </span>
+        <span class="font-serif font-bold text-2xl tracking-tight text-white">
+          TaLi<span class="text-brand">.</span>
+        </span>
+        <span class="text-[10px] tracking-wider uppercase px-2 py-0.5 rounded font-mono font-medium bg-brand/10 text-brand border border-brand/20 ml-1">
+          Ops
+        </span>
+      </a>
+      <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1 rounded-md">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <div class="px-3 pb-2 text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+        Platform Fleet
+      </div>
+
+      <!-- Dashboard -->
+      <a href="{{ url_for('admin.dashboard') }}"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group {% if active_nav == 'dashboard' %}bg-brand/15 text-white border border-brand/30 shadow-sm{% else %}text-slate-400 hover:text-slate-100 hover:bg-obsidian-700/50{% endif %}">
+        <svg class="w-5 h-5 {% if active_nav == 'dashboard' %}text-brand{% else %}text-slate-400 group-hover:text-slate-200{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>Overview & Command</span>
+      </a>
+
+      <!-- AI Fleet & FinOps (WP-05) -->
+      <a href="/admin/finops"
+         class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all group {% if active_nav == 'finops' %}bg-brand/15 text-white border border-brand/30 shadow-sm{% else %}text-slate-400 hover:text-slate-100 hover:bg-obsidian-700/50{% endif %}">
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 {% if active_nav == 'finops' %}text-brand{% else %}text-slate-400 group-hover:text-slate-200{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span>AI Fleet & FinOps</span>
+        </div>
+        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Live</span>
+      </a>
+
+      <!-- Compliance Queue (WP-06) -->
+      <a href="/admin/compliance"
+         class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all group {% if active_nav == 'compliance' %}bg-brand/15 text-white border border-brand/30 shadow-sm{% else %}text-slate-400 hover:text-slate-100 hover:bg-obsidian-700/50{% endif %}">
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 {% if active_nav == 'compliance' %}text-brand{% else %}text-slate-400 group-hover:text-slate-200{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span>Compliance Hub</span>
+        </div>
+        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">3 holds</span>
+      </a>
+
+      <div class="pt-6 px-3 pb-2 text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+        Platform Governance
+      </div>
+
+      <!-- Audit Trail Link -->
+      <a href="/audit/trail" target="_blank"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-obsidian-700/50 transition-all group">
+        <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+        <span>Audit Trail (JSONL)</span>
+        <svg class="w-3.5 h-3.5 ml-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+    </nav>
+
+    <!-- User Profile & Sign Out Footer -->
+    <div class="p-3 border-t border-obsidian-700/60 bg-obsidian-950/40">
+      <div class="flex items-center justify-between p-2 rounded-lg bg-obsidian-800/80 border border-obsidian-700/50">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-7 h-7 rounded-full bg-brand/20 border border-brand/40 flex items-center justify-center text-xs font-semibold text-brand">
+            {{ session.get('admin_user', 'A')[0]|upper }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-white truncate">{{ session.get('admin_user', 'Admin') }}</p>
+            <p class="text-[10px] text-slate-400 font-mono">Stakeholder</p>
+          </div>
+        </div>
+        <form method="POST" action="{{ url_for('admin.logout') }}" class="m-0">
+          <button type="submit" title="Sign Out" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main View Area -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-obsidian-900 bg-grid">
+    <!-- Top Bar -->
+    <header class="h-16 bg-obsidian-850/80 backdrop-blur-md border-b border-obsidian-700/80 px-4 lg:px-8 flex items-center justify-between z-10">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg bg-obsidian-700/50 text-slate-300 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div>
+          <h1 class="text-base font-semibold text-white font-fraunces">{% block page_title %}Command Center{% endblock %}</h1>
+          <p class="text-xs text-slate-400">Autonomous Multi-Agent Fleet Governance</p>
+        </div>
+      </div>
+
+      <!-- Fleet Status Badge -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Fleet Active (4 Agents)</span>
+        </div>
+        <div class="h-5 w-[1px] bg-obsidian-700 hidden sm:block"></div>
+        <span class="text-xs font-mono text-slate-400">v1.2.0-rc</span>
+      </div>
+    </header>
+
+    <!-- Toast Notifications -->
+    <div class="px-4 lg:px-8 pt-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for category, message in messages %}
+              <div class="flex items-center justify-between p-3.5 rounded-lg border text-sm font-medium transition-all
+                {% if category == 'success' %}bg-emerald-950/40 border-emerald-500/40 text-emerald-200
+                {% elif category == 'error' %}bg-rose-950/40 border-rose-500/40 text-rose-200
+                {% elif category == 'warning' %}bg-amber-950/40 border-amber-500/40 text-amber-200
+                {% else %}bg-obsidian-800 border-obsidian-600 text-slate-200{% endif %}">
+                <div class="flex items-center gap-2.5">
+                  {% if category == 'success' %}
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  {% elif category == 'error' %}
+                    <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  {% elif category == 'warning' %}
+                    <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  {% endif %}
+                  <span>{{ message }}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 overflow-y-auto px-4 lg:px-8 py-6">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('mobile-backdrop');
+      const isClosed = sidebar.classList.contains('-translate-x-full');
+      if (isClosed) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

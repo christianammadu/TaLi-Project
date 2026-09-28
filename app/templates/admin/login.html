@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#080C14] text-slate-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stakeholder Sign In — TaLi Platform Command</title>
+
+  <!-- Google Fonts: Fraunces & Hanken Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#C2562F',
+              hover: '#D66338',
+              muted: '#7A351C',
+            },
+            obsidian: {
+              950: '#05070B',
+              900: '#080C14',
+              850: '#0B101A',
+              800: '#0F1523',
+              700: '#182032',
+              600: '#232D42',
+            }
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    .font-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .glow {
+      background: radial-gradient(circle 400px at 50% 40%, rgba(194, 86, 47, 0.12), transparent 70%);
+    }
+  </style>
+</head>
+<body class="h-full flex items-center justify-center p-4 bg-obsidian-900 glow selection:bg-brand selection:text-white">
+
+  <div class="w-full max-w-md">
+    <!-- Brand Emblem -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand text-white font-serif font-bold text-2xl shadow-xl shadow-brand/25 ring-1 ring-white/20 mb-4">
+        T
+      </div>
+      <h1 class="text-2xl font-bold font-fraunces text-white tracking-tight">
+        TaLi<span class="text-brand">.</span> Command &amp; Governance
+      </h1>
+      <p class="text-xs font-mono text-slate-400 mt-1 uppercase tracking-widest">
+        Restricted Stakeholder Access
+      </p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-obsidian-850/90 backdrop-blur-xl border border-obsidian-700/80 rounded-2xl p-7 shadow-2xl shadow-black/80 ring-1 ring-white/5">
+      <!-- Flashed messages / error toasts -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="space-y-2 mb-6">
+            {% for category, message in messages %}
+              <div class="flex items-center gap-2.5 p-3 rounded-lg border text-xs font-medium
+                {% if category == 'error' %}bg-rose-950/50 border-rose-500/40 text-rose-200
+                {% elif category == 'warning' %}bg-amber-950/50 border-amber-500/40 text-amber-200
+                {% elif category == 'success' %}bg-emerald-950/50 border-emerald-500/40 text-emerald-200
+                {% else %}bg-obsidian-700/60 border-obsidian-600 text-slate-300{% endif %}">
+                {% if category == 'error' %}
+                  <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% elif category == 'warning' %}
+                  <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                {% endif %}
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('admin.login') }}" class="space-y-5">
+        <input type="hidden" name="next" value="{{ next_url or '' }}">
+
+        <div>
+          <label for="username" class="block text-xs font-mono font-medium text-slate-300 uppercase tracking-wider mb-2">
+            Stakeholder ID
+          </label>
+          <div class="relative">
+            <input type="text" id="username" name="username" value="{{ username or '' }}" required autofocus
+                   placeholder="admin"
+                   class="w-full bg-obsidian-950/70 border border-obsidian-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all font-mono">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-xs font-mono font-medium text-slate-300 uppercase tracking-wider mb-2">
+            Master Passphrase
+          </label>
+          <div class="relative">
+            <input type="password" id="password" name="password" required
+                   placeholder="••••••••••••••••"
+                   class="w-full bg-obsidian-950/70 border border-obsidian-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all font-mono">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit"
+                class="w-full py-3 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white font-medium text-sm transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-brand/20 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-obsidian-900">
+          <span>Authenticate &amp; Launch</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </form>
+
+      <!-- Security Notice -->
+      <div class="mt-6 pt-5 border-t border-obsidian-700/60 flex items-start gap-2.5 text-[11px] text-slate-400">
+        <svg class="w-4 h-4 text-brand shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>Protected by bcrypt hashing &amp; 15-minute brute-force lockout. All actions recorded to persistent audit logs.</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
