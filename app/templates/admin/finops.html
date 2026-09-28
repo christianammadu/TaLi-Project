@@ -1,0 +1,382 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}FinOps Spend & AI Fleet Telemetry — TaLi Admin{% endblock %}
+{% block page_title %}AI Fleet & FinOps Spend Panel{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-obsidian-850 via-obsidian-800 to-obsidian-850 border border-obsidian-700/80 shadow-xl">
+    <div class="space-y-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+        Multi-Provider Telemetry Active
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold font-fraunces text-white tracking-tight">FinOps Cost & Routing Intelligence</h2>
+      <p class="text-sm text-slate-400">Continuous model-level cost attribution, fallback triggers, and p95 latency monitoring.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 border border-obsidian-600/60 text-xs font-semibold text-slate-200 hover:text-white transition-all">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        <span>Overview</span>
+      </a>
+      <a href="/admin/compliance" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 border border-obsidian-600/60 text-xs font-semibold text-amber-300 hover:text-white transition-all">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>Compliance</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Primary Metric Cards (4 Grid) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Spend vs Budget Ceiling -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">Ceiling Spend</span>
+        <span class="px-2 py-0.5 rounded text-[10px] font-mono border {% if finops.alert_color == 'red' %}bg-rose-500/10 text-rose-400 border-rose-500/20{% elif finops.alert_color == 'yellow' %}bg-amber-500/10 text-amber-400 border-amber-500/20{% else %}bg-emerald-500/10 text-emerald-400 border-emerald-500/20{% endif %}">
+          {{ finops.alert_label }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        ${{ "{:.2f}".format(finops.total_spend_usd) }}
+        <span class="text-xs font-normal text-slate-400 font-mono">/ ${{ "{:.2f}".format(finops.ceiling_usd) }}</span>
+      </div>
+      <div class="mt-3">
+        <div class="w-full bg-obsidian-700 rounded-full h-1.5 overflow-hidden">
+          <div class="h-1.5 rounded-full transition-all duration-500 {% if finops.alert_color == 'red' %}bg-rose-500{% elif finops.alert_color == 'yellow' %}bg-amber-400{% else %}bg-emerald-500{% endif %}" style="width: {{ finops.spend_percentage }}%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] font-mono text-slate-400 mt-1">
+          <span>{{ finops.actual_percentage }}% of budget</span>
+          <span>${{ "{:.2f}".format(finops.ceiling_usd - finops.total_spend_usd) }} headroom</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Invocations -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">Inference Calls</span>
+        <span class="p-1.5 rounded-md bg-obsidian-800 text-indigo-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ "{:,}".format(finops.total_ai_calls) }}
+      </div>
+      <div class="mt-2 text-xs text-slate-400 font-mono flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+        <span>Across 3 router chains</span>
+      </div>
+    </div>
+
+    <!-- Latency Profile -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">p95 / Avg Latency</span>
+        <span class="p-1.5 rounded-md bg-obsidian-800 text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ finops.p95_latency_ms }}<span class="text-base font-normal text-slate-400">ms</span>
+      </div>
+      <div class="mt-2 text-xs text-slate-400 font-mono">
+        Avg: <strong class="text-white">{{ finops.avg_latency_ms }}ms</strong> · Healthy bounds
+      </div>
+    </div>
+
+    <!-- Provider Primary Ratio -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">Provider Distribution</span>
+        <span class="p-1.5 rounded-md bg-obsidian-800 text-purple-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ finops.provider_share.openai }}<span class="text-base font-normal text-slate-400">%</span>
+      </div>
+      <div class="mt-2 text-xs text-slate-400 font-mono">
+        OpenAI primary · {{ finops.provider_share.aiml }}% AIML fallback
+      </div>
+    </div>
+  </div>
+
+  <!-- Telemetry Breakdown & Doughnut Chart (2 Col Grid) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Chart Panel -->
+    <div class="lg:col-span-1 p-6 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl space-y-4">
+      <div class="border-b border-obsidian-700/60 pb-3">
+        <h3 class="text-base font-semibold text-white font-fraunces">Provider Routing Share</h3>
+        <p class="text-xs text-slate-400">Distribution of calls between primary & fallbacks</p>
+      </div>
+
+      <div class="h-56 relative flex items-center justify-center">
+        <canvas id="finopsChart"></canvas>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-obsidian-700/50 text-xs">
+        <div class="flex items-center justify-between p-2 rounded bg-obsidian-800/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+            <span class="text-slate-300">OpenAI (Primary)</span>
+          </div>
+          <span class="font-mono font-semibold text-white">{{ finops.provider_share.openai }}%</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded bg-obsidian-800/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+            <span class="text-slate-300">AI/ML API (Backup)</span>
+          </div>
+          <span class="font-mono font-semibold text-white">{{ finops.provider_share.aiml }}%</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded bg-obsidian-800/60">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+            <span class="text-slate-300">Featherless (Fallback)</span>
+          </div>
+          <span class="font-mono font-semibold text-white">{{ finops.provider_share.featherless }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Form & Filter Controls -->
+    <div class="lg:col-span-2 p-6 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl flex flex-col justify-between">
+      <div class="space-y-4">
+        <div class="border-b border-obsidian-700/60 pb-3">
+          <h3 class="text-base font-semibold text-white font-fraunces">Log Inspection & Query Filters</h3>
+          <p class="text-xs text-slate-400">Filter historical AI inference executions by model architecture, source agent, and execution date.</p>
+        </div>
+
+        <form method="GET" action="{{ url_for('admin.finops') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Model Filter -->
+          <div>
+            <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Model Name</label>
+            <select name="model" class="w-full bg-obsidian-900 border border-obsidian-600 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand font-mono">
+              <option value="all" {% if selected_model == 'all' %}selected{% endif %}>All Models</option>
+              {% for m in available_models %}
+                <option value="{{ m }}" {% if selected_model == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Source Agent Filter -->
+          <div>
+            <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Source Agent</label>
+            <select name="agent" class="w-full bg-obsidian-900 border border-obsidian-600 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand font-mono">
+              <option value="all" {% if selected_agent == 'all' %}selected{% endif %}>All Agents</option>
+              {% for a in available_agents %}
+                <option value="{{ a }}" {% if selected_agent == a %}selected{% endif %}>{{ a }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Start Date -->
+          <div>
+            <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Start Date</label>
+            <input type="date" name="start_date" value="{{ selected_start_date }}" class="w-full bg-obsidian-900 border border-obsidian-600 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand font-mono">
+          </div>
+
+          <!-- End Date -->
+          <div>
+            <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">End Date</label>
+            <input type="date" name="end_date" value="{{ selected_end_date }}" class="w-full bg-obsidian-900 border border-obsidian-600 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand font-mono">
+          </div>
+
+          <!-- Actions -->
+          <div class="sm:col-span-2 lg:col-span-4 flex items-center justify-end gap-2 pt-2">
+            <a href="{{ url_for('admin.finops') }}" class="px-3 py-1.5 rounded-lg border border-obsidian-600 hover:bg-obsidian-700 text-xs font-semibold text-slate-400 hover:text-white transition-all">
+              Reset
+            </a>
+            <button type="submit" class="px-4 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-md shadow-brand/20 transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+              <span>Apply Filters</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Quick Metrics Summary -->
+      <div class="mt-4 p-3 rounded-lg bg-obsidian-950/40 border border-obsidian-700/60 flex items-center justify-between text-xs font-mono text-slate-400">
+        <div>Filtered results: <strong class="text-white">{{ total_count }}</strong> executions</div>
+        <div>Page {{ current_page }} of {{ total_pages }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dense AiLog Table (Impeccable Mode: Operate) -->
+  <div class="p-6 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl space-y-4">
+    <div class="flex items-center justify-between border-b border-obsidian-700/60 pb-3">
+      <div>
+        <h3 class="text-base font-semibold text-white font-fraunces">Inference Audit Log (ai_logs)</h3>
+        <p class="text-xs text-slate-400">Real-time model invocations, latency readings, and token-cost attribution.</p>
+      </div>
+      <span class="text-xs font-mono text-slate-400 bg-obsidian-800 px-2.5 py-1 rounded border border-obsidian-700">
+        {{ total_count }} records matching criteria
+      </span>
+    </div>
+
+    <!-- Table Container with Sticky Header & Zebra Striping -->
+    <div class="overflow-x-auto rounded-xl border border-obsidian-700/60 max-h-[600px] overflow-y-auto">
+      <table class="w-full text-left text-xs text-slate-300">
+        <thead class="bg-obsidian-950/90 backdrop-blur sticky top-0 z-10 border-b border-obsidian-700 font-mono uppercase tracking-wider text-[11px] text-slate-400">
+          <tr>
+            <th class="px-4 py-3">ID / Time</th>
+            <th class="px-4 py-3">Model & Provider</th>
+            <th class="px-4 py-3">Source Agent</th>
+            <th class="px-4 py-3">Parsed Intent</th>
+            <th class="px-4 py-3 text-right">Latency</th>
+            <th class="px-4 py-3 text-right">Est. Cost</th>
+            <th class="px-4 py-3">Original Input</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-obsidian-700/40">
+          {% if logs %}
+            {% for log in logs %}
+              <tr class="hover:bg-obsidian-750/50 transition-colors {% if loop.index is even %}bg-obsidian-900/40{% else %}bg-obsidian-850/40{% endif %}">
+                <!-- ID & Time -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="font-mono text-white font-semibold">#{{ log.id }}</span>
+                  <div class="text-[10px] text-slate-400 font-mono">{{ log.created_at }}</div>
+                </td>
+
+                <!-- Model & Provider -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5">
+                    {% if log.provider == 'openai' %}
+                      <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                    {% elif log.provider == 'aiml' %}
+                      <span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                    {% else %}
+                      <span class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
+                    {% endif %}
+                    <span class="font-mono font-medium text-white truncate max-w-[140px]" title="{{ log.model_name }}">
+                      {{ log.model_name }}
+                    </span>
+                  </div>
+                  <span class="text-[10px] font-mono uppercase text-slate-400">{{ log.provider }}</span>
+                </td>
+
+                <!-- Source Agent -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-obsidian-800 border border-obsidian-700 text-slate-300">
+                    {{ log.source_agent }}
+                  </span>
+                </td>
+
+                <!-- Parsed Intent -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-brand/10 text-brand border border-brand/20">
+                    {{ log.parsed_intent }}
+                  </span>
+                  {% if log.confidence_score is not none %}
+                    <span class="text-[10px] font-mono text-slate-400 ml-1">({{ (log.confidence_score * 100)|round|int }}%)</span>
+                  {% endif %}
+                </td>
+
+                <!-- Latency -->
+                <td class="px-4 py-3 text-right whitespace-nowrap font-mono">
+                  {% if log.processing_time_ms > 2000 %}
+                    <span class="text-amber-400 font-semibold">{{ log.processing_time_ms }}ms</span>
+                  {% else %}
+                    <span class="text-emerald-400 font-medium">{{ log.processing_time_ms }}ms</span>
+                  {% endif %}
+                </td>
+
+                <!-- Estimated Cost -->
+                <td class="px-4 py-3 text-right whitespace-nowrap font-mono text-white">
+                  ${{ "{:.6f}".format(log.estimated_cost) }}
+                </td>
+
+                <!-- Original Input Snippet -->
+                <td class="px-4 py-3 max-w-xs truncate text-slate-400 font-mono text-xs" title="{{ log.original_message }}">
+                  {{ log.original_message or "—" }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                <svg class="w-8 h-8 mx-auto mb-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-sm font-medium text-slate-300">No inference logs found</p>
+                <p class="text-xs text-slate-500 mt-1">Try broadening your date filter or selecting all models.</p>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+      <div class="flex items-center justify-between pt-3 border-t border-obsidian-700/60 text-xs">
+        <div class="text-slate-400 font-mono">
+          Showing page {{ current_page }} of {{ total_pages }}
+        </div>
+        <div class="flex items-center gap-2">
+          {% if current_page > 1 %}
+            <a href="{{ url_for('admin.finops', page=current_page - 1, model=selected_model, agent=selected_agent, start_date=selected_start_date, end_date=selected_end_date) }}" class="px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 border border-obsidian-700 text-slate-300 transition-colors">
+              ← Previous
+            </a>
+          {% endif %}
+          {% if current_page < total_pages %}
+            <a href="{{ url_for('admin.finops', page=current_page + 1, model=selected_model, agent=selected_agent, start_date=selected_start_date, end_date=selected_end_date) }}" class="px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 border border-obsidian-700 text-slate-300 transition-colors">
+              Next →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Render FinOps provider share doughnut chart
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('finopsChart');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['OpenAI', 'AI/ML API', 'Featherless'],
+        datasets: [{
+          data: [
+            {{ finops.provider_share.openai }},
+            {{ finops.provider_share.aiml }},
+            {{ finops.provider_share.featherless }}
+          ],
+          backgroundColor: ['#6366F1', '#8B5CF6', '#64748B'],
+          borderColor: '#080C14',
+          borderWidth: 3,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: ${context.parsed}% of platform calls`;
+              }
+            }
+          }
+        },
+        cutout: '72%'
+      }
+    });
+  });
+</script>
+{% endblock %}

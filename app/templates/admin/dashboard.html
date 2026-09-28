@@ -94,14 +94,15 @@
         <span class="text-xs font-normal text-slate-400 font-mono">/ ${{ "{:.2f}".format(metrics.finops.ceiling_usd) }}</span>
       </div>
       <!-- Progress Bar -->
-      {% set pct = (metrics.finops.total_spend_usd / metrics.finops.ceiling_usd * 100)|round(1) %}
       <div class="mt-3">
         <div class="w-full bg-obsidian-700 rounded-full h-1.5 overflow-hidden">
-          <div class="bg-brand h-1.5 rounded-full" style="width: {{ pct }}%"></div>
+          <div class="h-1.5 rounded-full transition-all duration-500 {% if metrics.finops.alert_color == 'red' %}bg-rose-500{% elif metrics.finops.alert_color == 'yellow' %}bg-amber-400{% else %}bg-brand{% endif %}" style="width: {{ metrics.finops.spend_percentage }}%"></div>
         </div>
-        <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono mt-1">
-          <span>{{ pct }}% consumed</span>
-          <span class="text-emerald-400 font-medium">Safe Margin</span>
+        <div class="flex justify-between items-center text-[10px] font-mono mt-1">
+          <span class="text-slate-400">{{ metrics.finops.actual_percentage }}% consumed</span>
+          <span class="px-1.5 py-0.2 rounded border {% if metrics.finops.alert_color == 'red' %}text-rose-400 bg-rose-500/10 border-rose-500/20{% elif metrics.finops.alert_color == 'yellow' %}text-amber-400 bg-amber-500/10 border-amber-500/20{% else %}text-emerald-400 bg-emerald-500/10 border-emerald-500/20{% endif %} font-medium">
+            {{ metrics.finops.alert_label }}
+          </span>
         </div>
       </div>
     </div>
@@ -115,13 +116,14 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-obsidian-700/60 pb-4">
         <div>
           <h3 class="text-lg font-semibold text-white font-fraunces">Inference Spend & Model Distribution</h3>
-          <p class="text-xs text-slate-400">Token expenditure breakdown across OpenAI, AIML API, and Featherless</p>
+          <p class="text-xs text-slate-400">Token expenditure breakdown across OpenAI, AI/ML API, and Featherless</p>
         </div>
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 bg-obsidian-800 px-2.5 py-1 rounded-md border border-obsidian-700">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
             p95 Latency: <strong class="text-white">{{ metrics.finops.p95_latency_ms }}ms</strong>
           </span>
+          <a href="/admin/finops" class="text-xs text-brand hover:underline font-mono ml-2">Inspect Logs →</a>
         </div>
       </div>
 
@@ -134,27 +136,27 @@
       <div class="grid grid-cols-3 gap-3 pt-2 border-t border-obsidian-700/50">
         <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
           <div class="flex items-center gap-1.5 text-xs text-slate-400">
-            <span class="w-2 h-2 rounded-full bg-brand"></span>
-            <span>OpenAI (GPT-4o)</span>
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <span>OpenAI (Primary)</span>
           </div>
-          <p class="text-base font-bold font-mono text-white mt-1">88.0%</p>
-          <p class="text-[10px] text-slate-400 font-mono">$3.63 spent</p>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.openai }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.openai) }} spent</p>
         </div>
         <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
           <div class="flex items-center gap-1.5 text-xs text-slate-400">
-            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-            <span>AIML API (Llama)</span>
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span>AI/ML API (Backup)</span>
           </div>
-          <p class="text-base font-bold font-mono text-white mt-1">12.0%</p>
-          <p class="text-[10px] text-slate-400 font-mono">$0.49 spent</p>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.aiml }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.aiml) }} spent</p>
         </div>
         <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
           <div class="flex items-center gap-1.5 text-xs text-slate-400">
             <span class="w-2 h-2 rounded-full bg-slate-500"></span>
             <span>Featherless (Fallback)</span>
           </div>
-          <p class="text-base font-bold font-mono text-white mt-1">0.0%</p>
-          <p class="text-[10px] text-slate-400 font-mono">Standby</p>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.featherless }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.featherless) }} spent</p>
         </div>
       </div>
     </div>
@@ -242,10 +244,14 @@
     new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['OpenAI (GPT-4o)', 'AIML API (Llama 3.3)', 'Featherless (Standby)'],
+        labels: ['OpenAI (Primary)', 'AI/ML API (Backup)', 'Featherless (Fallback)'],
         datasets: [{
-          data: [88, 12, 0],
-          backgroundColor: ['#C2562F', '#38BDF8', '#475569'],
+          data: [
+            {{ metrics.finops.provider_share.openai }},
+            {{ metrics.finops.provider_share.aiml }},
+            {{ metrics.finops.provider_share.featherless }}
+          ],
+          backgroundColor: ['#6366F1', '#8B5CF6', '#64748B'],
           borderColor: '#080C14',
           borderWidth: 3,
           hoverOffset: 4
