@@ -104,3 +104,16 @@ class Config:
     TELEGRAM_API_BASE = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
     # Public WhatsApp number for the wa.me Path-B deep-link (the display number, not PHONE_NUMBER_ID).
     WHATSAPP_PUBLIC_NUMBER = os.getenv("WHATSAPP_PUBLIC_NUMBER", "")
+
+    # --- Stakeholder Admin Portal (WP-04 / G-ADMIN-AUTH & G-08) ---
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+    # Pre-seeded default bcrypt hash for 'tali-admin-secret-2026'
+    ADMIN_PASSWORD_HASH = os.getenv(
+        "ADMIN_PASSWORD_HASH",
+        "$2b$12$wqX7NM/IDlJPCRis5l7jhuKPvk1A7nJGoZUtnELbWASCQdBt6oGYu"
+    )
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "tali-admin-secret-2026")
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+
