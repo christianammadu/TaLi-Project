@@ -1,0 +1,147 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Financial Statements & Exports — TaLi Merchant Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-obsidian-800 pb-6">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl sm:text-3xl font-bold font-fraunces text-white tracking-tight">Financial Statements</h1>
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand/10 border border-brand/20 text-brand">
+          Official Exports
+        </span>
+      </div>
+      <p class="text-slate-400 text-sm mt-1">
+        Generate and download branded PDF and CSV/Excel reports for tax compliance, bank loans, and audit records.
+      </p>
+    </div>
+  </div>
+
+  <!-- Period Selector Card -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-5 shadow-lg space-y-4">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Statement Period</label>
+        
+        <!-- Period Preset Pills -->
+        <div class="flex flex-wrap items-center gap-2" id="period-selector-group">
+          <!-- This Month -->
+          <a href="{{ url_for('portal.statement', period='this_month') }}"
+             hx-get="{{ url_for('portal.statement', period='this_month') }}"
+             hx-target="#statement-preview-container"
+             hx-push-url="true"
+             class="px-3.5 py-2 rounded-xl text-xs font-semibold transition border {% if summary.period == 'this_month' %}bg-brand text-white border-brand shadow-sm shadow-brand/20{% else %}bg-obsidian-800 text-slate-300 border-obsidian-700 hover:bg-obsidian-750 hover:text-white{% endif %}">
+            This Month
+          </a>
+
+          <!-- Last Month -->
+          <a href="{{ url_for('portal.statement', period='last_month') }}"
+             hx-get="{{ url_for('portal.statement', period='last_month') }}"
+             hx-target="#statement-preview-container"
+             hx-push-url="true"
+             class="px-3.5 py-2 rounded-xl text-xs font-semibold transition border {% if summary.period == 'last_month' %}bg-brand text-white border-brand shadow-sm shadow-brand/20{% else %}bg-obsidian-800 text-slate-300 border-obsidian-700 hover:bg-obsidian-750 hover:text-white{% endif %}">
+            Last Month
+          </a>
+
+          <!-- Last 90 Days -->
+          <a href="{{ url_for('portal.statement', period='last_90_days') }}"
+             hx-get="{{ url_for('portal.statement', period='last_90_days') }}"
+             hx-target="#statement-preview-container"
+             hx-push-url="true"
+             class="px-3.5 py-2 rounded-xl text-xs font-semibold transition border {% if summary.period == 'last_90_days' %}bg-brand text-white border-brand shadow-sm shadow-brand/20{% else %}bg-obsidian-800 text-slate-300 border-obsidian-700 hover:bg-obsidian-750 hover:text-white{% endif %}">
+            Last 90 Days
+          </a>
+
+          <!-- All Time -->
+          <a href="{{ url_for('portal.statement', period='all_time') }}"
+             hx-get="{{ url_for('portal.statement', period='all_time') }}"
+             hx-target="#statement-preview-container"
+             hx-push-url="true"
+             class="px-3.5 py-2 rounded-xl text-xs font-semibold transition border {% if summary.period == 'all_time' %}bg-brand text-white border-brand shadow-sm shadow-brand/20{% else %}bg-obsidian-800 text-slate-300 border-obsidian-700 hover:bg-obsidian-750 hover:text-white{% endif %}">
+            All Time
+          </a>
+
+          <!-- Custom Range Toggle -->
+          <button type="button"
+                  id="btn-toggle-custom"
+                  onclick="toggleCustomDateInputs()"
+                  class="px-3.5 py-2 rounded-xl text-xs font-semibold transition border {% if summary.period == 'custom' %}bg-brand text-white border-brand{% else %}bg-obsidian-800 text-slate-300 border-obsidian-700 hover:bg-obsidian-750 hover:text-white{% endif %} flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Custom Range</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Date Range Form (collapsible) -->
+    <div id="custom-date-container" class="{% if summary.period != 'custom' %}hidden{% endif %} pt-3 border-t border-obsidian-800">
+      <form method="GET" action="{{ url_for('portal.statement') }}"
+            hx-get="{{ url_for('portal.statement') }}"
+            hx-target="#statement-preview-container"
+            hx-push-url="true"
+            class="flex flex-wrap items-end gap-3">
+        <input type="hidden" name="period" value="custom">
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">From Date</label>
+          <input type="date"
+                 name="start_date"
+                 value="{{ summary.custom_start }}"
+                 required
+                 class="px-3 py-1.5 bg-obsidian-900 border border-obsidian-700 rounded-lg text-xs text-white focus:outline-none focus:border-brand">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">To Date</label>
+          <input type="date"
+                 name="end_date"
+                 value="{{ summary.custom_end }}"
+                 required
+                 class="px-3 py-1.5 bg-obsidian-900 border border-obsidian-700 rounded-lg text-xs text-white focus:outline-none focus:border-brand">
+        </div>
+
+        <button type="submit"
+                class="px-4 py-1.5 bg-brand hover:bg-brand-hover text-white rounded-lg text-xs font-semibold transition">
+          Apply Filter
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Statement Preview Container (Swapped by HTMX on period change) -->
+  {% include "portal/_statement_preview.html" %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function toggleCustomDateInputs() {
+    const el = document.getElementById('custom-date-container');
+    if (el) {
+      el.classList.toggle('hidden');
+    }
+  }
+
+  // Update active pill button state on HTMX settle
+  document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+    if (evt.detail.target && evt.detail.target.id === 'statement-preview-container') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const activePeriod = urlParams.get('period') || 'this_month';
+      const customContainer = document.getElementById('custom-date-container');
+      if (customContainer) {
+        if (activePeriod === 'custom') {
+          customContainer.classList.remove('hidden');
+        } else {
+          customContainer.classList.add('hidden');
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

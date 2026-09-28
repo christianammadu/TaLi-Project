@@ -1,9 +1,11 @@
 """Routes for the Merchant Self-Service Web Portal (WP-07)."""
 
+import io
 from urllib.parse import urljoin, urlparse
-from flask import flash, jsonify, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, send_file, session, url_for
 from app.portal import portal_bp
 from app.portal.auth import (
+
     get_current_merchant,
     is_merchant_authenticated,
     login_merchant,
@@ -25,6 +27,14 @@ from app.portal.metrics import (
     get_merchant_transactions,
     get_recent_merchant_transactions,
 )
+from app.portal.statement import (
+    export_statement_csv,
+    export_statement_excel,
+    export_statement_pdf,
+    get_merchant_business_name,
+    get_statement_summary,
+)
+
 
 
 def is_safe_url(target: str) -> bool:
@@ -329,3 +339,93 @@ def inventory_adjust(item_id):
     return redirect(url_for("portal.inventory"))
 
 
+@portal_bp.route("/statement", methods=["GET"])
+@merchant_required
+def statement():
+    """Render financial statement preview and period selector."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+    biz_name = session.get("merchant_name") or get_merchant_business_name(user_id)
+
+    period = request.args.get("period", "this_month")
+    custom_start = request.args.get("start_date")
+    custom_end = request.args.get("end_date")
+    tx_type = request.args.get("type", "all")
+
+    summary = get_statement_summary(
+        user_id=user_id,
+        period=period,
+        custom_start=custom_start,
+        custom_end=custom_end,
+        tx_type=tx_type,
+    )
+
+    if request.headers.get("HX-Request"):
+        return render_template(
+            "portal/_statement_preview.html",
+            summary=summary,
+            business_name=biz_name,
+        )
+
+    return render_template(
+        "portal/statement.html",
+        summary=summary,
+        business_name=biz_name,
+    )
+
+
+@portal_bp.route("/statement/export", methods=["GET"])
+@merchant_required
+def statement_export():
+    """Generate and stream on-demand statement file (PDF, Excel, or CSV)."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+    biz_name = session.get("merchant_name") or get_merchant_business_name(user_id)
+
+    export_format = request.args.get("format", "pdf").lower().strip()
+    period = request.args.get("period", "this_month")
+    custom_start = request.args.get("start_date")
+    custom_end = request.args.get("end_date")
+
+    if export_format == "csv":
+        csv_data, filename = export_statement_csv(
+            user_id=user_id,
+            period=period,
+            custom_start=custom_start,
+            custom_end=custom_end,
+            business_name=biz_name,
+        )
+        return send_file(
+            io.BytesIO(csv_data.encode("utf-8")),
+            mimetype="text/csv",
+            as_attachment=True,
+            download_name=filename,
+        )
+    elif export_format in ("excel", "xlsx"):
+        xlsx_bytes, filename = export_statement_excel(
+            user_id=user_id,
+            period=period,
+            custom_start=custom_start,
+            custom_end=custom_end,
+            business_name=biz_name,
+        )
+        return send_file(
+            io.BytesIO(xlsx_bytes),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name=filename,
+        )
+    else:  # default to pdf
+        pdf_bytes, filename = export_statement_pdf(
+            user_id=user_id,
+            period=period,
+            custom_start=custom_start,
+            custom_end=custom_end,
+            business_name=biz_name,
+        )
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=filename,
+        )
