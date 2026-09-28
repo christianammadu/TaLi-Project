@@ -1,0 +1,224 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Compliance Review Queue — TaLi Admin{% endblock %}
+{% block page_title %}Compliance Review Queue &amp; Governance Hub{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-obsidian-850 via-obsidian-800 to-obsidian-850 border border-obsidian-700/80 shadow-xl">
+    <div class="space-y-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-mono font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+        Human-in-the-Loop Active
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold font-fraunces text-white tracking-tight">Audit Verification &amp; Veto Hub</h2>
+      <p class="text-sm text-slate-400">Review high-stakes transactions held for human governance before permanent ledger commitment.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 border border-obsidian-600/60 text-xs font-semibold text-slate-200 hover:text-white transition-all">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        <span>Overview</span>
+      </a>
+      <a href="{{ url_for('admin.finops') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 border border-obsidian-600/60 text-xs font-semibold text-slate-200 hover:text-white transition-all">
+        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span>FinOps Panel</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Pending Holds -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">Pending Holds</span>
+        <span class="p-1.5 rounded-md bg-amber-500/10 text-amber-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ stats.total_pending }}
+      </div>
+      <div class="mt-2 text-xs text-amber-400 font-mono">
+        Awaiting compliance decision
+      </div>
+    </div>
+
+    <!-- High Expense Flag -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">High Expense (&gt;₦100k)</span>
+        <span class="p-1.5 rounded-md bg-rose-500/10 text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ stats.high_expense_count }}
+      </div>
+      <div class="mt-2 text-xs text-rose-400 font-mono">
+        Strict audit mandatory
+      </div>
+    </div>
+
+    <!-- High Debt Flag -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">High Debt (&gt;₦50k)</span>
+        <span class="p-1.5 rounded-md bg-amber-500/10 text-amber-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ stats.high_debt_count }}
+      </div>
+      <div class="mt-2 text-xs text-amber-400 font-mono">
+        Counterparty validation
+      </div>
+    </div>
+
+    <!-- Low Confidence Flag -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider">Low Confidence (&lt;75%)</span>
+        <span class="p-1.5 rounded-md bg-purple-500/10 text-purple-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ stats.low_confidence_count }}
+      </div>
+      <div class="mt-2 text-xs text-purple-400 font-mono">
+        Ambiguous entity extraction
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs & Main Table -->
+  <div class="p-6 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl space-y-4">
+    <!-- Filter Navigation Tabs -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-obsidian-700/60 pb-4">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <a href="{{ url_for('admin.compliance', filter='all') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all {% if current_filter == 'all' %}bg-brand text-white shadow-md shadow-brand/20{% else %}bg-obsidian-800 text-slate-400 hover:text-white hover:bg-obsidian-700{% endif %}">
+          All Queued ({{ stats.total_pending }})
+        </a>
+        <a href="{{ url_for('admin.compliance', filter='high_expense') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all {% if current_filter == 'high_expense' %}bg-rose-500 text-white shadow-md shadow-rose-900/30{% else %}bg-obsidian-800 text-slate-400 hover:text-rose-300 hover:bg-obsidian-700{% endif %}">
+          High Expense ({{ stats.high_expense_count }})
+        </a>
+        <a href="{{ url_for('admin.compliance', filter='high_debt') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all {% if current_filter == 'high_debt' %}bg-amber-500 text-obsidian-950 font-bold shadow-md shadow-amber-900/30{% else %}bg-obsidian-800 text-slate-400 hover:text-amber-300 hover:bg-obsidian-700{% endif %}">
+          High Debt ({{ stats.high_debt_count }})
+        </a>
+        <a href="{{ url_for('admin.compliance', filter='low_confidence') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all {% if current_filter == 'low_confidence' %}bg-purple-600 text-white shadow-md shadow-purple-900/30{% else %}bg-obsidian-800 text-slate-400 hover:text-purple-300 hover:bg-obsidian-700{% endif %}">
+          Low Confidence ({{ stats.low_confidence_count }})
+        </a>
+      </div>
+
+      <div class="text-xs font-mono text-slate-400">
+        Active filter: <strong class="text-white uppercase">{{ current_filter }}</strong>
+      </div>
+    </div>
+
+    <!-- Review Queue Table -->
+    <div class="overflow-x-auto rounded-xl border border-obsidian-700/60">
+      <table class="w-full text-left text-xs text-slate-300">
+        <thead class="bg-obsidian-950/90 backdrop-blur sticky top-0 z-10 border-b border-obsidian-700 font-mono uppercase tracking-wider text-[11px] text-slate-400">
+          <tr>
+            <th class="px-4 py-3">Merchant / ID</th>
+            <th class="px-4 py-3 text-right">Amount (NGN)</th>
+            <th class="px-4 py-3">Risk Classification</th>
+            <th class="px-4 py-3">Original Prompt &amp; Details</th>
+            <th class="px-4 py-3 text-right">Compliance Action</th>
+          </tr>
+        </thead>
+        <tbody id="compliance-table-body" class="divide-y divide-obsidian-700/40">
+          {% if reviews %}
+            {% for item in reviews %}
+              {% include "admin/_compliance_row.html" %}
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                <svg class="w-10 h-10 mx-auto mb-3 text-emerald-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-sm font-semibold text-white">All Clear — Review Queue Empty</p>
+                <p class="text-xs text-slate-400 mt-1">There are no flagged transactions awaiting human compliance approval.</p>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Rejection Confirmation Modal (Safe 2-Click Veto Interaction) -->
+<div id="reject-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+  <div class="w-full max-w-md rounded-2xl bg-obsidian-850 border border-rose-500/40 p-6 shadow-2xl space-y-4">
+    <div class="flex items-center gap-3 text-rose-400 border-b border-obsidian-700/60 pb-3">
+      <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div>
+        <h3 class="text-base font-bold font-fraunces text-white">Confirm Compliance Veto</h3>
+        <p class="text-xs text-slate-400">Formal rejection of flagged transaction</p>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-300 leading-relaxed">
+      Rejecting this item will terminate the agent room flow, abort ledger persistence, and immediately notify the merchant on WhatsApp/Telegram with your reason.
+    </p>
+
+    <div>
+      <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Rejection Reason</label>
+      <textarea id="reject-reason" rows="3" class="w-full bg-obsidian-900 border border-obsidian-600 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500 font-mono" placeholder="e.g. Unverified vendor invoice, transaction exceeds single-day limit..."></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <button onclick="closeRejectModal()" class="px-3.5 py-2 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 border border-obsidian-700 text-xs font-semibold text-slate-300 transition-colors">
+        Cancel
+      </button>
+      <button id="confirm-reject-btn" onclick="submitRejection()" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-900/30 transition-all">
+        Confirm Rejection &amp; Notify
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let activeReviewId = null;
+
+  function confirmReject(reviewId) {
+    activeReviewId = reviewId;
+    document.getElementById('reject-reason').value = '';
+    document.getElementById('reject-modal').classList.remove('hidden');
+  }
+
+  function closeRejectModal() {
+    activeReviewId = null;
+    document.getElementById('reject-modal').classList.add('hidden');
+  }
+
+  function submitRejection() {
+    if (!activeReviewId) return;
+    const reason = document.getElementById('reject-reason').value.trim();
+
+    htmx.ajax('POST', '/admin/compliance/' + activeReviewId + '/action', {
+      target: '#review-row-' + activeReviewId,
+      swap: 'outerHTML',
+      values: {
+        action: 'reject',
+        reason: reason || 'Transaction declined by compliance officer.'
+      }
+    });
+
+    closeRejectModal();
+  }
+</script>
+{% endblock %}
