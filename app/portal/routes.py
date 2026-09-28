@@ -1,7 +1,7 @@
 """Routes for the Merchant Self-Service Web Portal (WP-07)."""
 
 from urllib.parse import urljoin, urlparse
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from app.portal import portal_bp
 from app.portal.auth import (
     get_current_merchant,
@@ -12,6 +12,12 @@ from app.portal.auth import (
     normalize_phone,
     request_portal_otp,
     verify_portal_otp,
+)
+from app.portal.metrics import (
+    get_merchant_cashflow_trends,
+    get_merchant_financial_summary,
+    get_merchant_transactions,
+    get_recent_merchant_transactions,
 )
 
 
@@ -132,4 +138,88 @@ def logout():
 def dashboard():
     """Merchant Portal Home Dashboard."""
     merchant = get_current_merchant()
-    return render_template("portal/dashboard.html", merchant=merchant)
+    user_id = merchant["user_id"]
+    summary = get_merchant_financial_summary(user_id)
+    chart_data = get_merchant_cashflow_trends(user_id, days=30)
+    recent_transactions = get_recent_merchant_transactions(user_id, limit=5)
+
+    return render_template(
+        "portal/dashboard.html",
+        merchant=merchant,
+        summary=summary,
+        chart_data=chart_data,
+        recent_transactions=recent_transactions,
+    )
+
+
+@portal_bp.route("/transactions", methods=["GET"])
+@merchant_required
+def transactions():
+    """Searchable and filterable ledger transactions view."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
+
+    limit = 20
+    offset = (page - 1) * limit
+
+    tx_type = request.args.get("type", "").strip() or None
+    search = request.args.get("search", "").strip() or None
+    start_date = request.args.get("start_date", "").strip() or None
+    end_date = request.args.get("end_date", "").strip() or None
+
+    items, total_count = get_merchant_transactions(
+        user_id=user_id,
+        limit=limit,
+        offset=offset,
+        tx_type=tx_type,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    total_pages = max(1, (total_count + limit - 1) // limit)
+
+    # Return partial rows if HTMX request
+    if request.headers.get("HX-Request"):
+        return render_template(
+            "portal/_transaction_rows.html",
+            items=items,
+            page=page,
+            total_pages=total_pages,
+            total_count=total_count,
+        )
+
+    return render_template(
+        "portal/transactions.html",
+        merchant=merchant,
+        items=items,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        tx_type=tx_type or "",
+        search=search or "",
+        start_date=start_date or "",
+        end_date=end_date or "",
+    )
+
+
+@portal_bp.route("/api/cashflow-chart", methods=["GET"])
+@merchant_required
+def cashflow_chart_api():
+    """Return cashflow chart data as JSON for interactive period switching."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    try:
+        days = int(request.args.get("days", 30))
+    except (ValueError, TypeError):
+        days = 30
+
+    data = get_merchant_cashflow_trends(user_id, days=days)
+    return jsonify(data)
+

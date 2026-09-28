@@ -51,7 +51,7 @@ WP-07 (Merchant Portal Auth & OTP) ──► WP-08 (Cashflow Visualizer) & WP-09
 | `WP-05` | AI Fleet Observability & FinOps Spend Panel | 4 | `[x]` | `WP-04` | — | sonnet |
 | `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[x]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
 | `WP-07` | Merchant Web Session Auth & WhatsApp OTP Verification | 5 | `[x]` | `WP-04` | `G-MERCHANT-AUTH` | sonnet |
-| `WP-08` | Merchant Cashflow & Ledger Visualizer | 6 | `[ ]` | `WP-07` | — | sonnet |
+| `WP-08` | Merchant Cashflow & Ledger Visualizer | 6 | `[x]` | `WP-07` | — | sonnet |
 | `WP-09` | Self-Service Catalog & Inventory Manager | 6 | `[ ]` | `WP-07` | — | sonnet |
 | `WP-10` | On-demand Statement Generator (PDF & Excel Export) | 7 | `[ ]` | `WP-08` | `G-STATEMENT-EXPORT` | sonnet |
 <!-- groundwork:auto:end wp-matrix -->

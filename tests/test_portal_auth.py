@@ -47,6 +47,11 @@ class MockSession:
         self.store = store
 
     def execute(self, stmt):
+        class Row:
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+
         class Result:
             def __init__(self, item):
                 self.item = item
@@ -54,11 +59,17 @@ class MockSession:
             def scalars(self):
                 return self
 
+            def scalar(self):
+                return self.item if isinstance(self.item, (int, float)) else 0
+
+            def scalar_one_or_none(self):
+                return self.item if not isinstance(self.item, list) else (self.item[0] if self.item else None)
+
             def first(self):
                 return self.item
 
             def all(self):
-                return [self.item] if self.item else []
+                return [self.item] if self.item and not isinstance(self.item, list) else (self.item or [])
 
             @property
             def rowcount(self):
@@ -77,7 +88,16 @@ class MockSession:
                     c.used = True
             return Result(None)
 
-        # Select statement
+        if "from debt_balances" in stmt_str:
+            return Result(Row(receivables=0, payables=0))
+        if "from transactions" in stmt_str and "sum" in stmt_str:
+            return Result(Row(total_in=0, total_out=0, month_in=0, month_out=0, today_in=0, tx_count=0))
+        if "from transactions" in stmt_str:
+            return Result([])
+        if "count" in stmt_str and ("inventory_items" in stmt_str or "products" in stmt_str):
+            return Result(0)
+
+        # Select statement for VerificationCode
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         for c in reversed(self.store.codes):
             if c.purpose == "login" and not c.used and c.expires_at > now:
@@ -114,6 +134,7 @@ def app(monkeypatch, db_store):
     """Create Flask application configured for portal testing with mock database."""
     import app as app_module
     import app.portal.auth as portal_auth_mod
+    import app.portal.metrics as portal_metrics_mod
     import app.admin.metrics as metrics_mod
 
     @contextmanager
@@ -124,6 +145,7 @@ def app(monkeypatch, db_store):
     monkeypatch.setattr(app_module, "init_engine", lambda a: None)
     monkeypatch.setattr(portal_auth_mod, "session_scope", mock_session_scope)
     monkeypatch.setattr(portal_auth_mod, "get_user_by_phone", lambda p: db_store.users.get(p))
+    monkeypatch.setattr(portal_metrics_mod, "session_scope", mock_session_scope)
     monkeypatch.setattr(metrics_mod, "session_scope", mock_session_scope)
 
     application = create_app()
