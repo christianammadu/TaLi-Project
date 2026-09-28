@@ -212,3 +212,34 @@ def get_orchestrator(backend: Optional[Any] = None, config: Optional[Dict[str, A
 # Backward-compatible aliases for existing agent code
 BandClient = OrchestratorClient
 get_band_client = get_orchestrator
+
+
+def post_human_decision(
+    room_id: str,
+    review_id: str,
+    decision: str,
+    reason: Optional[str] = None,
+    orchestrator: Optional[OrchestratorClient] = None,
+) -> str:
+    """Post human-in-the-loop compliance decision into the agent room.
+
+    Surfaces human decisions (@tali-human) to resume pending transactions or
+    formalize audit vetoes across @tali-ledger and @tali-cfo.
+    """
+    client = orchestrator or get_orchestrator(_GLOBAL_ENGINE)
+    payload = {
+        "type": "human_decision",
+        "review_id": review_id,
+        "decision": decision,
+        "reason": reason,
+        "timestamp": time.time(),
+    }
+    return client.send(
+        room_id=room_id,
+        mentions=["@tali-ledger", "@tali-cfo"],
+        body=payload,
+        sender="@tali-human",
+        correlation_id=review_id,
+        terminal=False,
+    )
+
