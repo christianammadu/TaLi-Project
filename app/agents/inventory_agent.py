@@ -7,6 +7,7 @@ import json
 from decimal import Decimal
 from mysql.connector import Error
 from app.data.database import get_db_connection
+from app.data.queries import resolve_inventory_item
 
 
 class InventoryAgent:
@@ -64,7 +65,6 @@ class InventoryAgent:
         action = parsed.get('action', 'ADD').upper()
 
         # Resolve item using multi-tier fuzzy matching and check for tied ambiguity (WP-03 / G-07)
-        from app.data.queries import resolve_inventory_item
         resolved = resolve_inventory_item(self.user_id, product)
         if resolved and resolved.get('status') == 'clarification_needed':
             return json.dumps({

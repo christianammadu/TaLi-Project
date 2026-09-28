@@ -11,6 +11,7 @@ from app.data.database import get_db_connection, set_transaction_state
 from app.agents.band import get_band_client
 from app.services.validators import dump_model
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
+from app.data.queries import resolve_inventory_item
 
 # Band room handles (WP-04). Ledger forwards results to the CFO and runs the two-phase
 # review with the Compliance agent (WP-07) — all by @mention in the shared room.
@@ -547,7 +548,6 @@ class LedgerAgent:
             return json.dumps({"status": "error", "message": "Missing product details."})
 
         # Resolve item using multi-tier fuzzy matching and check for tied ambiguity (WP-03 / G-07)
-        from app.data.queries import resolve_inventory_item
         resolved = resolve_inventory_item(self.user_id, item_name)
         if resolved and resolved.get('status') == 'clarification_needed':
             return json.dumps({
