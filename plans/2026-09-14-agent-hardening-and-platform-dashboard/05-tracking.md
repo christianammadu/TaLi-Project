@@ -43,7 +43,7 @@ WP-04 (Admin Blueprint & Auth) ──► WP-05 (AI Observability) & WP-06 (Compl
 |---|---|---|---|---|---|---|
 | `WP-01` | Conversational Guardrail Pre-Filter & Throttling | 1 | `[x]` | — | — | sonnet |
 | `WP-02` | Multi-Intent Compound Split-Routing & Composite CFO | 2 | `[ ]` | `WP-01`, `WP-03` | `G-COMPOSITE-PAYLOAD` | sonnet |
-| `WP-03` | Canonical Inventory Prompt Injection & Fuzzy SQL Matcher | 1 | `[ ]` | — | `G-INVENTORY-SEAM` | sonnet |
+| `WP-03` | Canonical Inventory Prompt Injection & Fuzzy SQL Matcher | 1 | `[x]` | — | `G-INVENTORY-SEAM` | sonnet |
 | `WP-04` | Admin Flask Blueprint & Stakeholder Session Auth | 3 | `[ ]` | `WP-02` | `G-ADMIN-AUTH` | sonnet |
 | `WP-05` | AI Fleet Observability & FinOps Spend Panel | 4 | `[ ]` | `WP-04` | — | sonnet |
 | `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[ ]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
