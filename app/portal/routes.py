@@ -13,6 +13,12 @@ from app.portal.auth import (
     request_portal_otp,
     verify_portal_otp,
 )
+from app.portal.inventory import (
+    add_merchant_inventory_item,
+    adjust_merchant_stock,
+    get_inventory_summary_stats,
+    get_merchant_inventory_items,
+)
 from app.portal.metrics import (
     get_merchant_cashflow_trends,
     get_merchant_financial_summary,
@@ -222,4 +228,104 @@ def cashflow_chart_api():
 
     data = get_merchant_cashflow_trends(user_id, days=days)
     return jsonify(data)
+
+
+@portal_bp.route("/inventory", methods=["GET"])
+@merchant_required
+def inventory():
+    """Merchant catalog and stock management view."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    search = request.args.get("search", "").strip() or None
+    low_stock = request.args.get("low_stock", "").lower() in ("true", "1", "yes")
+
+    items = get_merchant_inventory_items(user_id, search=search, low_stock_only=low_stock)
+    stats = get_inventory_summary_stats(user_id)
+
+    if request.headers.get("HX-Request"):
+        return render_template(
+            "portal/_inventory_rows.html",
+            items=items,
+            stats=stats,
+            search=search or "",
+            low_stock=low_stock,
+        )
+
+    return render_template(
+        "portal/inventory.html",
+        merchant=merchant,
+        items=items,
+        stats=stats,
+        search=search or "",
+        low_stock=low_stock,
+    )
+
+
+@portal_bp.route("/inventory/add", methods=["POST"])
+@merchant_required
+def inventory_add():
+    """Add a new product or inventory SKU."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    name = request.form.get("name", "").strip()
+    unit = request.form.get("unit", "pcs").strip() or "pcs"
+
+    try:
+        qty = float(request.form.get("quantity", 0))
+    except (ValueError, TypeError):
+        qty = 0.0
+
+    try:
+        min_stock = float(request.form.get("min_stock", 5))
+    except (ValueError, TypeError):
+        min_stock = 5.0
+
+    success, message, _ = add_merchant_inventory_item(
+        user_id=user_id,
+        name=name,
+        unit=unit,
+        initial_quantity=qty,
+        min_stock=min_stock,
+    )
+
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+
+    return redirect(url_for("portal.inventory"))
+
+
+@portal_bp.route("/inventory/<item_id>/adjust", methods=["POST"])
+@merchant_required
+def inventory_adjust(item_id):
+    """Adjust quantity of an existing stock item (restock, loss, set)."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    adj_type = request.form.get("adjustment_type", "restock").strip()
+    notes = request.form.get("notes", "").strip() or None
+
+    try:
+        qty = float(request.form.get("quantity", 0))
+    except (ValueError, TypeError):
+        qty = 0.0
+
+    success, message, _ = adjust_merchant_stock(
+        user_id=user_id,
+        item_id=item_id,
+        adjustment_type=adj_type,
+        quantity=qty,
+        notes=notes,
+    )
+
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+
+    return redirect(url_for("portal.inventory"))
+
 

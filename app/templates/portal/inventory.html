@@ -1,0 +1,198 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Catalog & Inventory{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">Catalog &amp; Inventory</h1>
+      <p class="text-sm text-slate-400">Track stock quantities, manage units, and record restocking adjustments</p>
+    </div>
+    <div>
+      <button onclick="document.getElementById('add-product-modal').classList.remove('hidden')"
+              class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand hover:bg-brand-hover text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-brand/20 active:scale-[0.99]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add New Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Inventory Summary Stats Cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-4 shadow">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total SKUs</div>
+      <div class="text-2xl font-bold font-sans text-white mt-1">{{ stats.total_skus }}</div>
+    </div>
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-4 shadow">
+      <div class="text-xs font-semibold uppercase tracking-wider text-emerald-400">In Stock</div>
+      <div class="text-2xl font-bold font-sans text-emerald-400 mt-1">{{ stats.in_stock }}</div>
+    </div>
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-4 shadow">
+      <div class="text-xs font-semibold uppercase tracking-wider text-amber-400">Low Stock</div>
+      <div class="text-2xl font-bold font-sans text-amber-400 mt-1">{{ stats.low_stock }}</div>
+    </div>
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-4 shadow">
+      <div class="text-xs font-semibold uppercase tracking-wider text-rose-400">Out of Stock</div>
+      <div class="text-2xl font-bold font-sans text-rose-400 mt-1">{{ stats.out_of_stock }}</div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+    
+    <!-- Filter Toggle Pills -->
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('portal.inventory', search=search) }}"
+         class="px-4 py-2 rounded-xl text-xs font-semibold transition-all {% if not low_stock %}bg-brand text-white shadow-lg shadow-brand/20{% else %}bg-obsidian-900 text-slate-400 hover:text-white border border-obsidian-700{% endif %}">
+        All Items
+      </a>
+      <a href="{{ url_for('portal.inventory', low_stock='true', search=search) }}"
+         class="px-4 py-2 rounded-xl text-xs font-semibold transition-all {% if low_stock %}bg-amber-600 text-white shadow-lg shadow-amber-900/30{% else %}bg-obsidian-900 text-slate-400 hover:text-amber-400 border border-obsidian-700{% endif %}">
+        ⚠️ Low Stock Warnings
+      </a>
+    </div>
+
+    <!-- Live Search Bar (HTMX) -->
+    <div class="relative w-full md:w-80">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+      <input type="text" name="search" value="{{ search }}"
+             placeholder="Search product names..."
+             hx-get="{{ url_for('portal.inventory') }}"
+             hx-trigger="keyup changed delay:300ms, search"
+             hx-target="#inventory-table-container"
+             hx-include="[name='low_stock']"
+             hx-push-url="true"
+             class="block w-full pl-10 pr-4 py-2 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand shadow-inner">
+      <input type="hidden" name="low_stock" value="{{ 'true' if low_stock else '' }}">
+    </div>
+
+  </div>
+
+  <!-- Inventory Table Container -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl shadow-xl overflow-hidden">
+    {% include "portal/_inventory_rows.html" %}
+  </div>
+
+</div>
+
+<!-- Modal 1: Add New Product -->
+<div id="add-product-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-obsidian-850 border border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+    <div class="flex items-center justify-between border-b border-obsidian-700/60 pb-3">
+      <h3 class="text-lg font-serif font-bold text-white">Add New Product</h3>
+      <button onclick="document.getElementById('add-product-modal').classList.add('hidden')" class="text-slate-400 hover:text-white text-xl">
+        &times;
+      </button>
+    </div>
+
+    <form action="{{ url_for('portal.inventory_add') }}" method="POST" class="space-y-4 text-xs">
+      <div>
+        <label for="name" class="block font-semibold uppercase text-slate-400 mb-1">Product Name</label>
+        <input type="text" id="name" name="name" required placeholder="e.g. 50kg Bag of Rice"
+               class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="unit" class="block font-semibold uppercase text-slate-400 mb-1">Unit of Measure</label>
+          <input type="text" id="unit" name="unit" placeholder="bags, kg, pcs, kegs" value="pcs"
+                 class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label for="quantity" class="block font-semibold uppercase text-slate-400 mb-1">Initial Stock Count</label>
+          <input type="number" step="0.01" min="0" id="quantity" name="quantity" placeholder="0" value="0"
+                 class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+      </div>
+
+      <div>
+        <label for="min_stock" class="block font-semibold uppercase text-slate-400 mb-1">Minimum Alert Level</label>
+        <input type="number" step="0.01" min="0" id="min_stock" name="min_stock" placeholder="5" value="5"
+               class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand">
+        <p class="mt-1 text-[11px] text-slate-500">Alerts you when stock falls below this quantity.</p>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2">
+        <button type="button" onclick="document.getElementById('add-product-modal').classList.add('hidden')"
+                class="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-obsidian-800 border border-obsidian-700">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-2 rounded-xl text-white font-semibold bg-brand hover:bg-brand-hover shadow-lg shadow-brand/20">
+          Save Product
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Adjust / Restock Stock -->
+<div id="adjust-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-obsidian-850 border border-obsidian-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+    <div class="flex items-center justify-between border-b border-obsidian-700/60 pb-3">
+      <div>
+        <h3 class="text-lg font-serif font-bold text-white">Adjust Stock Level</h3>
+        <p id="modal-product-name" class="text-xs text-brand font-semibold"></p>
+      </div>
+      <button onclick="closeAdjustModal()" class="text-slate-400 hover:text-white text-xl">
+        &times;
+      </button>
+    </div>
+
+    <form id="adjust-form" action="" method="POST" class="space-y-4 text-xs">
+      <div>
+        <label for="adjustment_type" class="block font-semibold uppercase text-slate-400 mb-1">Action</label>
+        <select id="adjustment_type" name="adjustment_type"
+                class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white focus:outline-none focus:ring-2 focus:ring-brand">
+          <option value="restock">➕ Restock (Add to stock)</option>
+          <option value="damage">➖ Loss / Damage / Expiry</option>
+          <option value="set">🔄 Stock Count Correction (Set exact count)</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="adjust-quantity" class="block font-semibold uppercase text-slate-400 mb-1">Quantity</label>
+        <input type="number" step="0.01" min="0.01" id="adjust-quantity" name="quantity" required placeholder="Enter quantity"
+               class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white focus:outline-none focus:ring-2 focus:ring-brand">
+      </div>
+
+      <div>
+        <label for="adjust-notes" class="block font-semibold uppercase text-slate-400 mb-1">Notes / Reason (Optional)</label>
+        <input type="text" id="adjust-notes" name="notes" placeholder="e.g. Received new shipment from supplier"
+               class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white focus:outline-none focus:ring-2 focus:ring-brand">
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeAdjustModal()"
+                class="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-obsidian-800 border border-obsidian-700">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-2 rounded-xl text-white font-semibold bg-brand hover:bg-brand-hover shadow-lg shadow-brand/20">
+          Update Stock
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openAdjustModal(itemId, itemName, itemUnit, currentQty) {
+    document.getElementById('modal-product-name').textContent = itemName + ' (Current: ' + currentQty + ' ' + itemUnit + ')';
+    document.getElementById('adjust-form').action = '/portal/inventory/' + itemId + '/adjust';
+    document.getElementById('adjust-quantity').value = '';
+    document.getElementById('adjust-modal').classList.remove('hidden');
+  }
+
+  function closeAdjustModal() {
+    document.getElementById('adjust-modal').classList.add('hidden');
+  }
+</script>
+{% endblock %}
