@@ -12,8 +12,8 @@ def get_openai_client():
     return model_router.get_client("openai")
 
 
-def build_system_prompt(categories):
-    """Build the system prompt with today's date and available categories.
+def build_system_prompt(categories, products=None):
+    """Build the system prompt with today's date, available categories, and canonical products.
 
     The prompt instructs GPT to analyze the message for multiple bookkeeping intents,
     assess confidence, flag complex instructions for review, and output a unified JSON.
@@ -25,11 +25,19 @@ def build_system_prompt(categories):
         f"- {cat['name']} ({cat['type']})" for cat in categories
     )
 
+    product_section = ""
+    if products:
+        product_list = "\n".join(f"- {p}" for p in products)
+        product_section = (
+            f"\n\nAVAILABLE PRODUCTS IN INVENTORY:\n{product_list}\n"
+            "When the user refers to any product or stock item, resolve it to the closest canonical item name from this list."
+        )
+
     return f"""You are a bookkeeping assistant for a WhatsApp Financial Operating System.
 Today's date is {today}.
 
 AVAILABLE CATEGORIES:
-{category_list}
+{category_list}{product_section}
 
 Analyze the user's message. It may contain one or multiple intents (e.g. recording a transaction AND updating stock, or recording credit AND recording a sale).
 Return a single unified JSON object representing all parsed intents and details.
@@ -238,7 +246,9 @@ def parse_message(text, user_id):
     start_time = time.time()
     try:
         categories = get_categories_for_user(user_id)
-        system_prompt = build_system_prompt(categories)
+        from app.data.queries import get_user_product_names
+        products = get_user_product_names(user_id)
+        system_prompt = build_system_prompt(categories, products=products)
 
         # Route through the multi-provider model router (WP-01): the "intake" role runs
         # on Featherless with an automatic OpenAI fallback. The router reports the
