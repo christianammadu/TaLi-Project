@@ -1,0 +1,86 @@
+<div id="transactions-table-container">
+  {% if items %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-obsidian-900/80 text-slate-400 text-xs uppercase font-medium border-b border-obsidian-700/60">
+        <tr>
+          <th class="py-3.5 px-6">Date</th>
+          <th class="py-3.5 px-6">Type</th>
+          <th class="py-3.5 px-6">Item / Description</th>
+          <th class="py-3.5 px-6">Category</th>
+          <th class="py-3.5 px-6 text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-obsidian-700/40 text-slate-300">
+        {% for tx in items %}
+        <tr class="hover:bg-obsidian-800/60 transition-colors">
+          <td class="py-3.5 px-6 font-mono text-xs text-slate-400 whitespace-nowrap">
+            {{ tx.transaction_date }}
+          </td>
+          <td class="py-3.5 px-6 whitespace-nowrap">
+            {% if tx.type == 'income' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Sale
+              </span>
+            {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                Expense
+              </span>
+            {% endif %}
+          </td>
+          <td class="py-3.5 px-6 font-medium text-white max-w-xs truncate">
+            {{ tx.item or tx.description }}
+          </td>
+          <td class="py-3.5 px-6 text-slate-400 text-xs whitespace-nowrap">
+            {{ tx.category }}
+          </td>
+          <td class="py-3.5 px-6 text-right font-mono font-semibold whitespace-nowrap {% if tx.type == 'income' %}text-emerald-400{% else %}text-slate-200{% endif %}">
+            {% if tx.type == 'income' %}+{% else %}-{% endif %}{{ tx.amount_formatted }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="px-6 py-4 bg-obsidian-900/60 border-t border-obsidian-700/60 flex items-center justify-between text-xs text-slate-400">
+    <div>
+      Showing <span class="text-white font-semibold">{{ items|length }}</span> of <span class="text-white font-semibold">{{ total_count }}</span> entries
+    </div>
+    <div class="flex items-center gap-2">
+      {% if page > 1 %}
+      <a href="{{ url_for('portal.transactions', page=page-1, type=request.args.get('type', ''), search=request.args.get('search', '')) }}"
+         hx-get="{{ url_for('portal.transactions', page=page-1, type=request.args.get('type', ''), search=request.args.get('search', '')) }}"
+         hx-target="#transactions-table-container"
+         hx-push-url="true"
+         class="px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition-colors">
+        &larr; Previous
+      </a>
+      {% endif %}
+
+      <span class="px-2 py-1 text-slate-400">Page {{ page }} of {{ total_pages }}</span>
+
+      {% if page < total_pages %}
+      <a href="{{ url_for('portal.transactions', page=page+1, type=request.args.get('type', ''), search=request.args.get('search', '')) }}"
+         hx-get="{{ url_for('portal.transactions', page=page+1, type=request.args.get('type', ''), search=request.args.get('search', '')) }}"
+         hx-target="#transactions-table-container"
+         hx-push-url="true"
+         class="px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 border border-obsidian-700 transition-colors">
+        Next &rarr;
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="p-16 text-center">
+    <div class="w-12 h-12 rounded-xl bg-obsidian-800 border border-obsidian-700 flex items-center justify-center text-slate-500 mx-auto mb-3">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+    <h3 class="text-sm font-semibold text-white">No transactions found</h3>
+    <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+      No transactions match your current search or filter criteria.
+    </p>
+  </div>
+  {% endif %}
+</div>

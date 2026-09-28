@@ -21,11 +21,15 @@ WP-01 (Guardrails) & WP-03 (Inventory Matcher) ──► WP-02 (Compound Split-R
                                                                                           │
                                                                                           ▼
 WP-04 (Admin Blueprint & Auth) ──► WP-05 (AI Observability) & WP-06 (Compliance Hub) ──► Phase 2 Gate
+                                                                                          │
+                                                                                          ▼
+WP-07 (Merchant Portal Auth & OTP) ──► WP-08 (Cashflow Visualizer) & WP-09 (Catalog/Inventory) ──► WP-10 (Statement Export)
 ```
 
 **Parallel tracks**:
 - In Phase 1: `WP-01` (Guardrails) and `WP-03` (Fuzzy Inventory) are completely independent and run in parallel; `WP-02` (Compound Routing) consumes their outputs.
 - In Phase 2: Once `WP-04` (Admin Blueprint & Auth) lands, `WP-05` (FinOps) and `WP-06` (Compliance Hub) execute concurrently.
+- In Phase 3: Once `WP-07` (Merchant Portal Auth & OTP) lands, `WP-08` (Cashflow & Ledger) and `WP-09` (Catalog & Inventory) can run in parallel, converging into `WP-10` (Statement Generator).
 
 ---
 
@@ -38,31 +42,36 @@ WP-04 (Admin Blueprint & Auth) ──► WP-05 (AI Observability) & WP-06 (Compl
 ## Work-package matrix
 
 <!-- groundwork:auto:start wp-matrix -->
-<!-- last_action: review · 2026-09-14T17:09:32Z -->
 | WP | Title | Wave | Status | Depends on | Gate | Tier |
 |---|---|---|---|---|---|---|
-| `WP-01` | Conversational Guardrail Pre-Filter & Throttling | 1 | `[ ]` | — | — | sonnet |
-| `WP-02` | Multi-Intent Compound Split-Routing & Composite CFO | 2 | `[ ]` | `WP-01`, `WP-03` | `G-COMPOSITE-PAYLOAD` | sonnet |
-| `WP-03` | Canonical Inventory Prompt Injection & Fuzzy SQL Matcher | 1 | `[ ]` | — | `G-INVENTORY-SEAM` | sonnet |
-| `WP-04` | Admin Flask Blueprint & Stakeholder Session Auth | 3 | `[ ]` | `WP-02` | `G-ADMIN-AUTH` | sonnet |
-| `WP-05` | AI Fleet Observability & FinOps Spend Panel | 4 | `[ ]` | `WP-04` | — | sonnet |
-| `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[ ]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
+| `WP-01` | Conversational Guardrail Pre-Filter & Throttling | 1 | `[x]` | — | — | sonnet |
+| `WP-02` | Multi-Intent Compound Split-Routing & Composite CFO | 2 | `[x]` | `WP-01`, `WP-03` | `G-COMPOSITE-PAYLOAD` | sonnet |
+| `WP-03` | Canonical Inventory Prompt Injection & Fuzzy SQL Matcher | 1 | `[x]` | — | `G-INVENTORY-SEAM` | sonnet |
+| `WP-04` | Admin Flask Blueprint & Stakeholder Session Auth | 3 | `[x]` | `WP-02` | `G-ADMIN-AUTH` | sonnet |
+| `WP-05` | AI Fleet Observability & FinOps Spend Panel | 4 | `[x]` | `WP-04` | — | sonnet |
+| `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[x]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
+| `WP-07` | Merchant Web Session Auth & WhatsApp OTP Verification | 5 | `[x]` | `WP-04` | `G-MERCHANT-AUTH` | sonnet |
+| `WP-08` | Merchant Cashflow & Ledger Visualizer | 6 | `[x]` | `WP-07` | — | sonnet |
+| `WP-09` | Self-Service Catalog & Inventory Manager | 6 | `[x]` | `WP-07` | — | sonnet |
+| `WP-10` | On-demand Statement Generator (PDF & Excel Export) | 7 | `[x]` | `WP-08` | `G-STATEMENT-EXPORT` | sonnet |
 <!-- groundwork:auto:end wp-matrix -->
+
 
 ## Wave plan
 
 <!-- groundwork:auto:start wave-plan -->
-<!-- last_action: review · 2026-09-14T17:09:33Z -->
 - **Wave 1 (Independent Agent Hardening)**: `WP-01` (Guardrails Pre-Filter) + `WP-03` (Inventory Canonicalization & Fuzzy Matcher)
 - **Wave 2 (Composite Integration)**: `WP-02` (Multi-Intent Compound Statement Execution & CFO Formatting)
 - **Wave 3 (Admin Portal Foundation)**: `WP-04` (Admin Blueprint, Stakeholder Auth, Layout Template)
 - **Wave 4 (Platform Observability & Governance)**: `WP-05` (FinOps & AI Fleet Dashboard) + `WP-06` (Compliance Review Queue UI)
+- **Wave 5 (Merchant Portal Foundation)**: `WP-07` (Merchant Web Session Auth & WhatsApp OTP)
+- **Wave 6 (Merchant Dashboard Core)**: `WP-08` (Merchant Cashflow & Ledger Visualizer) + `WP-09` (Catalog & Inventory Manager)
+- **Wave 7 (Financial Export)**: `WP-10` (Statement Generator & Export)
 <!-- groundwork:auto:end wave-plan -->
 
 ## Critical-path graph
 
 <!-- groundwork:auto:start critical-path -->
-<!-- last_action: review · 2026-09-14T17:09:33Z -->
 ```mermaid
 flowchart LR
     WP01["WP-01: Guardrails Pre-Filter"] --> WP02["WP-02: Compound Split-Routing"]
@@ -73,6 +82,10 @@ flowchart LR
     WP04 --> WP06["WP-06: Compliance Queue UI"]
     WP05 --> G_P2{{"Phase 2 Ship Gate"}}
     WP06 --> G_P2
+    G_P2 --> WP07["WP-07: Merchant Web Auth & OTP"]
+    WP07 --> WP08["WP-08: Cashflow Visualizer"]
+    WP07 --> WP09["WP-09: Inventory Manager"]
+    WP08 --> WP10["WP-10: Statement Export"]
 ```
 <!-- groundwork:auto:end critical-path -->
 
@@ -169,7 +182,73 @@ flowchart LR
 
 ---
 
-## Phase 3 — Merchant Self-Service Web Portal (stub)
+## Phase 3 — Merchant Self-Service Web Portal
 
-Customer-facing web portal allowing business owners to authenticate via WhatsApp OTP to view interactive cashflow charts, review historical transactions, export PDF/Excel statements, and edit catalog items.
+### WP-07 — Merchant Web Session Auth & WhatsApp OTP Verification
+
+- **Goal:** Allow registered merchants to authenticate into the web portal via phone number and one-time passcode (OTP) delivered via WhatsApp / dev bypass. Scaffold dedicated `/portal/` blueprint with `@merchant_required` decorator and secure session management.
+- **Depends on:** `WP-04` (Phase 2 complete).
+- **Files (create/touch):**
+  - `app/portal/__init__.py` (new) — Dedicated `portal_bp` blueprint.
+  - `app/portal/auth.py` (new) — Merchant session store, WhatsApp OTP generation/verification, rate limiting, and `@merchant_required` decorator.
+  - `app/portal/routes.py` (new) — `/portal/login`, `/portal/verify-otp`, `/portal/logout`, `/portal/dashboard` shell.
+  - `app/templates/portal/layout.html` (new) — Base merchant portal layout adhering to Obsidian theme, Fraunces serif headings, and Hanken Grotesk numbers.
+  - `app/templates/portal/login.html` (new) — Phone input and OTP verification interface with resend countdown.
+  - `app/templates/portal/dashboard.html` (new) — Merchant dashboard shell.
+  - `app/__init__.py` — Register `portal_bp`.
+  - `tests/test_portal_auth.py` (new) — Full unit tests for login, OTP verification, session cookies, rate-limiting, and logout.
+- **DoD (self-verifiable):**
+  1. Visiting `/portal/` unauthenticated redirects to `/portal/login`.
+  2. Requesting an OTP sends a 6-digit code to the merchant's WhatsApp (or dev bypass); submitting the valid code authenticates the session and redirects to `/portal/dashboard`.
+  3. Non-registered phone numbers receive clear guidance to register.
+  4. Exceeded OTP attempts (3 failed) lock the phone for 10 minutes.
+  5. Session cookies use `HttpOnly=True`, `SameSite='Lax'`, and expire on logout.
+  6. 100% test pass on `pytest tests/test_portal_auth.py`.
+
+### WP-08 — Merchant Cashflow & Ledger Visualizer
+
+- **Goal:** Surface personal merchant financial health metrics (Total Revenue, Total Expenses, Net Cashflow, Today's Sales, Pending Debt Balances) with interactive cashflow charts and a filterable ledger transaction table.
+- **Depends on:** `WP-07`.
+- **Files (create/touch):**
+  - `app/portal/metrics.py` (new) — Aggregations strictly scoped by `user_id` on `transactions` and `debts`.
+  - `app/portal/routes.py` — Add `/portal/transactions` list endpoint and cashflow data provider.
+  - `app/templates/portal/dashboard.html` — Chart.js cashflow charts and summary cards.
+  - `app/templates/portal/transactions.html` (new) — Searchable/filterable ledger table.
+  - `tests/test_portal_metrics.py` (new) — Tests for user isolation, date range filtering, empty state handling, and GMV calculations.
+- **DoD (self-verifiable):**
+  1. Dashboard displays: Total Sales, Total Expenses, Net Cashflow, and Debts Receivable/Payable.
+  2. Chart.js renders daily/weekly revenue vs expense bars.
+  3. Ledger table supports category and transaction type filtering.
+  4. 100% test pass on `pytest tests/test_portal_metrics.py`.
+
+### WP-09 — Self-Service Catalog & Inventory Manager
+
+- **Goal:** Allow merchants to browse their inventory stock, edit product names and prices, record restocking or quantity adjustments, and view low-stock warnings directly on the web.
+- **Depends on:** `WP-07`.
+- **Files (create/touch):**
+  - `app/portal/inventory.py` (new) — Inventory management queries and mutations (`inventory_items`).
+  - `app/portal/routes.py` — Add `/portal/inventory`, `/portal/inventory/add`, `/portal/inventory/<id>/adjust`.
+  - `app/templates/portal/inventory.html` (new) — Inventory management table with restock and edit forms.
+  - `tests/test_portal_inventory.py` (new) — Tests for item listing, stock adjustments, and multi-tenant isolation.
+- **DoD (self-verifiable):**
+  1. Merchant can view all stocked products with current quantities, unit prices, and low-stock badges.
+  2. Merchant can add a new item or adjust stock directly from the web interface.
+  3. All operations are strictly multi-tenant isolated by `user_id`.
+  4. 100% test pass on `pytest tests/test_portal_inventory.py`.
+
+### WP-10 — On-demand Statement Generator (PDF & Excel Export)
+
+- **Goal:** Provide instant export and download of branded financial statements in PDF and CSV/Excel formats for tax compliance, bank loans, and audit records.
+- **Depends on:** `WP-08`.
+- **Files (create/touch):**
+  - `app/portal/statement.py` (new) — Statement generator generating CSV and PDF formats for merchant transactions.
+  - `app/portal/routes.py` — Add `/portal/statement` view and `/portal/statement/export` download handler.
+  - `app/templates/portal/statement.html` (new) — Statement period selector and export preview.
+  - `tests/test_portal_statement.py` (new) — Tests for CSV/PDF export, date bounding, and data integrity.
+- **DoD (self-verifiable):**
+  1. Merchant can select a date range (This Month, Last Month, Custom) and download a CSV/Excel statement.
+  2. Merchant can export a branded PDF statement.
+  3. Data in statements matches underlying ledger transactions precisely.
+  4. 100% test pass on `pytest tests/test_portal_statement.py`.
+
 

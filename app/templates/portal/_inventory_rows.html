@@ -1,0 +1,77 @@
+<div id="inventory-table-container">
+  {% if items %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-obsidian-900/80 text-slate-400 text-xs uppercase font-medium border-b border-obsidian-700/60">
+        <tr>
+          <th class="py-3.5 px-6">Product / SKU</th>
+          <th class="py-3.5 px-6">Unit</th>
+          <th class="py-3.5 px-6 text-right">In Stock</th>
+          <th class="py-3.5 px-6 text-right">Min Stock</th>
+          <th class="py-3.5 px-6 text-center">Status</th>
+          <th class="py-3.5 px-6 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-obsidian-700/40 text-slate-300">
+        {% for item in items %}
+        <tr class="hover:bg-obsidian-800/60 transition-colors">
+          <td class="py-3.5 px-6 font-semibold text-white">
+            {{ item.name }}
+          </td>
+          <td class="py-3.5 px-6 text-slate-400 text-xs font-mono">
+            {{ item.unit }}
+          </td>
+          <td class="py-3.5 px-6 text-right font-mono font-bold text-base {% if item.status == 'OUT_OF_STOCK' %}text-rose-400{% elif item.status == 'LOW_STOCK' %}text-amber-400{% else %}text-emerald-400{% endif %}">
+            {{ item.quantity }}
+          </td>
+          <td class="py-3.5 px-6 text-right font-mono text-xs text-slate-400">
+            {{ item.min_stock }}
+          </td>
+          <td class="py-3.5 px-6 text-center whitespace-nowrap">
+            {% if item.status == 'IN_STOCK' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                In Stock
+              </span>
+            {% elif item.status == 'LOW_STOCK' %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Low Stock
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                Out of Stock
+              </span>
+            {% endif %}
+          </td>
+          <td class="py-3.5 px-6 text-right whitespace-nowrap">
+            <button onclick="openAdjustModal('{{ item.id }}', '{{ item.name }}', '{{ item.unit }}', '{{ item.quantity }}')"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-obsidian-800 hover:bg-obsidian-700 text-brand hover:text-brand-hover border border-obsidian-700 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+              Adjust / Restock
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="px-6 py-4 bg-obsidian-900/60 border-t border-obsidian-700/60 flex items-center justify-between text-xs text-slate-400">
+    <div>Total: <span class="text-white font-semibold">{{ items|length }}</span> catalog item(s)</div>
+    <div class="text-slate-500">Live inventory synced with WhatsApp catalog</div>
+  </div>
+  {% else %}
+  <div class="p-16 text-center">
+    <div class="w-12 h-12 rounded-xl bg-obsidian-800 border border-obsidian-700 flex items-center justify-center text-slate-500 mx-auto mb-3">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <h3 class="text-sm font-semibold text-white">No products found</h3>
+    <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+      {% if search %}
+        No catalog products match your search "{{ search }}".
+      {% else %}
+        You haven't added any products yet. Click "+ Add New Product" or tell TaLi on WhatsApp: e.g. <span class="font-mono text-slate-300">"Add 10 bags rice"</span>.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+</div>

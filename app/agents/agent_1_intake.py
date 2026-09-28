@@ -63,6 +63,99 @@ def _wants_statement(text_lower):
     return False
 
 
+# Guardrail Pre-Filter Contract (WP-01 / G-01 & G-05)
+OFF_TOPIC_REGEX = re.compile(
+    r'\b('
+    r'write\s+(?:(?:me\s+)?(?:a\s+)?(?:python|bash|sql|javascript|java|c\+\+|html|css)?\s*(?:code|script|program)|(?:an?\s+)?(?:essay|story|poem|song|lyrics|article|joke))|'
+    r'python\s+script|'
+    r'translate(?:\s+(?:this|me|to\s+\w+|into\s+\w+))?|'
+    r'homework|recipe(?:\s+for)?|'
+    r'who\s+is\s+(?:the\s+)?(?:president|prime\s+minister|governor|king|queen|actor|actress|singer|author|ceo\s+of)|'
+    r'what\s+is\s+the\s+capital\s+of|'
+    r'dan\s+mode|ignore\s+(?:all\s+)?previous(?:\s+instructions)?|system\s+prompt|disregard\s+(?:all\s+)?previous|you\s+are\s+now\s+a'
+    r')\b',
+    re.IGNORECASE
+)
+
+RESPONSE_OFF_TOPIC = (
+    "🤖 I am strictly a bookkeeping assistant for tracking your sales, expenses, inventory, and debts.\n\n"
+    "Here are things you can tell me:\n"
+    "• \"Sold 2 bags of rice 15000\"\n"
+    "• \"Bought fuel 3000\"\n"
+    "• \"What is my balance?\"\n"
+    "• \"How much rice do I have in stock?\"\n\n"
+    "Type *help* to see everything I can do."
+)
+
+RESPONSE_COOLDOWN = (
+    "⏳ You have sent multiple off-topic queries. To protect service availability, "
+    "your account is on a 10-minute cooldown. Please wait before sending new requests."
+)
+
+# FinOps Abuse Throttling State (sender_id -> {"count": int, "cooldown_until": float})
+_SENDER_ABUSE_STATE = {}
+COOLDOWN_DURATION_SECONDS = 600  # 10 minutes
+ABUSE_THRESHOLD = 3
+
+
+def is_off_topic(text: str) -> bool:
+    """Return True if text matches off-topic guardrail regex."""
+    if not text:
+        return False
+    return bool(OFF_TOPIC_REGEX.search(text))
+
+
+def check_and_apply_abuse(sender_id: str) -> tuple[bool, str]:
+    """Check if sender is on cooldown or has hit consecutive off-topic limit.
+
+    Returns (is_blocked, response_message).
+    """
+    import time
+    now = time.time()
+    state = _SENDER_ABUSE_STATE.setdefault(sender_id, {"count": 0, "cooldown_until": 0.0})
+
+    if state["cooldown_until"] > now:
+        return True, RESPONSE_COOLDOWN
+
+    state["count"] += 1
+    if state["count"] >= ABUSE_THRESHOLD:
+        state["cooldown_until"] = now + COOLDOWN_DURATION_SECONDS
+        return True, RESPONSE_COOLDOWN
+
+    return False, RESPONSE_OFF_TOPIC
+
+
+def record_valid_interaction(sender_id: str):
+    """Reset consecutive off-topic count when sender provides a valid request."""
+    import time
+    if sender_id in _SENDER_ABUSE_STATE:
+        if _SENDER_ABUSE_STATE[sender_id]["cooldown_until"] <= time.time():
+            _SENDER_ABUSE_STATE[sender_id]["count"] = 0
+
+
+def is_on_cooldown(sender_id: str) -> bool:
+    """Return True if sender is currently under cooldown."""
+    import time
+    if sender_id not in _SENDER_ABUSE_STATE:
+        return False
+    state = _SENDER_ABUSE_STATE[sender_id]
+    if state["cooldown_until"] > time.time():
+        return True
+    if state["cooldown_until"] > 0:
+        state["count"] = 0
+        state["cooldown_until"] = 0.0
+    return False
+
+
+def reset_cooldown(sender_id: str = None):
+    """Reset cooldown state (for tests and admin operations)."""
+    global _SENDER_ABUSE_STATE
+    if sender_id is not None:
+        _SENDER_ABUSE_STATE.pop(sender_id, None)
+    else:
+        _SENDER_ABUSE_STATE.clear()
+
+
 # Local read-query detection (no LLM): so "what's in stock" / "what's my balance" answer
 # even when the NLP model is down. Guards keep these from swallowing write commands
 # ("add 10 bags") or transactions that carry an amount ("i bought stock 5000").
@@ -70,8 +163,10 @@ _WRITE_VERBS = {'add', 'added', 'remove', 'removed', 'set', 'sold', 'sell', 'sal
                 'bought', 'buy', 'purchase', 'purchased', 'spent', 'paid', 'repay', 'repayment'}
 _STOCK_QUERY_KW = ('inventory', 'in stock', 'stock level', 'stock count', 'available stock',
                    'current stock', 'remaining stock', 'stock balance', 'my stock', 'stock left',
-                   'have in stock', 'left in stock', 'what do i have', 'what do i have left')
-_BALANCE_QUERY_KW = ('balance', 'net position', 'cash position', 'how much do i have')
+                   'have in stock', 'left in stock', 'what do i have', 'what do i have left',
+                   'wetin remain', 'wetin dey', 'wetin dey for shop')
+_BALANCE_QUERY_KW = ('balance', 'net position', 'cash position', 'how much do i have',
+                     'how much dey', 'how much dey for account')
 
 
 def _looks_like_query(text_lower):
@@ -157,6 +252,15 @@ class IntakeAgent:
         text_stripped = text.strip()
         text_lower = text_stripped.lower()
 
+        # 0. Cooldown gate (Layer 4 Abuse Throttling - WP-01)
+        if is_on_cooldown(self.sender_id):
+            return RESPONSE_COOLDOWN
+
+        # 0b. Deterministic Pre-LLM Guardrail (Layer 1 Zero-Cost Regex - WP-01)
+        if is_off_topic(text_stripped):
+            _, response_msg = check_and_apply_abuse(self.sender_id)
+            return response_msg
+
         # Pending gates: check self._load_pending() first to handle FSM state
         pending = self._load_pending()
         if pending:
@@ -167,11 +271,13 @@ class IntakeAgent:
                 set_transaction_state(event_id, self.user_id, 'RECEIVED')
             if pj.get('awaiting') == 'statement_format':
                 if text_lower in FORMAT_REPLIES or text_lower in CONFIRM_NO:
+                    record_valid_interaction(self.sender_id)
                     return self._apply_format_choice(text_lower, pj)
                 else:
                     return RESPONSE_INVALID_FORMAT
             else:
                 if text_lower in CONFIRM_YES or text_lower in CONFIRM_NO:
+                    record_valid_interaction(self.sender_id)
                     return self._apply_confirmation(text_lower, pending)
                 else:
                     return RESPONSE_PENDING
@@ -182,12 +288,14 @@ class IntakeAgent:
         inv_match_set = re.match(r'^set\s+(\w+)\s+(?:to\s+)?(\d+(?:\.\d+)?)$', text_lower)
 
         debt_match_owes = re.match(r'^(\w+)\s+(?:owes|credit)\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
+        debt_match_credit_for = re.match(r'^credit\s+(\d+(?:\.\d+)?[kh]?)\s+(?:for|to)\s+(?:oga\s+)?(\w+)$', text_lower)
         debt_match_repay = re.match(r'^(?:repay|repayment)\s+(\w+)\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
         debt_match_paid = re.match(r'^(\w+)\s+(?:paid|repaid)\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
 
         tx_match_sold = re.match(r'^(sold|sell|sale)\s+(\w+)\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
         tx_match_bought = re.match(r'^(bought|buy|purchase)\s+(\w+)\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
         tx_match_spent = re.match(r'^spent\s+(\d+(?:\.\d+)?[kh]?)\s+on\s+(\w+)$', text_lower)
+        tx_match_dash = re.match(r'^(?:i\s+)?dash(?:\s+am|\s+\w+)?\s+(\d+(?:\.\d+)?[kh]?)$', text_lower)
 
         # 1. System Queries (Snapshot, Reports, FinOps)
         if any(kw in text_lower for kw in ('snapshot', 'health', 'how is my business', 'how is the business')):
@@ -203,7 +311,10 @@ class IntakeAgent:
                 extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                 confidence=1.0
             )
-            return results[0] if results else "❌ Snapshot failed."
+            if results:
+                record_valid_interaction(self.sender_id)
+                return results[0]
+            return "❌ Snapshot failed."
 
         # 1a. Read-queries (stock / balance) classified locally so they answer even when
         #     the NLP model is unavailable — no LLM round-trip needed for a plain lookup.
@@ -218,7 +329,10 @@ class IntakeAgent:
                 extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                 confidence=1.0,
             )
-            return results[0] if results else "❌ Couldn't fetch your stock right now."
+            if results:
+                record_valid_interaction(self.sender_id)
+                return results[0]
+            return "❌ Couldn't fetch your stock right now."
 
         elif _is_balance_query(text_lower):
             payload = {
@@ -231,7 +345,10 @@ class IntakeAgent:
                 extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                 confidence=1.0,
             )
-            return results[0] if results else "❌ Couldn't fetch your balance right now."
+            if results:
+                record_valid_interaction(self.sender_id)
+                return results[0]
+            return "❌ Couldn't fetch your balance right now."
 
         elif any(kw in text_lower for kw in ('cost', 'billing', 'finops', 'api spend')):
             payload = {
@@ -249,7 +366,10 @@ class IntakeAgent:
                 extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                 confidence=1.0
             )
-            return results[0] if results else "❌ FinOps report failed."
+            if results:
+                record_valid_interaction(self.sender_id)
+                return results[0]
+            return "❌ FinOps report failed."
 
         elif any(kw in text_lower for kw in ('report', 'summary', 'monthly', 'weekly', 'daily', 'cfo')) and not _wants_statement(text_lower):
             period = 'monthly'
@@ -273,7 +393,10 @@ class IntakeAgent:
                 extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                 confidence=1.0
             )
-            return results[0] if results else "❌ Report failed."
+            if results:
+                record_valid_interaction(self.sender_id)
+                return results[0]
+            return "❌ Report failed."
 
         # 2. Inventory (Stock levels)
         elif inv_match_add or inv_match_remove or inv_match_set:
@@ -312,13 +435,21 @@ class IntakeAgent:
                     extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                     confidence=1.0
                 )
-                return results[0] if results else "❌ Inventory update failed."
+                if results:
+                    record_valid_interaction(self.sender_id)
+                    return results[0]
+                return "❌ Inventory update failed."
             except ValueError:
                 pass
 
         # 3. Debt (Receivables/Payables)
-        elif debt_match_owes or debt_match_repay or debt_match_paid:
-            if debt_match_owes:
+        elif debt_match_owes or debt_match_credit_for or debt_match_repay or debt_match_paid:
+            if debt_match_credit_for:
+                debt_action = 'add_debt'
+                name = debt_match_credit_for.group(2)
+                amount_str = debt_match_credit_for.group(1)
+                debt_type = 'customer_debt'
+            elif debt_match_owes:
                 debt_action = 'add_debt'
                 name = debt_match_owes.group(1)
                 amount_str = debt_match_owes.group(2)
@@ -354,7 +485,10 @@ class IntakeAgent:
                     extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                     confidence=1.0
                 )
-                return results[0] if results else "❌ Debt update failed."
+                if results:
+                    record_valid_interaction(self.sender_id)
+                    return results[0]
+                return "❌ Debt update failed."
 
         # 4. Fast-path Shorthand
         elif self._is_shorthand(text):
@@ -378,11 +512,20 @@ class IntakeAgent:
                     extracted_data=payload,
                     confidence=1.0
                 )
-                return results[0] if results else "❌ Shorthand processing failed."
+                if results:
+                    record_valid_interaction(self.sender_id)
+                    return results[0]
+                return "❌ Shorthand processing failed."
 
         # 5. Transactions
-        elif tx_match_sold or tx_match_bought or tx_match_spent:
-            if tx_match_sold:
+        elif tx_match_sold or tx_match_bought or tx_match_spent or tx_match_dash:
+            if tx_match_dash:
+                action = 'expense'
+                tx_type = 'expense'
+                item = 'dash'
+                amount_str = tx_match_dash.group(1)
+                category = 'Miscellaneous'
+            elif tx_match_sold:
                 action = 'sale'
                 tx_type = 'income'
                 item = tx_match_sold.group(2)
@@ -424,7 +567,10 @@ class IntakeAgent:
                     extracted_data={"parsed": payload, "raw_text": text, "is_fast_path": False},
                     confidence=1.0
                 )
-                return results[0] if results else "❌ Transaction failed."
+                if results:
+                    record_valid_interaction(self.sender_id)
+                    return results[0]
+                return "❌ Transaction failed."
 
         # 6. Fallback LLM Classification
         import time
@@ -458,18 +604,29 @@ class IntakeAgent:
             }
 
         # Prefer the router's accurate per-provider cost (WP-10); fall back to OpenAI rates.
-        from flask import current_app
         meta = parsed.get('_meta') or {}
         if meta.get('estimated_cost') is not None:
             estimated_cost = float(meta['estimated_cost'])
         else:
-            input_rate = current_app.config.get('OPENAI_INPUT_COST_PER_MILLION', 0.15)
-            output_rate = current_app.config.get('OPENAI_OUTPUT_COST_PER_MILLION', 0.60)
+            try:
+                from flask import current_app
+                input_rate = current_app.config.get('OPENAI_INPUT_COST_PER_MILLION', 0.15)
+                output_rate = current_app.config.get('OPENAI_OUTPUT_COST_PER_MILLION', 0.60)
+            except RuntimeError:
+                input_rate = 0.15
+                output_rate = 0.60
             usage = parsed.get('_usage', {})
             estimated_cost = (usage.get('prompt_tokens', 0) * input_rate / 1_000_000) + \
                              (usage.get('completion_tokens', 0) * output_rate / 1_000_000)
 
         self._log_ai_interaction(text, parsed, processing_time_ms, estimated_cost)
+
+        # Off-topic / Non-financial rejection (Layer 2 & Layer 4 - WP-01)
+        if parsed.get('status') == 'unknown' or (parsed.get('status') != 'ok' and 'unknown' in parsed.get('intents', [])):
+            _, response_msg = check_and_apply_abuse(self.sender_id)
+            return response_msg
+
+        record_valid_interaction(self.sender_id)
 
         if parsed.get('status') == 'clarification_needed':
             return parsed.get('question', "Please clarify your request.")

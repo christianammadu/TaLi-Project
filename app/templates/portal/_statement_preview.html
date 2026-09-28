@@ -1,0 +1,211 @@
+<!-- Statement Preview Partial (HTMX Compatible) -->
+<div id="statement-preview-container" class="space-y-6">
+
+  <!-- Summary KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Inflow -->
+    <div class="bg-obsidian-850 border border-obsidian-700/60 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Inflow</span>
+        <span class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+          </svg>
+        </span>
+      </div>
+      <p class="mt-2 text-2xl font-bold font-fraunces text-emerald-400 tracking-tight">{{ summary.total_inflow_fmt }}</p>
+      <p class="mt-1 text-xs text-slate-500">Sales & cash receipts</p>
+    </div>
+
+    <!-- Total Outflow -->
+    <div class="bg-obsidian-850 border border-obsidian-700/60 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Outflow</span>
+        <span class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+          </svg>
+        </span>
+      </div>
+      <p class="mt-2 text-2xl font-bold font-fraunces text-rose-400 tracking-tight">{{ summary.total_outflow_fmt }}</p>
+      <p class="mt-1 text-xs text-slate-500">Expenses & purchases</p>
+    </div>
+
+    <!-- Net Cash Movement -->
+    <div class="bg-obsidian-850 border border-obsidian-700/60 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Net Movement</span>
+        <span class="w-8 h-8 rounded-lg {% if summary.net_movement >= 0 %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400{% else %}bg-rose-500/10 border-rose-500/20 text-rose-400{% endif %} border flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </span>
+      </div>
+      <p class="mt-2 text-2xl font-bold font-fraunces {% if summary.net_movement >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %} tracking-tight">
+        {{ summary.net_movement_fmt }}
+      </p>
+      <p class="mt-1 text-xs text-slate-500">Inflow minus outflow</p>
+    </div>
+
+    <!-- Transaction Volume & Opening/Closing Balance -->
+    <div class="bg-obsidian-850 border border-obsidian-700/60 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Transactions</span>
+        <span class="w-8 h-8 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </span>
+      </div>
+      <p class="mt-2 text-2xl font-bold font-fraunces text-white tracking-tight">{{ summary.transaction_count }}</p>
+      <p class="mt-1 text-xs text-slate-500">
+        Opening: <span class="text-slate-300 font-mono">{{ summary.opening_balance_fmt }}</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Export Download Buttons Bar -->
+  <div class="bg-obsidian-850 border border-obsidian-700/60 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-brand animate-ping"></span>
+      <span class="text-sm font-medium text-slate-200">
+        Ready to export: <span class="text-white font-semibold">{{ summary.period_label }}</span>
+      </span>
+      <span class="text-xs text-slate-500 font-mono">({{ summary.transaction_count }} entries)</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+      <!-- PDF Export Button -->
+      <a href="{{ url_for('portal.statement_export', format='pdf', period=summary.period, start_date=summary.custom_start, end_date=summary.custom_end) }}"
+         id="btn-export-pdf"
+         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand-hover text-white rounded-lg text-sm font-medium transition shadow-sm hover:shadow-brand/20">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        <span>Download PDF</span>
+      </a>
+
+      <!-- Excel Export Button -->
+      <a href="{{ url_for('portal.statement_export', format='excel', period=summary.period, start_date=summary.custom_start, end_date=summary.custom_end) }}"
+         id="btn-export-excel"
+         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-sm font-medium transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Download Excel</span>
+      </a>
+
+      <!-- CSV Export Button -->
+      <a href="{{ url_for('portal.statement_export', format='csv', period=summary.period, start_date=summary.custom_start, end_date=summary.custom_end) }}"
+         id="btn-export-csv"
+         class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 border border-obsidian-600 rounded-lg text-sm font-medium transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span>Download CSV</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Document Sheet Preview -->
+  <div class="bg-obsidian-900 border border-obsidian-700/80 rounded-2xl overflow-hidden shadow-xl">
+    <!-- Document Letterhead Banner -->
+    <div class="p-6 bg-obsidian-850 border-b border-obsidian-700/80">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div class="flex items-baseline gap-1">
+            <span class="font-fraunces text-2xl font-bold tracking-tight text-white">TaLi</span>
+            <span class="font-fraunces text-2xl font-bold text-brand">.</span>
+            <span class="ml-2 text-[10px] tracking-widest text-slate-400 uppercase font-sans">Statement of Account</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Prepared for: <span class="text-slate-300 font-semibold">{{ business_name }}</span></p>
+        </div>
+        <div class="text-left sm:text-right">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-brand/10 border border-brand/20 text-brand">
+            {{ summary.period_label }}
+          </span>
+          <p class="text-[11px] text-slate-500 mt-1 font-mono">Currency: {{ summary.currency }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm border-collapse" id="statement-preview-table">
+        <thead>
+          <tr class="bg-obsidian-800/80 border-b border-obsidian-700 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            <th class="py-3.5 px-4">Date</th>
+            <th class="py-3.5 px-4">Description</th>
+            <th class="py-3.5 px-4">Category</th>
+            <th class="py-3.5 px-4">Type</th>
+            <th class="py-3.5 px-4 text-right">Money In</th>
+            <th class="py-3.5 px-4 text-right">Money Out</th>
+            <th class="py-3.5 px-4 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-obsidian-800 text-slate-300">
+          {% if summary.has_rows %}
+            {% for r in summary.rows %}
+            <tr class="hover:bg-obsidian-800/50 transition-colors">
+              <td class="py-3 px-4 font-mono text-xs text-slate-400 whitespace-nowrap">{{ r.date }}</td>
+              <td class="py-3 px-4 font-medium text-white max-w-xs truncate">{{ r.description }}</td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="px-2 py-0.5 rounded text-xs bg-obsidian-750 text-slate-300 border border-obsidian-700">
+                  {{ r.category }}
+                </span>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="text-xs capitalize {% if r.is_income %}text-emerald-400{% else %}text-rose-400{% endif %} font-medium">
+                  {{ r.type }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-right font-mono text-xs whitespace-nowrap {% if r.is_income %}text-emerald-400 font-semibold{% else %}text-slate-600{% endif %}">
+                {% if r.is_income %}+{{ r.amount_formatted }}{% else %}—{% endif %}
+              </td>
+              <td class="py-3 px-4 text-right font-mono text-xs whitespace-nowrap {% if not r.is_income %}text-rose-400 font-semibold{% else %}text-slate-600{% endif %}">
+                {% if not r.is_income %}-{{ r.amount_formatted }}{% else %}—{% endif %}
+              </td>
+              <td class="py-3 px-4 text-right font-mono text-xs font-semibold whitespace-nowrap text-white">
+                {{ r.amount_formatted }}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="py-12 px-4 text-center">
+                <div class="flex flex-col items-center justify-center max-w-sm mx-auto text-slate-400">
+                  <div class="w-12 h-12 rounded-full bg-obsidian-800 border border-obsidian-700 flex items-center justify-center mb-3 text-slate-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <p class="font-medium text-slate-300">No transactions for this period</p>
+                  <p class="text-xs text-slate-500 mt-1">There are no records matching the selected date range. Try switching to a different period above.</p>
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+        {% if summary.has_rows %}
+        <tfoot>
+          <tr class="bg-obsidian-850/90 border-t-2 border-obsidian-700 text-xs font-bold text-slate-200">
+            <td colspan="4" class="py-3 px-4 text-left uppercase tracking-wider text-slate-400">Period Totals</td>
+            <td class="py-3 px-4 text-right font-mono text-emerald-400">+{{ summary.total_inflow_fmt }}</td>
+            <td class="py-3 px-4 text-right font-mono text-rose-400">-{{ summary.total_outflow_fmt }}</td>
+            <td class="py-3 px-4 text-right font-mono {% if summary.net_movement >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+              {{ summary.net_movement_fmt }}
+            </td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+
+    <!-- Document Footer -->
+    <div class="p-4 bg-obsidian-950/80 border-t border-obsidian-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>TaLi Technologies · Every entry verified & auditable</div>
+      <div class="text-[11px] font-mono">Generated from official merchant ledger</div>
+    </div>
+  </div>
+
+</div>

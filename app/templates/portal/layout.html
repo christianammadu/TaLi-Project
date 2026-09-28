@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#080C14] text-slate-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Merchant Portal{% endblock %} — TaLi</title>
+
+  <!-- Google Fonts: Fraunces & Hanken Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#C2562F',
+              hover: '#D66338',
+              muted: '#7A351C',
+              surface: '#1A1311',
+            },
+            obsidian: {
+              950: '#05070B',
+              900: '#080C14',
+              850: '#0B101A',
+              800: '#0F1523',
+              700: '#182032',
+              600: '#232D42',
+            }
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- HTMX & Chart.js -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    body { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    .font-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .bg-grid {
+      background-size: 32px 32px;
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #080C14; }
+    ::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C2562F; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-full flex flex-col bg-obsidian-900 text-slate-200">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 bg-obsidian-850/90 backdrop-blur-md border-b border-obsidian-700/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Brand -->
+        <div class="flex items-center gap-6">
+          <a href="{{ url_for('portal.dashboard') }}" class="flex items-center gap-2 group">
+            <span class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white font-serif font-bold text-lg shadow-lg shadow-brand/20 group-hover:scale-105 transition-transform">
+              T
+            </span>
+            <span class="font-serif font-bold text-xl tracking-tight text-white">
+              TaLi<span class="text-brand">.</span>
+            </span>
+            <span class="ml-2 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 border border-brand/20 rounded">
+              Merchant
+            </span>
+          </a>
+
+          <!-- Desktop Navigation Tabs -->
+          {% if session.get('merchant_logged_in') %}
+          <nav class="hidden md:flex items-center gap-1 ml-4">
+            <a href="{{ url_for('portal.dashboard') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.dashboard' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Dashboard
+            </a>
+            <a href="{{ url_for('portal.transactions') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.transactions' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Ledger & Cashflow
+            </a>
+            <a href="{{ url_for('portal.inventory') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.inventory' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Inventory & Catalog
+            </a>
+            <a href="{{ url_for('portal.statement') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.statement' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Statements
+            </a>
+          </nav>
+          {% endif %}
+        </div>
+
+        <!-- Right Side: User profile & actions -->
+        <div class="flex items-center gap-3">
+          {% if session.get('merchant_logged_in') %}
+            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-obsidian-800 border border-obsidian-700 rounded-lg text-xs">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-slate-300 font-medium">{{ session.get('merchant_name') }}</span>
+              <span class="text-slate-500 font-mono">{{ session.get('merchant_phone') }}</span>
+            </div>
+            
+            <a href="{{ url_for('portal.logout') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-400 bg-obsidian-800 hover:bg-rose-500/10 border border-obsidian-700 hover:border-rose-500/30 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign out
+            </a>
+          {% else %}
+            <a href="https://wa.me/{{ config.get('PHONE_NUMBER_ID', '') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+              </svg>
+              Chat on WhatsApp
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Notifications -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+      {% for category, message in messages %}
+      <div class="mb-3 px-4 py-3 rounded-xl border flex items-center justify-between text-sm shadow-lg
+        {% if category == 'error' %}
+          bg-rose-500/10 border-rose-500/30 text-rose-300
+        {% elif category == 'success' %}
+          bg-emerald-500/10 border-emerald-500/30 text-emerald-300
+        {% else %}
+          bg-blue-500/10 border-blue-500/30 text-blue-300
+        {% endif %}">
+        <div class="flex items-center gap-2">
+          {% if category == 'error' %}
+            <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          {% elif category == 'success' %}
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          {% else %}
+            <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          {% endif %}
+          <span>{{ message }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white ml-3">
+          &times;
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-obsidian-800 bg-obsidian-950/60 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>&copy; 2026 TaLi Technologies Inc. All financial records encrypted & secured.</p>
+    </div>
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

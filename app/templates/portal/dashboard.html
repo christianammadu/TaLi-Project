@@ -1,0 +1,306 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  
+  <!-- Welcome Header Banner -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-xl">
+    <div class="absolute -right-16 -top-16 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10 space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          Account Verified
+        </span>
+        <span class="text-xs text-slate-400 font-mono">{{ merchant.phone_number }}</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+        Welcome, <span class="text-brand">{{ merchant.display_name or 'Merchant' }}</span>
+      </h1>
+      <p class="text-sm text-slate-400 max-w-xl">
+        Here is your live financial command center. Real-time cashflow, customer debts, and ledger statements synced with your WhatsApp assistant.
+      </p>
+    </div>
+
+    <div class="relative z-10 flex flex-wrap items-center gap-3">
+      <a href="{{ url_for('portal.transactions') }}"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-obsidian-700 hover:bg-obsidian-600 text-slate-200 text-sm font-semibold rounded-xl border border-obsidian-600 transition-colors shadow">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Full Ledger
+      </a>
+      <a href="https://wa.me/{{ config.get('PHONE_NUMBER_ID', '') }}" target="_blank"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-900/30">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
+        Record in WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <!-- Financial KPI Metrics Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <!-- This Month Revenue -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg relative group">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">This Month Sales</span>
+        <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">{{ summary.month_revenue_fmt }}</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span class="text-emerald-400 font-medium">Today: {{ summary.today_revenue_fmt }}</span>
+      </div>
+    </div>
+
+    <!-- This Month Expenses -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">This Month Expenses</span>
+        <span class="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">{{ summary.month_expense_fmt }}</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Lifetime: {{ summary.total_expense_fmt }}</span>
+      </div>
+    </div>
+
+    <!-- Net Cashflow -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Net Cashflow</span>
+        <span class="p-2 rounded-lg {% if summary.month_net >= 0 %}bg-emerald-500/10 text-emerald-400{% else %}bg-rose-500/10 text-rose-400{% endif %}">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans tracking-tight {% if summary.month_net >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+        {{ summary.month_net_fmt }}
+      </div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Total Lifetime Net: {{ summary.net_cashflow_fmt }}</span>
+      </div>
+    </div>
+
+    <!-- Receivables & Debts -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Customer Debts</span>
+        <span class="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-amber-400 tracking-tight">{{ summary.total_receivables_fmt }}</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>You owe suppliers: {{ summary.total_payables_fmt }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Cashflow Velocity Chart (WP-08) -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-6 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-lg font-serif font-bold text-white tracking-tight">Cashflow Velocity</h2>
+        <p class="text-xs text-slate-400">Daily sales income vs business expense outlays</p>
+      </div>
+      <div class="flex items-center gap-1.5 bg-obsidian-900 border border-obsidian-700 p-1 rounded-xl">
+        <button onclick="updateChartPeriod(7)" id="btn-period-7" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors">
+          7D
+        </button>
+        <button onclick="updateChartPeriod(30)" id="btn-period-30" class="px-3 py-1 rounded-lg text-xs font-medium bg-brand text-white shadow transition-colors">
+          30D
+        </button>
+        <button onclick="updateChartPeriod(90)" id="btn-period-90" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors">
+          90D
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart Canvas -->
+    <div class="h-72 w-full relative">
+      <canvas id="merchantCashflowChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Ledger Entries -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl shadow-xl overflow-hidden">
+    <div class="p-6 border-b border-obsidian-700/60 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-serif font-bold text-white tracking-tight">Recent Ledger Entries</h2>
+        <p class="text-xs text-slate-400">Latest business sales and expenses recorded</p>
+      </div>
+      <a href="{{ url_for('portal.transactions') }}" class="text-xs font-semibold text-brand hover:text-brand-hover flex items-center gap-1 transition-colors">
+        <span>View Full Ledger</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    {% if recent_transactions %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-obsidian-900/60 text-slate-400 text-xs uppercase font-medium border-b border-obsidian-700/60">
+          <tr>
+            <th class="py-3 px-6">Date</th>
+            <th class="py-3 px-6">Type</th>
+            <th class="py-3 px-6">Description / Item</th>
+            <th class="py-3 px-6">Category</th>
+            <th class="py-3 px-6 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-obsidian-700/40 text-slate-300">
+          {% for tx in recent_transactions %}
+          <tr class="hover:bg-obsidian-800/50 transition-colors">
+            <td class="py-3.5 px-6 font-mono text-xs text-slate-400">{{ tx.transaction_date }}</td>
+            <td class="py-3.5 px-6">
+              {% if tx.type == 'income' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Sale
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  Expense
+                </span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-6 font-medium text-white">{{ tx.item or tx.description }}</td>
+            <td class="py-3.5 px-6 text-slate-400 text-xs">{{ tx.category }}</td>
+            <td class="py-3.5 px-6 text-right font-mono font-semibold {% if tx.type == 'income' %}text-emerald-400{% else %}text-slate-300{% endif %}">
+              {% if tx.type == 'income' %}+{% else %}-{% endif %}{{ tx.amount_formatted }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-12 text-center">
+      <div class="w-12 h-12 rounded-xl bg-obsidian-800 border border-obsidian-700 flex items-center justify-center text-slate-500 mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      <h3 class="text-sm font-semibold text-white">No transactions recorded yet</h3>
+      <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+        Start by chatting with TaLi on WhatsApp: e.g. <span class="font-mono text-slate-300">"Sold 2 bags rice 10k"</span> or <span class="font-mono text-slate-300">"Bought fuel 3k"</span>.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let cashflowChart = null;
+
+  function initChart(labels, revenueData, expenseData) {
+    const ctx = document.getElementById('merchantCashflowChart').getContext('2d');
+    if (cashflowChart) {
+      cashflowChart.destroy();
+    }
+
+    cashflowChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Sales (₦)',
+            data: revenueData,
+            backgroundColor: '#10B981',
+            borderRadius: 6,
+            maxBarThickness: 24,
+          },
+          {
+            label: 'Expenses (₦)',
+            data: expenseData,
+            backgroundColor: '#F43F5E',
+            borderRadius: 6,
+            maxBarThickness: 24,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'end',
+            labels: {
+              color: '#94A3B8',
+              font: { family: 'Hanken Grotesk', size: 12 },
+              boxWidth: 12,
+              usePointStyle: true,
+            }
+          },
+          tooltip: {
+            backgroundColor: '#0B101A',
+            titleColor: '#F8FAFC',
+            bodyColor: '#E2E8F0',
+            borderColor: '#1F293D',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: function(context) {
+                return ' ' + context.dataset.label + ': ₦' + Number(context.raw).toLocaleString();
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#64748B', font: { size: 11 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              color: '#64748B',
+              font: { size: 11 },
+              callback: function(val) {
+                return '₦' + (val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Initial load from server-rendered chart_data
+  const initialLabels = {{ chart_data.labels | tojson }};
+  const initialRevenue = {{ chart_data.revenue | tojson }};
+  const initialExpense = {{ chart_data.expense | tojson }};
+  initChart(initialLabels, initialRevenue, initialExpense);
+
+  function updateChartPeriod(days) {
+    // Update button states
+    ['7', '30', '90'].forEach(d => {
+      const btn = document.getElementById('btn-period-' + d);
+      if (d === String(days)) {
+        btn.className = 'px-3 py-1 rounded-lg text-xs font-medium bg-brand text-white shadow transition-colors';
+      } else {
+        btn.className = 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors';
+      }
+    });
+
+    fetch('/portal/api/cashflow-chart?days=' + days)
+      .then(res => res.json())
+      .then(data => {
+        initChart(data.labels, data.revenue, data.expense);
+      })
+      .catch(err => console.error('Failed to load chart data:', err));
+  }
+</script>
+{% endblock %}

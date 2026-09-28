@@ -7,6 +7,7 @@ import json
 from decimal import Decimal
 from mysql.connector import Error
 from app.data.database import get_db_connection
+from app.data.queries import resolve_inventory_item
 
 
 class InventoryAgent:
@@ -62,6 +63,18 @@ class InventoryAgent:
 
         unit = parsed.get('unit')
         action = parsed.get('action', 'ADD').upper()
+
+        # Resolve item using multi-tier fuzzy matching and check for tied ambiguity (WP-03 / G-07)
+        resolved = resolve_inventory_item(self.user_id, product)
+        if resolved and resolved.get('status') == 'clarification_needed':
+            return json.dumps({
+                "status": "clarification_needed",
+                "question": resolved.get('question')
+            }, indent=2)
+        if resolved and resolved.get('status') == 'matched':
+            product = resolved['item_name']
+            if not unit and resolved.get('unit'):
+                unit = resolved['unit']
 
         # Connect to DB and fetch product stock details
         try:

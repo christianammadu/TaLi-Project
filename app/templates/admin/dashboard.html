@@ -1,0 +1,285 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Executive Command Overview — TaLi Admin{% endblock %}
+{% block page_title %}Platform Fleet Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+
+  <!-- Top Hero Header / Banner -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-obsidian-850 via-obsidian-800 to-obsidian-850 border border-obsidian-700/80 shadow-xl shadow-black/40">
+    <div class="space-y-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-mono font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
+        Sovereign Governance Active
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold font-fraunces text-white tracking-tight">Autonomous Merchant Orchestration</h2>
+      <p class="text-sm text-slate-400">Real-time telemetry, FinOps spend tracking, and compliance enforcement across Lagos merchants.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/admin/compliance" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 border border-obsidian-600/60 text-xs font-semibold text-slate-200 hover:text-white transition-all">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>Review Queue ({{ metrics.pending_compliance_count }})</span>
+      </a>
+      <a href="/admin/finops" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-lg shadow-brand/25 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span>FinOps Detail</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 4 Primary KPI Metric Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Merchants -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg hover:border-obsidian-600 transition-all group">
+      <div class="flex items-center justify-between text-slate-400 mb-3">
+        <span class="text-xs font-mono uppercase tracking-wider">Registered Merchants</span>
+        <div class="p-2 rounded-lg bg-obsidian-800 text-slate-300 group-hover:text-brand transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ metrics.total_merchants }}
+      </div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+        <span>+14% vs last week</span>
+      </div>
+    </div>
+
+    <!-- Daily Active Merchants -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg hover:border-obsidian-600 transition-all group">
+      <div class="flex items-center justify-between text-slate-400 mb-3">
+        <span class="text-xs font-mono uppercase tracking-wider">Active Today</span>
+        <div class="p-2 rounded-lg bg-obsidian-800 text-slate-300 group-hover:text-emerald-400 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        {{ metrics.daily_active_merchants }}
+      </div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-400 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+        <span>42.8% fleet concurrency</span>
+      </div>
+    </div>
+
+    <!-- Platform GMV (NGN) -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg hover:border-obsidian-600 transition-all group">
+      <div class="flex items-center justify-between text-slate-400 mb-3">
+        <span class="text-xs font-mono uppercase tracking-wider">Platform GMV</span>
+        <div class="p-2 rounded-lg bg-obsidian-800 text-slate-300 group-hover:text-amber-400 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight truncate">
+        ₦{{ "{:,.2f}".format(metrics.platform_gmv_ngn) }}
+      </div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+        <span>Clean settled transactions</span>
+      </div>
+    </div>
+
+    <!-- AI Spend vs Ceiling (USD) -->
+    <div class="p-5 rounded-xl bg-obsidian-850/90 border border-obsidian-700/70 shadow-lg hover:border-obsidian-600 transition-all group">
+      <div class="flex items-center justify-between text-slate-400 mb-3">
+        <span class="text-xs font-mono uppercase tracking-wider">AI Spend / Budget</span>
+        <div class="p-2 rounded-lg bg-obsidian-800 text-slate-300 group-hover:text-brand transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+      </div>
+      <div class="text-3xl font-bold font-fraunces text-white tracking-tight">
+        ${{ "{:.2f}".format(metrics.finops.total_spend_usd) }}
+        <span class="text-xs font-normal text-slate-400 font-mono">/ ${{ "{:.2f}".format(metrics.finops.ceiling_usd) }}</span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="mt-3">
+        <div class="w-full bg-obsidian-700 rounded-full h-1.5 overflow-hidden">
+          <div class="h-1.5 rounded-full transition-all duration-500 {% if metrics.finops.alert_color == 'red' %}bg-rose-500{% elif metrics.finops.alert_color == 'yellow' %}bg-amber-400{% else %}bg-brand{% endif %}" style="width: {{ metrics.finops.spend_percentage }}%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] font-mono mt-1">
+          <span class="text-slate-400">{{ metrics.finops.actual_percentage }}% consumed</span>
+          <span class="px-1.5 py-0.2 rounded border {% if metrics.finops.alert_color == 'red' %}text-rose-400 bg-rose-500/10 border-rose-500/20{% elif metrics.finops.alert_color == 'yellow' %}text-amber-400 bg-amber-500/10 border-amber-500/20{% else %}text-emerald-400 bg-emerald-500/10 border-emerald-500/20{% endif %} font-medium">
+            {{ metrics.finops.alert_label }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operational Telemetry & Fleet Breakdown (2-Column Grid) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- FinOps Spend & Provider Distribution (2 cols) -->
+    <div class="lg:col-span-2 p-6 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-obsidian-700/60 pb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-white font-fraunces">Inference Spend & Model Distribution</h3>
+          <p class="text-xs text-slate-400">Token expenditure breakdown across OpenAI, AI/ML API, and Featherless</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 bg-obsidian-800 px-2.5 py-1 rounded-md border border-obsidian-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            p95 Latency: <strong class="text-white">{{ metrics.finops.p95_latency_ms }}ms</strong>
+          </span>
+          <a href="/admin/finops" class="text-xs text-brand hover:underline font-mono ml-2">Inspect Logs →</a>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="h-64 relative flex items-center justify-center">
+        <canvas id="fleetSpendChart"></canvas>
+      </div>
+
+      <!-- Provider Share Legend & Metrics -->
+      <div class="grid grid-cols-3 gap-3 pt-2 border-t border-obsidian-700/50">
+        <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
+          <div class="flex items-center gap-1.5 text-xs text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <span>OpenAI (Primary)</span>
+          </div>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.openai }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.openai) }} spent</p>
+        </div>
+        <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
+          <div class="flex items-center gap-1.5 text-xs text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span>AI/ML API (Backup)</span>
+          </div>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.aiml }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.aiml) }} spent</p>
+        </div>
+        <div class="p-3 rounded-lg bg-obsidian-800/60 border border-obsidian-700/40">
+          <div class="flex items-center gap-1.5 text-xs text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+            <span>Featherless (Fallback)</span>
+          </div>
+          <p class="text-base font-bold font-mono text-white mt-1">{{ metrics.finops.provider_share.featherless }}%</p>
+          <p class="text-[10px] text-slate-400 font-mono">${{ "{:.2f}".format(metrics.finops.provider_costs.featherless) }} spent</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fleet Agent Health & Compliance Queue (1 col) -->
+    <div class="space-y-6">
+
+      <!-- Active Agent Grid -->
+      <div class="p-5 rounded-2xl bg-obsidian-850/90 border border-obsidian-700/80 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-obsidian-700/60 pb-3">
+          <h4 class="text-sm font-semibold text-white font-fraunces">Autonomous Agent Fleet</h4>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">All Healthy</span>
+        </div>
+        <div class="space-y-2">
+          <!-- CFOAgent -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-800/80 border border-obsidian-700/40">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-semibold text-white">CFOAgent</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">Orchestrator · Multi-turn</span>
+          </div>
+          <!-- LedgerAgent -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-800/80 border border-obsidian-700/40">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-semibold text-white">LedgerAgent</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">Atomic Rollbacks · Safe</span>
+          </div>
+          <!-- TransactionAgent -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-800/80 border border-obsidian-700/40">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-semibold text-white">TransactionAgent</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">Fuzzy SQL & Pre-filter</span>
+          </div>
+          <!-- MarketAgent -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-800/80 border border-obsidian-700/40">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-semibold text-white">MarketAgent</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">Pricing & Intelligence</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance Queue Alert Card -->
+      <div class="p-5 rounded-2xl bg-obsidian-850/90 border border-amber-500/30 shadow-xl space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h4 class="text-sm font-semibold text-white font-fraunces">Human Compliance Queue</h4>
+          </div>
+          <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            {{ metrics.pending_compliance_count }} Pending
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Transactions exceeding threshold limits (₦1,000,000+) or flagged for anomaly detection are held for human review.
+        </p>
+        <a href="/admin/compliance" class="block w-full text-center py-2.5 px-4 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all">
+          Open Compliance Hub →
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Render FinOps spend distribution doughnut chart
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('fleetSpendChart');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['OpenAI (Primary)', 'AI/ML API (Backup)', 'Featherless (Fallback)'],
+        datasets: [{
+          data: [
+            {{ metrics.finops.provider_share.openai }},
+            {{ metrics.finops.provider_share.aiml }},
+            {{ metrics.finops.provider_share.featherless }}
+          ],
+          backgroundColor: ['#6366F1', '#8B5CF6', '#64748B'],
+          borderColor: '#080C14',
+          borderWidth: 3,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#94A3B8',
+              font: { family: "'Hanken Grotesk', sans-serif", size: 12 },
+              padding: 16
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: ${context.parsed}% of platform spend`;
+              }
+            }
+          }
+        },
+        cutout: '72%'
+      }
+    });
+  });
+</script>
+{% endblock %}

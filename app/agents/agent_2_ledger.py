@@ -11,6 +11,7 @@ from app.data.database import get_db_connection, set_transaction_state
 from app.agents.band import get_band_client
 from app.services.validators import dump_model
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
+from app.data.queries import resolve_inventory_item
 
 # Band room handles (WP-04). Ledger forwards results to the CFO and runs the two-phase
 # review with the Compliance agent (WP-07) — all by @mention in the shared room.
@@ -266,52 +267,71 @@ class LedgerAgent:
                 intents = parsed.intents
                 results = {}
 
-                # Trigger health snapshot directly (Read-only, rollback transaction)
-                if parsed.snapshot or "snapshot" in intents:
-                    conn.rollback()
-                    success_event = LedgerUpdateEvent(
-                        correlation_id=correlation_id,
-                        session_id=session_id,
-                        user_id=user_id,
-                        business_id=business_id,
-                        source_agent="LedgerAgent",
-                        event_type="report",
-                        payload=LedgerUpdateEventPayload(
-                            status="success",
-                            intent="snapshot",
-                            raw_text=raw_text
-                        )
-                    )
-                    self._emit_to_cfo(success_event.model_dump(mode='json'))
-                    return "📊 Snapshot requested."
+                has_mutations = bool(parsed.transactions or parsed.inventory or parsed.debts)
 
-                # Trigger reports directly (Read-only, rollback transaction)
-                if "report" in intents and parsed.report:
-                    conn.rollback()
-                    success_event = LedgerUpdateEvent(
-                        correlation_id=correlation_id,
-                        session_id=session_id,
-                        user_id=user_id,
-                        business_id=business_id,
-                        source_agent="LedgerAgent",
-                        event_type="report",
-                        payload=LedgerUpdateEventPayload(
-                            status="success",
-                            intent="report",
-                            raw_text=raw_text,
-                            data=LedgerUpdateData(report=parsed.report)
+                if not has_mutations:
+                    # Trigger health snapshot directly (Read-only, rollback transaction)
+                    if parsed.snapshot or "snapshot" in intents:
+                        conn.rollback()
+                        success_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="report",
+                            payload=LedgerUpdateEventPayload(
+                                status="success",
+                                intent="snapshot",
+                                raw_text=raw_text
+                            )
                         )
-                    )
-                    self._emit_to_cfo(success_event.model_dump(mode='json'))
-                    return "📑 Report requested."
+                        self._emit_to_cfo(success_event.model_dump(mode='json'))
+                        return "📊 Snapshot requested."
 
-                # Trigger queries directly (Read-only, rollback transaction)
-                if "query" in intents:
-                    conn.rollback()
-                    from app.agents.transaction_agent import TransactionAgent
-                    tx_agent = TransactionAgent(self.user_id, self.sender_id)
-                    query_fields = dump_model(parsed.query) if parsed.query else {}
-                    return tx_agent.process(raw_text, {'intent': 'query', **query_fields})
+                    # Trigger reports directly (Read-only, rollback transaction)
+                    if "report" in intents and parsed.report:
+                        conn.rollback()
+                        success_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="report",
+                            payload=LedgerUpdateEventPayload(
+                                status="success",
+                                intent="report",
+                                raw_text=raw_text,
+                                data=LedgerUpdateData(report=parsed.report)
+                            )
+                        )
+                        self._emit_to_cfo(success_event.model_dump(mode='json'))
+                        return "📑 Report requested."
+
+                    # Trigger queries directly (Read-only, rollback transaction)
+                    if "query" in intents or parsed.query:
+                        conn.rollback()
+                        from app.agents.transaction_agent import TransactionAgent
+                        tx_agent = TransactionAgent(self.user_id, self.sender_id)
+                        query_fields = dump_model(parsed.query) if parsed.query else {}
+                        res = tx_agent.query(query_fields)
+                        success_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="transaction",
+                            payload=LedgerUpdateEventPayload(
+                                status="success",
+                                intent="split_routing",
+                                raw_text=raw_text,
+                                data=LedgerUpdateData(query_result=res)
+                            )
+                        )
+                        self._emit_to_cfo(success_event.model_dump(mode='json'))
+                        return res
 
                 # Resolve user business_id
                 cursor.execute("SELECT business_id FROM users WHERE id = %s LIMIT 1", (user_id_bin,))
@@ -327,78 +347,180 @@ class LedgerAgent:
 
                 tx_results = []
                 for i, cleaned in enumerate(parsed.transactions):
-                    category_name = cleaned.category or 'Miscellaneous'
-                    cursor.execute(
-                        "SELECT id FROM categories WHERE name = %s AND (user_id IS NULL OR user_id = %s) LIMIT 1",
-                        (category_name, user_id_bin)
-                    )
-                    cat_row = cursor.fetchone()
-                    category_id = cat_row['id'] if cat_row else None
-                    if category_id is None:
-                        cursor.execute("SELECT id FROM categories WHERE name = 'Miscellaneous' AND user_id IS NULL LIMIT 1")
+                    try:
+                        category_name = cleaned.category or 'Miscellaneous'
+                        cursor.execute(
+                            "SELECT id FROM categories WHERE name = %s AND (user_id IS NULL OR user_id = %s) LIMIT 1",
+                            (category_name, user_id_bin)
+                        )
                         cat_row = cursor.fetchone()
                         category_id = cat_row['id'] if cat_row else None
+                        if category_id is None:
+                            cursor.execute("SELECT id FROM categories WHERE name = 'Miscellaneous' AND user_id IS NULL LIMIT 1")
+                            cat_row = cursor.fetchone()
+                            category_id = cat_row['id'] if cat_row else None
 
-                    transaction_date = cleaned.date
-                    amount = Decimal(str(cleaned.amount))
-                    currency = cleaned.currency
-                    tx_type = cleaned.type
-                    action = cleaned.action
-                    item = cleaned.item
-                    description = cleaned.description or ''
+                        transaction_date = cleaned.date
+                        amount = Decimal(str(cleaned.amount))
+                        currency = cleaned.currency
+                        tx_type = cleaned.type
+                        action = cleaned.action
+                        item = cleaned.item
+                        description = cleaned.description or ''
 
-                    tx_uuid = uuid7()
-                    cursor.execute(
-                        "INSERT INTO transactions (id, user_id, business_id, event_id, category_id, type, action, amount, currency, currency_code, item, description, raw_text, transaction_date) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                        (tx_uuid.bytes, user_id_bin, user_business_id, f"{event.event_id}:tx{i}", category_id, tx_type, action, amount, currency, currency, item, description, raw_text, transaction_date)
-                    )
+                        tx_uuid = uuid7()
+                        cursor.execute(
+                            "INSERT INTO transactions (id, user_id, business_id, event_id, category_id, type, action, amount, currency, currency_code, item, description, raw_text, transaction_date) "
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                            (tx_uuid.bytes, user_id_bin, user_business_id, f"{event.event_id}:tx{i}", category_id, tx_type, action, amount, currency, currency, item, description, raw_text, transaction_date)
+                        )
 
-                    record_uuid = uuid7()
-                    cursor.execute(
-                        "INSERT INTO records (id, sender_id, raw_text, amount) VALUES (%s, %s, %s, %s)",
-                        (record_uuid.bytes, self.sender_id, raw_text, int(amount))
-                    )
+                        record_uuid = uuid7()
+                        cursor.execute(
+                            "INSERT INTO records (id, sender_id, raw_text, amount) VALUES (%s, %s, %s, %s)",
+                            (record_uuid.bytes, self.sender_id, raw_text, int(amount))
+                        )
 
-                    tx_results.append(TransactionResult(
-                        id=str(bin_to_uuid(tx_uuid.bytes)),
-                        type=tx_type,
-                        action=action,
-                        amount=float(amount),
-                        currency=currency,
-                        item=item,
-                        category=category_name,
-                        description=description,
-                        date=transaction_date
-                    ))
+                        tx_results.append(TransactionResult(
+                            id=str(bin_to_uuid(tx_uuid.bytes)),
+                            type=tx_type,
+                            action=action,
+                            amount=float(amount),
+                            currency=currency,
+                            item=item,
+                            category=category_name,
+                            description=description,
+                            date=transaction_date
+                        ))
+                    except Exception as tx_err:
+                        conn.rollback()
+                        set_transaction_state(event.event_id, user_id, 'FAILED')
+                        item_label = cleaned.item or cleaned.category or f"transaction #{i+1}"
+                        err_msg = f"Failed to record transaction for '{item_label}': {tx_err}"
+                        err_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="error",
+                            payload=LedgerUpdateEventPayload(
+                                status="error",
+                                intent="split_routing",
+                                raw_text=raw_text,
+                                error_reason=err_msg
+                            )
+                        )
+                        self._emit_to_cfo(err_event.model_dump(mode='json'))
+                        return f"❌ {err_msg}"
                 if tx_results:
                     results['transactions'] = tx_results
 
                 inv_results = []
                 for i, inv_item in enumerate(parsed.inventory):
-                    cleaned = dump_model(inv_item)
-                    inv_reply_str = self._process_inventory(cursor, raw_text, cleaned, user_business_id, f"{event.event_id}:inv{i}")
-                    inv_reply = json.loads(inv_reply_str)
-                    if inv_reply.get('status') == 'clarification_needed':
+                    try:
+                        cleaned = dump_model(inv_item)
+                        inv_reply_str = self._process_inventory(cursor, raw_text, cleaned, user_business_id, f"{event.event_id}:inv{i}")
+                        inv_reply = json.loads(inv_reply_str)
+                        if inv_reply.get('status') == 'clarification_needed':
+                            conn.rollback()
+                            set_transaction_state(event.event_id, user_id, 'FAILED')
+                            return inv_reply.get('question') or "I need a bit more detail to record that stock change."
+                        if inv_reply.get('status') == 'error':
+                            conn.rollback()
+                            set_transaction_state(event.event_id, user_id, 'FAILED')
+                            err_msg = f"Failed to update inventory for '{inv_item.product}': {inv_reply.get('message', 'inventory error')}"
+                            err_event = LedgerUpdateEvent(
+                                correlation_id=correlation_id,
+                                session_id=session_id,
+                                user_id=user_id,
+                                business_id=business_id,
+                                source_agent="LedgerAgent",
+                                event_type="error",
+                                payload=LedgerUpdateEventPayload(
+                                    status="error",
+                                    intent="split_routing",
+                                    raw_text=raw_text,
+                                    error_reason=err_msg
+                                )
+                            )
+                            self._emit_to_cfo(err_event.model_dump(mode='json'))
+                            return f"❌ {err_msg}"
+                        inv_results.append(InventoryResult(**inv_reply))
+                    except Exception as inv_err:
                         conn.rollback()
                         set_transaction_state(event.event_id, user_id, 'FAILED')
-                        # Return the human question — never the raw JSON (this reply is
-                        # sent straight to the customer, it does not pass through the CFO).
-                        return inv_reply.get('question') or "I need a bit more detail to record that stock change."
-                    inv_results.append(InventoryResult(**inv_reply))
+                        err_msg = f"Failed to update inventory for '{inv_item.product}': {inv_err}"
+                        err_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="error",
+                            payload=LedgerUpdateEventPayload(
+                                status="error",
+                                intent="split_routing",
+                                raw_text=raw_text,
+                                error_reason=err_msg
+                            )
+                        )
+                        self._emit_to_cfo(err_event.model_dump(mode='json'))
+                        return f"❌ {err_msg}"
                 if inv_results:
                     results['inventory'] = inv_results
 
                 debt_results = []
                 for i, debt_item in enumerate(parsed.debts):
-                    cleaned = dump_model(debt_item)
-                    debt_reply_str = self._process_debt(cursor, raw_text, cleaned, user_business_id, f"{event.event_id}:debt{i}")
-                    debt_reply = json.loads(debt_reply_str)
-                    if debt_reply.get('status') == 'clarification_needed':
+                    try:
+                        cleaned = dump_model(debt_item)
+                        debt_reply_str = self._process_debt(cursor, raw_text, cleaned, user_business_id, f"{event.event_id}:debt{i}")
+                        debt_reply = json.loads(debt_reply_str)
+                        if debt_reply.get('status') == 'clarification_needed':
+                            conn.rollback()
+                            set_transaction_state(event.event_id, user_id, 'FAILED')
+                            return debt_reply.get('question') or "I need a bit more detail to record that debt."
+                        if debt_reply.get('status') == 'error':
+                            conn.rollback()
+                            set_transaction_state(event.event_id, user_id, 'FAILED')
+                            err_msg = f"Failed to record debt for '{debt_item.name}': {debt_reply.get('message', 'debt error')}"
+                            err_event = LedgerUpdateEvent(
+                                correlation_id=correlation_id,
+                                session_id=session_id,
+                                user_id=user_id,
+                                business_id=business_id,
+                                source_agent="LedgerAgent",
+                                event_type="error",
+                                payload=LedgerUpdateEventPayload(
+                                    status="error",
+                                    intent="split_routing",
+                                    raw_text=raw_text,
+                                    error_reason=err_msg
+                                )
+                            )
+                            self._emit_to_cfo(err_event.model_dump(mode='json'))
+                            return f"❌ {err_msg}"
+                        debt_results.append(DebtResult(**debt_reply))
+                    except Exception as debt_err:
                         conn.rollback()
                         set_transaction_state(event.event_id, user_id, 'FAILED')
-                        return debt_reply.get('question') or "I need a bit more detail to record that debt."
-                    debt_results.append(DebtResult(**debt_reply))
+                        err_msg = f"Failed to record debt for '{debt_item.name}': {debt_err}"
+                        err_event = LedgerUpdateEvent(
+                            correlation_id=correlation_id,
+                            session_id=session_id,
+                            user_id=user_id,
+                            business_id=business_id,
+                            source_agent="LedgerAgent",
+                            event_type="error",
+                            payload=LedgerUpdateEventPayload(
+                                status="error",
+                                intent="split_routing",
+                                raw_text=raw_text,
+                                error_reason=err_msg
+                            )
+                        )
+                        self._emit_to_cfo(err_event.model_dump(mode='json'))
+                        return f"❌ {err_msg}"
                 if debt_results:
                     results['debts'] = debt_results
 
@@ -413,6 +535,37 @@ class LedgerAgent:
                     set_transaction_state(event.event_id, user_id, 'COMPLETED')
 
                     tx_id_str = str(tx_results[0].id) if tx_results else None
+
+                    # Post-commit queries executed on the committed state (WP-02 / G-02)
+                    query_result_str = None
+                    report_result_str = None
+
+                    queries_to_run = []
+                    if parsed.query:
+                        queries_to_run.append(parsed.query)
+                    if getattr(parsed, 'queries', None):
+                        for q in parsed.queries:
+                            if q not in queries_to_run:
+                                queries_to_run.append(q)
+
+                    if queries_to_run:
+                        from app.agents.transaction_agent import TransactionAgent
+                        tx_agent = TransactionAgent(self.user_id, self.sender_id)
+                        rendered_queries = []
+                        for q in queries_to_run:
+                            q_dict = dump_model(q)
+                            res = tx_agent.query(q_dict)
+                            if res:
+                                rendered_queries.append(res)
+                        if rendered_queries:
+                            query_result_str = "\n\n".join(rendered_queries)
+
+                    if parsed.report or "report" in intents:
+                        from app.agents.reporting_agent import ReportingAgent
+                        rep_agent = ReportingAgent(self.user_id)
+                        period = parsed.report.period if parsed.report else 'daily'
+                        target_date = parsed.report.date if parsed.report else None
+                        report_result_str = rep_agent.generate_report(period, target_date)
 
                     success_event = LedgerUpdateEvent(
                         correlation_id=correlation_id,
@@ -429,13 +582,19 @@ class LedgerAgent:
                             data=LedgerUpdateData(
                                 transactions=tx_results,
                                 inventory=inv_results,
-                                debts=debt_results
+                                debts=debt_results,
+                                query_result=query_result_str,
+                                report_result=report_result_str
                             )
                         )
                     )
                     self._emit_to_cfo(success_event.model_dump(mode='json'))
                     # For output display, dump list representations
                     out_results = {k: [dump_model(x) for x in v] for k, v in results.items()}
+                    if query_result_str:
+                        out_results['query_result'] = query_result_str
+                    if report_result_str:
+                        out_results['report_result'] = report_result_str
                     return json.dumps(out_results, indent=2)
 
                 conn.rollback()
@@ -546,14 +705,26 @@ class LedgerAgent:
         if not item_name or quantity_val is None:
             return json.dumps({"status": "error", "message": "Missing product details."})
 
+        # Resolve item using multi-tier fuzzy matching and check for tied ambiguity (WP-03 / G-07)
+        resolved = resolve_inventory_item(self.user_id, item_name)
+        if resolved and resolved.get('status') == 'clarification_needed':
+            return json.dumps({
+                "status": "clarification_needed",
+                "question": resolved.get('question')
+            })
+        if resolved and resolved.get('status') == 'matched':
+            item_name = resolved['item_name']
+            if not unit and resolved.get('unit'):
+                unit = resolved['unit']
+
         user_id_bin = uuid_to_bin(self.user_id)
         quantity = Decimal(str(quantity_val))
 
-        # Fetch inventory item details using business_id
+        # Fetch inventory item details using user_id or business_id (G-03 / scoping divergence fix)
         cursor.execute(
             "SELECT id, unit FROM inventory_items "
-            "WHERE business_id = %s AND item_name = %s LIMIT 1",
-            (business_id, item_name)
+            "WHERE (user_id = %s OR (business_id IS NOT NULL AND business_id = %s)) AND item_name = %s LIMIT 1",
+            (user_id_bin, business_id, item_name)
         )
         item_row = cursor.fetchone()
 

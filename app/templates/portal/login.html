@@ -1,0 +1,120 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-grid">
+  <div class="max-w-md w-full space-y-8 bg-obsidian-800/90 backdrop-blur-md p-8 sm:p-10 rounded-2xl border border-obsidian-700/80 shadow-2xl relative">
+    
+    <!-- Ambient brand glow -->
+    <div class="absolute -top-12 -left-12 w-32 h-32 bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header & Badge -->
+    <div class="text-center">
+      <div class="mx-auto w-12 h-12 rounded-xl bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-serif font-bold text-2xl shadow-inner mb-4">
+        T
+      </div>
+      <h2 class="text-2xl font-serif font-bold tracking-tight text-white">
+        {% if step == 'verify' %}Check your WhatsApp{% else %}Merchant Sign In{% endif %}
+      </h2>
+      <p class="mt-2 text-sm text-slate-400">
+        {% if step == 'verify' %}
+          We sent a 6-digit login code to <span class="font-mono text-slate-200 font-semibold">{{ phone }}</span>.
+        {% else %}
+          Access your business cashflow, stock records, and financial statements.
+        {% endif %}
+      </p>
+    </div>
+
+    {% if step == 'verify' %}
+    <!-- Step 2: OTP Verification Form -->
+    <form class="mt-8 space-y-6" action="{{ url_for('portal.verify_otp') }}" method="POST">
+      <input type="hidden" name="phone" value="{{ phone }}">
+      <input type="hidden" name="next" value="{{ next_url }}">
+
+      <div>
+        <label for="code" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 text-center">
+          6-Digit Passcode
+        </label>
+        <div class="relative">
+          <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus
+                 class="block w-full text-center tracking-[0.5em] font-mono font-bold text-2xl py-3 px-4 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand shadow-inner"
+                 placeholder="······">
+        </div>
+        <p class="mt-2 text-xs text-center text-slate-500">
+          Code expires in 10 minutes. Check your WhatsApp messages.
+        </p>
+      </div>
+
+      <div>
+        <button type="submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand focus:ring-offset-obsidian-900 transition-all shadow-lg shadow-brand/25 active:scale-[0.99]">
+          Verify & Enter Dashboard
+        </button>
+      </div>
+    </form>
+
+    <div class="pt-4 border-t border-obsidian-700/60 flex items-center justify-between text-xs">
+      <a href="{{ url_for('portal.login', next=next_url) }}" class="text-slate-400 hover:text-slate-200 transition-colors">
+        &larr; Use different phone
+      </a>
+
+      <!-- Resend form -->
+      <form action="{{ url_for('portal.request_otp') }}" method="POST" class="inline">
+        <input type="hidden" name="phone" value="{{ phone }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <button type="submit" class="text-brand hover:text-brand-hover font-medium transition-colors">
+          Resend code
+        </button>
+      </form>
+    </div>
+
+    {% else %}
+    <!-- Step 1: Phone Entry Form -->
+    <form class="mt-8 space-y-6" action="{{ url_for('portal.request_otp') }}" method="POST">
+      <input type="hidden" name="next" value="{{ next_url }}">
+
+      <div>
+        <label for="phone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          WhatsApp Phone Number
+        </label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+          </div>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" required autofocus
+                 class="block w-full pl-11 pr-4 py-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand text-sm shadow-inner"
+                 placeholder="080 1234 5678 or +234..."
+                 value="{{ phone or '' }}">
+        </div>
+        <p class="mt-2 text-xs text-slate-500">
+          Enter the Nigerian phone number you use to chat with TaLi.
+        </p>
+      </div>
+
+      <div>
+        <button type="submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand focus:ring-offset-obsidian-900 transition-all shadow-lg shadow-brand/25 active:scale-[0.99]">
+          Send Login Passcode via WhatsApp
+        </button>
+      </div>
+    </form>
+
+    <div class="pt-4 border-t border-obsidian-700/60 text-center text-xs text-slate-400">
+      <span>Not registered yet? </span>
+      <a href="{{ url_for('web.register') }}" class="text-brand hover:text-brand-hover font-medium underline underline-offset-2 transition-colors">
+        Register your number
+      </a>
+      <span> or </span>
+      <a href="{{ url_for('web.index') }}" class="text-slate-300 hover:text-white transition-colors">
+        learn more &rarr;
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

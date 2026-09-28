@@ -1,0 +1,107 @@
+<!-- HTMX Compliance Row Partial (_compliance_row.html) -->
+<tr id="review-row-{{ item.id }}" class="transition-all duration-300 {% if item.status == 'APPROVED' %}bg-emerald-950/20 border-l-4 border-l-emerald-500{% elif item.status == 'REJECTED' %}bg-rose-950/20 border-l-4 border-l-rose-500{% elif loop and loop.index is even %}bg-obsidian-900/40 hover:bg-obsidian-750/50{% else %}bg-obsidian-850/40 hover:bg-obsidian-750/50{% endif %}">
+
+  <!-- Merchant & ID -->
+  <td class="px-4 py-3 whitespace-nowrap">
+    <div class="flex items-center gap-2">
+      <span class="font-mono text-xs font-semibold text-white">#{{ item.id }}</span>
+      <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-obsidian-800 text-slate-400 border border-obsidian-700">
+        {{ item.channel|upper }}
+      </span>
+    </div>
+    <div class="text-xs font-medium text-slate-300 truncate max-w-[150px] mt-0.5" title="{{ item.merchant_name }}">
+      {{ item.merchant_name }}
+    </div>
+    <div class="text-[10px] font-mono text-slate-500">{{ item.merchant_phone }}</div>
+  </td>
+
+  <!-- Amount (Bold Tabular Figures) -->
+  <td class="px-4 py-3 whitespace-nowrap text-right">
+    <div class="font-mono font-bold text-sm text-white tracking-tight">
+      ₦{{ "{:,.2f}".format(item.amount) }}
+    </div>
+    <div class="text-[10px] font-mono text-slate-400 uppercase">
+      {{ item.intent|replace('record_', '') }}
+    </div>
+  </td>
+
+  <!-- Risk Classification Badge -->
+  <td class="px-4 py-3 whitespace-nowrap">
+    {% if item.risk_type == 'high_expense' %}
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+        High Expense
+      </span>
+    {% elif item.risk_type == 'high_debt' %}
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        High Debt
+      </span>
+    {% elif item.risk_type == 'low_confidence' %}
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-purple-500/10 text-purple-300 border border-purple-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+        Low Conf ({{ (item.confidence_score * 100)|round|int }}%)
+      </span>
+    {% else %}
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-slate-500/10 text-slate-300 border border-slate-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+        Flagged
+      </span>
+    {% endif %}
+  </td>
+
+  <!-- Raw Prompt / Details -->
+  <td class="px-4 py-3 text-xs text-slate-300 max-w-xs font-mono">
+    <div class="line-clamp-2" title="{{ item.raw_text }}">
+      "{{ item.raw_text }}"
+    </div>
+    <div class="text-[10px] text-slate-500 mt-1 font-mono">
+      Received: {{ item.created_at }}
+    </div>
+  </td>
+
+  <!-- Status / Interactive Actions (HTMX) -->
+  <td class="px-4 py-3 whitespace-nowrap text-right">
+    {% if item.status == 'APPROVED' %}
+      <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>✓ Approved by Admin</span>
+      </div>
+      <div class="text-[10px] text-emerald-400/80 font-mono mt-0.5">Room Resumed · Ledger Committed</div>
+    {% elif item.status == 'REJECTED' %}
+      <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold">
+        <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <span>✕ Rejected / Vetoed</span>
+      </div>
+      <div class="text-[10px] text-rose-400/80 font-mono mt-0.5">Transaction Aborted</div>
+    {% else %}
+      <!-- Interactive Action Buttons -->
+      <div class="flex items-center justify-end gap-2">
+        <!-- Approve Button -->
+        <button
+          hx-post="{{ url_for('admin.compliance_action', review_id=item.id) }}"
+          hx-vals='{"action": "approve"}'
+          hx-target="#review-row-{{ item.id }}"
+          hx-swap="outerHTML"
+          hx-indicator="#loading-{{ item.id }}"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm shadow-emerald-950 transition-all hover:scale-105 active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>Approve</span>
+        </button>
+
+        <!-- Reject Button with Safe 2-Click Confirmation -->
+        <button
+          onclick="confirmReject('{{ item.id }}')"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-obsidian-700 hover:border-rose-500/40 text-xs font-semibold transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span>Reject</span>
+        </button>
+      </div>
+
+      <!-- HTMX Request Indicator -->
+      <div id="loading-{{ item.id }}" class="htmx-indicator text-[10px] text-brand font-mono mt-1 text-right">
+        Transmitting to Room...
+      </div>
+    {% endif %}
+  </td>
+</tr>

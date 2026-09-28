@@ -45,6 +45,9 @@ class CFOAgent:
             reason = payload.get("error_reason") or "compliance hold"
             return f"🛑 Not recorded — {reason}."
         if status == "error":                              # dead-letter / DB failure
+            reason = payload.get("error_reason")
+            if reason:
+                return f"❌ {reason}"
             return ("⚠️ I understood your request, but saving it failed (a temporary issue). "
                     "Please try again.")
         return self.handle_ledger_update(body)
@@ -124,6 +127,14 @@ class CFOAgent:
                 return reporting_agent.generate_finops_report()
             return reporting_agent.generate_report(period, target_date)
 
+        elif intent == 'query':
+            query_res = getattr(data_obj, 'query_result', None) if data_obj else None
+            if query_res:
+                return str(query_res)
+            from app.agents.transaction_agent import TransactionAgent
+            tx_agent = TransactionAgent(self.user_id, self.sender_id)
+            return tx_agent.process(event.payload.raw_text, {'intent': 'query'})
+
         # Standard record transaction confirmation (fast path — single tx in the list)
         if intent == 'record_transaction':
             txs = data_obj.transactions if data_obj else []
@@ -184,6 +195,18 @@ class CFOAgent:
             for debt in debts:
                 action_lbl = "repaid" if debt.action == 'repayment' else "owes"
                 reply_lines.append(f"👥 Debt Ledger: {debt.name} {action_lbl} ₦{int(debt.amount):,}. Outstanding: ₦{int(debt.new_balance):,}.")
+
+            query_res = getattr(data_obj, 'query_result', None) if data_obj else None
+            if query_res:
+                if reply_lines:
+                    reply_lines.append("")
+                reply_lines.append(str(query_res))
+
+            report_res = getattr(data_obj, 'report_result', None) if data_obj else None
+            if report_res:
+                if reply_lines:
+                    reply_lines.append("")
+                reply_lines.append(str(report_res))
 
             if warnings:
                 reply_lines.append("")
