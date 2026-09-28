@@ -1,0 +1,156 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  
+  <!-- Welcome Header Banner -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-xl">
+    <div class="absolute -right-16 -top-16 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10 space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          Account Verified
+        </span>
+        <span class="text-xs text-slate-400 font-mono">{{ merchant.phone_number }}</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+        Welcome, <span class="text-brand">{{ merchant.display_name or 'Merchant' }}</span>
+      </h1>
+      <p class="text-sm text-slate-400 max-w-xl">
+        Here is your self-service financial command center. Review real-time sales, manage catalog stock, and generate tax-ready statements.
+      </p>
+    </div>
+
+    <div class="relative z-10 flex flex-wrap items-center gap-3">
+      <a href="https://wa.me/{{ config.get('PHONE_NUMBER_ID', '') }}" target="_blank"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-900/30">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
+        Record in WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Preview Cards (Scaffolded for WP-08) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <!-- Total Revenue -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg relative group">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">This Month Sales</span>
+        <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">₦0.00</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span class="text-brand">Live via WhatsApp</span> &bull; <span>Auto-synced</span>
+      </div>
+    </div>
+
+    <!-- Expenses -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">This Month Expenses</span>
+        <span class="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">₦0.00</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Recorded automatically</span>
+      </div>
+    </div>
+
+    <!-- Net Cashflow -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Net Cashflow</span>
+        <span class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">₦0.00</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Gross sales minus expenses</span>
+      </div>
+    </div>
+
+    <!-- Inventory / Debts -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Catalog Items</span>
+        <span class="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </span>
+      </div>
+      <div class="text-2xl font-bold font-sans text-white tracking-tight">0 SKUs</div>
+      <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Stock tracking active</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Roadmap Modules (Phase 3 Core Features) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Module 1: Cashflow Visualizer -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-6 flex flex-col justify-between hover:border-obsidian-600 transition-all">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand mb-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <h3 class="font-serif font-bold text-lg text-white">Cashflow & Ledger Visualizer</h3>
+        <p class="mt-2 text-xs text-slate-400">
+          Explore interactive cashflow charts, inspect recent sales and expense entries, and filter ledger records by category.
+        </p>
+      </div>
+      <div class="mt-6 pt-4 border-t border-obsidian-700/60 flex items-center justify-between text-xs">
+        <span class="text-brand font-semibold uppercase tracking-wider">WP-08</span>
+        <span class="text-slate-500">Next Work Package</span>
+      </div>
+    </div>
+
+    <!-- Module 2: Catalog & Stock -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-6 flex flex-col justify-between hover:border-obsidian-600 transition-all">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <h3 class="font-serif font-bold text-lg text-white">Catalog & Inventory Manager</h3>
+        <p class="mt-2 text-xs text-slate-400">
+          Add new product items, adjust quantity counts, update selling prices, and track low stock alerts.
+        </p>
+      </div>
+      <div class="mt-6 pt-4 border-t border-obsidian-700/60 flex items-center justify-between text-xs">
+        <span class="text-amber-400 font-semibold uppercase tracking-wider">WP-09</span>
+        <span class="text-slate-500">Upcoming</span>
+      </div>
+    </div>
+
+    <!-- Module 3: Statements -->
+    <div class="bg-obsidian-850 border border-obsidian-700/70 rounded-2xl p-6 flex flex-col justify-between hover:border-obsidian-600 transition-all">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3 class="font-serif font-bold text-lg text-white">Financial Statement Generator</h3>
+        <p class="mt-2 text-xs text-slate-400">
+          Generate branded PDF and CSV/Excel balance and P&amp;L statements formatted for loan applications and tax filings.
+        </p>
+      </div>
+      <div class="mt-6 pt-4 border-t border-obsidian-700/60 flex items-center justify-between text-xs">
+        <span class="text-blue-400 font-semibold uppercase tracking-wider">WP-10</span>
+        <span class="text-slate-500">Upcoming</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
