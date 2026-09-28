@@ -1,0 +1,66 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Transactions & Ledger{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">Business Ledger</h1>
+      <p class="text-sm text-slate-400">Search, filter, and inspect your recorded income and expenses</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-800 border border-obsidian-700 text-xs text-slate-400 font-mono">
+        Total: <strong class="text-white">{{ total_count }}</strong> records
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-5 shadow-lg space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Type Filter Pills -->
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('portal.transactions', search=search) }}"
+           class="px-4 py-2 rounded-xl text-xs font-semibold transition-all {% if not tx_type %}bg-brand text-white shadow-lg shadow-brand/20{% else %}bg-obsidian-900 text-slate-400 hover:text-white border border-obsidian-700{% endif %}">
+          All Entries
+        </a>
+        <a href="{{ url_for('portal.transactions', type='income', search=search) }}"
+           class="px-4 py-2 rounded-xl text-xs font-semibold transition-all {% if tx_type == 'income' %}bg-emerald-600 text-white shadow-lg shadow-emerald-900/30{% else %}bg-obsidian-900 text-slate-400 hover:text-emerald-400 border border-obsidian-700{% endif %}">
+          Sales (Income)
+        </a>
+        <a href="{{ url_for('portal.transactions', type='expense', search=search) }}"
+           class="px-4 py-2 rounded-xl text-xs font-semibold transition-all {% if tx_type == 'expense' %}bg-rose-600 text-white shadow-lg shadow-rose-900/30{% else %}bg-obsidian-900 text-slate-400 hover:text-rose-400 border border-obsidian-700{% endif %}">
+          Expenses
+        </a>
+      </div>
+
+      <!-- Live Search Bar (HTMX) -->
+      <div class="relative w-full md:w-80">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <input type="text" name="search" value="{{ search }}"
+               placeholder="Search items, notes, categories..."
+               hx-get="{{ url_for('portal.transactions') }}"
+               hx-trigger="keyup changed delay:300ms, search"
+               hx-target="#transactions-table-container"
+               hx-include="[name='type']"
+               hx-push-url="true"
+               class="block w-full pl-10 pr-4 py-2 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand shadow-inner">
+        <input type="hidden" name="type" value="{{ tx_type }}">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Transactions Table Card -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl shadow-xl overflow-hidden">
+    {% include "portal/_transaction_rows.html" %}
+  </div>
+
+</div>
+{% endblock %}
