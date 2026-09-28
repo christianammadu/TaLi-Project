@@ -90,10 +90,9 @@
             <a href="{{ url_for('portal.transactions') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.transactions' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
               Ledger & Cashflow
             </a>
-            <span class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 cursor-not-allowed flex items-center gap-1.5">
-              <span>Inventory</span>
-              <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.2 bg-obsidian-700/60 rounded text-slate-400">WP-09</span>
-            </span>
+            <a href="{{ url_for('portal.inventory') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.inventory' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Inventory & Catalog
+            </a>
             <span class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 cursor-not-allowed flex items-center gap-1.5">
               <span>Statements</span>
               <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.2 bg-obsidian-700/60 rounded text-slate-400">WP-10</span>
