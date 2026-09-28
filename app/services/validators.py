@@ -4,7 +4,7 @@ Validates and normalizes structured output from the NLP layer using Pydantic V2 
 """
 
 from datetime import date, datetime, timedelta
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Any
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Valid action types and their mapping to broad types
@@ -286,8 +286,11 @@ class UnifiedResponseModel(BaseModel):
     debts: List[DebtModel] = Field(default_factory=list)
     report: Optional[ReportModel] = None
     query: Optional[QueryModel] = None
+    queries: List[QueryModel] = Field(default_factory=list)
     statement: Optional[StatementModel] = None
     snapshot: bool = False
+    query_result: Optional[Any] = None
+    report_result: Optional[Any] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -307,6 +310,16 @@ class UnifiedResponseModel(BaseModel):
         inv = data.get('inventory')
         if inv is not None and not isinstance(inv, list):
             data['inventory'] = [inv]
+        q = data.get('query')
+        qs = data.get('queries')
+        if q is not None and not qs:
+            if isinstance(q, list):
+                data['queries'] = q
+                data['query'] = q[0] if q else None
+            else:
+                data['queries'] = [q]
+        elif qs and not q:
+            data['query'] = qs[0] if isinstance(qs, list) and qs else None
         return data
 
 

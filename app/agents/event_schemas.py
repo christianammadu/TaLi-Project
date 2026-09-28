@@ -73,6 +73,8 @@ class LedgerUpdateData(BaseModel):
     inventory: List[InventoryResult] = Field(default_factory=list)
     debts: List[DebtResult] = Field(default_factory=list)
     report: Optional[ReportModel] = None
+    query_result: Optional[Any] = None
+    report_result: Optional[Any] = None
 
 
 class LedgerUpdateEventPayload(BaseModel):

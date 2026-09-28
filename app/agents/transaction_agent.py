@@ -96,6 +96,15 @@ class TransactionAgent:
         else:
             return "❌ Failed to save the transaction. Please try again."
 
+    def query(self, parsed=None):
+        """Validate and execute a financial query directly with parsed dictionary/model."""
+        if not parsed:
+            return "❌ Invalid query: missing parameters."
+        if isinstance(parsed, dict):
+            return self._handle_query(parsed)
+        from app.services.validators import dump_model
+        return self._handle_query(dump_model(parsed))
+
     def _handle_query(self, parsed):
         """Validate and execute a financial query."""
         is_valid, cleaned = validate_query(parsed)
