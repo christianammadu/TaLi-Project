@@ -10,7 +10,7 @@ from decimal import Decimal
 from sqlalchemy import case, func, or_, select
 
 from app.data.db import session_scope
-from app.data.models import Category, InventoryItem, InventoryMovement, Record, Transaction, User
+from app.data.models import Category, InventoryItem, InventoryMovement, Product, Record, Transaction, User
 from app.services.uuid_utils import uuid7
 
 
@@ -361,36 +361,238 @@ def query_opening_balance(user_id, before_date):
         return {}
 
 
-def query_stock_levels(user_id, limit=50):
-    """Current stock level per item, computed from ``inventory_movements`` — the SAME
-    source the ledger's stock check uses (stock_in − stock_out, adjustments as deltas),
-    so a "what's in stock" answer always agrees with what recording a sale will see.
+def _stem_token(word: str) -> str:
+    """Normalize plural forms to singular."""
+    w = word.strip().lower()
+    if len(w) <= 3:
+        return w
+    if w.endswith('ies') and len(w) > 4:
+        return w[:-3] + 'y'
+    if w.endswith('toes') or w.endswith('does'):
+        return w[:-2]
+    if w.endswith(('ches', 'shes', 'xes')):
+        return w[:-2]
+    if w.endswith('sses'):
+        return w[:-2]
+    if w.endswith('s') and not w.endswith('ss'):
+        return w[:-1]
+    return w
 
-    Scoped by ``user_id`` (present on every movement, unlike business_id which is NULL
-    until provisioned). Returns a list of ``{item, unit, stock}`` ordered by name, or
-    ``None`` on failure.
+
+def get_user_product_names(user_id):
+    """Fetch distinct product/item names owned by user across inventory_items and products.
+
+    Used for injecting known canonical product names into the NLP prompt (WP-03).
     """
+    if not user_id:
+        return []
+    names = set()
     try:
         with session_scope() as s:
-            level = func.sum(case(
+            inv_names = s.execute(
+                select(InventoryItem.item_name).where(InventoryItem.user_id == user_id)
+            ).scalars().all()
+            prod_names = s.execute(
+                select(Product.name).where(Product.user_id == user_id)
+            ).scalars().all()
+            for n in inv_names:
+                if n and n.strip():
+                    names.add(n.strip())
+            for n in prod_names:
+                if n and n.strip():
+                    names.add(n.strip())
+        return sorted(list(names))
+    except Exception as e:
+        print(f"Failed to fetch user product names: {e}")
+        return []
+
+
+def resolve_inventory_item(user_id, product_name):
+    """Multi-tier fuzzy resolution for inventory products (WP-03 / G-03 & G-07).
+
+    Resolves merchant queries (e.g. 'rice', 'eggs') against stored inventory items
+    (e.g. '50kg bag of rice', 'egg') across 3 tiers:
+    1. Exact match (case-insensitive)
+    2. Stemmed match (singular/plural normalization)
+    3. Token / Substring containment (e.g. 'rice' in '50kg bag of rice')
+
+    If multiple items tie with equal confidence in Tier 3 (e.g. 'Golden Penny Flour'
+    and 'Golden Penny Semovita' for input 'Golden Penny'), returns:
+      {
+        "status": "clarification_needed",
+        "matches": [item1, item2],
+        "question": "🤔 I found multiple items matching 'Golden Penny'..."
+      }
+    Otherwise on unique match returns:
+      {
+        "status": "matched",
+        "id": item_id,
+        "item_id": item_id,
+        "name": canonical_name,
+        "item_name": canonical_name,
+        "unit": unit,
+        "stock": float(current_stock),
+        "quantity": float(current_stock),
+        "source": "inventory_items" | "products"
+      }
+    Returns None if no matching items are found.
+    """
+    if not user_id or not product_name:
+        return None
+
+    q = str(product_name).strip().lower()
+    if not q:
+        return None
+
+    # Fetch user inventory items and products
+    candidates = []
+    seen_names = set()
+
+    try:
+        with session_scope() as s:
+            # 1. Standard inventory_items with calculated movement stock
+            level = func.coalesce(func.sum(case(
                 (InventoryMovement.movement_type == 'stock_in', InventoryMovement.quantity),
                 (InventoryMovement.movement_type == 'stock_out', -InventoryMovement.quantity),
                 (InventoryMovement.movement_type == 'adjustment', InventoryMovement.quantity),
                 else_=0,
-            )).label('stock')
+            )), 0).label('stock')
+            inv_stmt = (
+                select(InventoryItem.id, InventoryItem.item_name, InventoryItem.unit, level)
+                .select_from(InventoryItem)
+                .outerjoin(InventoryMovement, InventoryItem.id == InventoryMovement.inventory_item_id)
+                .where(InventoryItem.user_id == user_id)
+                .group_by(InventoryItem.id, InventoryItem.item_name, InventoryItem.unit)
+            )
+            for r in s.execute(inv_stmt).all():
+                name = r.item_name
+                candidates.append({
+                    "id": str(r.id),
+                    "item_id": str(r.id),
+                    "name": name,
+                    "item_name": name,
+                    "unit": r.unit or "units",
+                    "stock": float(r.stock or 0),
+                    "quantity": float(r.stock or 0),
+                    "source": "inventory_items"
+                })
+                seen_names.add(name.lower().strip())
+
+            # 2. Legacy products table (if not already represented in inventory_items)
+            prod_stmt = select(Product.id, Product.name, Product.unit, Product.quantity).where(Product.user_id == user_id)
+            for r in s.execute(prod_stmt).all():
+                name = r.name
+                if name.lower().strip() not in seen_names:
+                    candidates.append({
+                        "id": str(r.id),
+                        "item_id": str(r.id),
+                        "name": name,
+                        "item_name": name,
+                        "unit": r.unit or "units",
+                        "stock": float(r.quantity or 0),
+                        "quantity": float(r.quantity or 0),
+                        "source": "products"
+                    })
+                    seen_names.add(name.lower().strip())
+    except Exception as e:
+        print(f"Error fetching inventory candidates: {e}")
+        return None
+
+    if not candidates:
+        return None
+
+    # Tier 1: Exact match (case-insensitive)
+    exact_matches = [c for c in candidates if c["name"].strip().lower() == q]
+    if len(exact_matches) == 1:
+        return {"status": "matched", **exact_matches[0]}
+
+    # Tier 2: Stemmed match (singular / plural normalization)
+    q_stem = " ".join(_stem_token(w) for w in q.split())
+    stemmed_matches = [
+        c for c in candidates
+        if " ".join(_stem_token(w) for w in c["name"].split()) == q_stem
+    ]
+    if len(stemmed_matches) == 1:
+        return {"status": "matched", **stemmed_matches[0]}
+    elif len(stemmed_matches) > 1:
+        bullets = "\n".join(f"{i+1}. {m['name']}" for i, m in enumerate(stemmed_matches))
+        return {
+            "status": "clarification_needed",
+            "matches": stemmed_matches,
+            "question": (
+                f"🤔 I found multiple items matching *\"{product_name}\"*. Which one did you mean?\n\n"
+                f"{bullets}\n\n"
+                "Please reply with the number or exact item name."
+            )
+        }
+
+    # Tier 3: Token containment & Substring match
+    q_tokens = set(q.split())
+    q_stem_tokens = set(_stem_token(w) for w in q.split())
+    tier3_matches = []
+    for c in candidates:
+        c_stem_tokens = set(_stem_token(w) for w in c["name"].split())
+        c_name_lower = c["name"].lower()
+        if q_stem_tokens.issubset(c_stem_tokens) or q in c_name_lower or c_name_lower in q:
+            tier3_matches.append(c)
+
+    if len(tier3_matches) == 1:
+        return {"status": "matched", **tier3_matches[0]}
+    elif len(tier3_matches) > 1:
+        bullets = "\n".join(f"{i+1}. {m['name']}" for i, m in enumerate(tier3_matches))
+        return {
+            "status": "clarification_needed",
+            "matches": tier3_matches,
+            "question": (
+                f"🤔 I found multiple items matching *\"{product_name}\"*. Which one did you mean?\n\n"
+                f"{bullets}\n\n"
+                "Please reply with the number or exact item name."
+            )
+        }
+
+    return None
+
+
+def query_stock_levels(user_id, limit=50):
+    """Current stock level per item, computed from ``inventory_movements`` and ``products``.
+
+    Scoped strictly by ``user_id`` regardless of business_id NULL status (G-03).
+    Returns a list of ``{item, unit, stock}`` ordered by name, or ``None`` on failure.
+    """
+    try:
+        with session_scope() as s:
+            level = func.coalesce(func.sum(case(
+                (InventoryMovement.movement_type == 'stock_in', InventoryMovement.quantity),
+                (InventoryMovement.movement_type == 'stock_out', -InventoryMovement.quantity),
+                (InventoryMovement.movement_type == 'adjustment', InventoryMovement.quantity),
+                else_=0,
+            )), 0).label('stock')
             stmt = (
                 select(InventoryItem.item_name, InventoryItem.unit, level)
-                .select_from(InventoryMovement)
-                .join(InventoryItem, InventoryItem.id == InventoryMovement.inventory_item_id)
-                .where(InventoryMovement.user_id == user_id)
+                .select_from(InventoryItem)
+                .outerjoin(InventoryMovement, InventoryItem.id == InventoryMovement.inventory_item_id)
+                .where(InventoryItem.user_id == user_id)
                 .group_by(InventoryItem.id, InventoryItem.item_name, InventoryItem.unit)
                 .order_by(InventoryItem.item_name)
                 .limit(limit)
             )
-            return [
-                {'item': r.item_name, 'unit': r.unit, 'stock': float(r.stock or 0)}
+            rows = [
+                {'item': r.item_name, 'unit': r.unit or 'units', 'stock': float(r.stock or 0)}
                 for r in s.execute(stmt).all()
             ]
+            seen_items = {r['item'].lower().strip() for r in rows}
+            # Also include legacy products if not already tracked in inventory_items
+            prod_stmt = (
+                select(Product.name, Product.unit, Product.quantity)
+                .where(Product.user_id == user_id)
+                .order_by(Product.name)
+                .limit(limit)
+            )
+            for p in s.execute(prod_stmt).all():
+                if p.name.lower().strip() not in seen_items:
+                    rows.append({'item': p.name, 'unit': p.unit or 'units', 'stock': float(p.quantity or 0)})
+                    seen_items.add(p.name.lower().strip())
+            return rows
     except Exception as e:
         print(f"Failed to query stock levels: {e}")
         return None

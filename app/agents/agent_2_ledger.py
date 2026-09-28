@@ -11,6 +11,7 @@ from app.data.database import get_db_connection, set_transaction_state
 from app.agents.band import get_band_client
 from app.services.validators import dump_model
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
+from app.data.queries import resolve_inventory_item
 
 # Band room handles (WP-04). Ledger forwards results to the CFO and runs the two-phase
 # review with the Compliance agent (WP-07) — all by @mention in the shared room.
@@ -546,14 +547,26 @@ class LedgerAgent:
         if not item_name or quantity_val is None:
             return json.dumps({"status": "error", "message": "Missing product details."})
 
+        # Resolve item using multi-tier fuzzy matching and check for tied ambiguity (WP-03 / G-07)
+        resolved = resolve_inventory_item(self.user_id, item_name)
+        if resolved and resolved.get('status') == 'clarification_needed':
+            return json.dumps({
+                "status": "clarification_needed",
+                "question": resolved.get('question')
+            })
+        if resolved and resolved.get('status') == 'matched':
+            item_name = resolved['item_name']
+            if not unit and resolved.get('unit'):
+                unit = resolved['unit']
+
         user_id_bin = uuid_to_bin(self.user_id)
         quantity = Decimal(str(quantity_val))
 
-        # Fetch inventory item details using business_id
+        # Fetch inventory item details using user_id or business_id (G-03 / scoping divergence fix)
         cursor.execute(
             "SELECT id, unit FROM inventory_items "
-            "WHERE business_id = %s AND item_name = %s LIMIT 1",
-            (business_id, item_name)
+            "WHERE (user_id = %s OR (business_id IS NOT NULL AND business_id = %s)) AND item_name = %s LIMIT 1",
+            (user_id_bin, business_id, item_name)
         )
         item_row = cursor.fetchone()
 
