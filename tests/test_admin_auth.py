@@ -45,8 +45,17 @@ def clean_lockout_state():
 def app(monkeypatch):
     """Create Flask application configured for admin testing."""
     import app as app_module
+    import app.admin.metrics as metrics_mod
+    from contextlib import contextmanager
+
+    @contextmanager
+    def fast_offline_scope():
+        raise RuntimeError("offline DB test")
+        yield
+
     monkeypatch.setattr(app_module, "init_db", lambda a: None)
     monkeypatch.setattr(app_module, "init_engine", lambda a: None)
+    monkeypatch.setattr(metrics_mod, "session_scope", fast_offline_scope)
     application = create_app()
     application.config.update(
         TESTING=True,

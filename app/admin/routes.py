@@ -3,12 +3,13 @@
 Provides login, logout, and dashboard landing shells for internal platform operators.
 """
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from app.admin import admin_bp
 from app.admin.auth import (
     admin_required, authenticate_stakeholder, login_admin, logout_admin,
     is_admin_authenticated, check_lockout, record_failed_attempt, reset_failed_attempts
 )
+from app.admin.metrics import get_platform_metrics, get_filtered_ai_logs, get_finops_metrics
 
 
 @admin_bp.route("/")
@@ -75,18 +76,53 @@ def logout():
 @admin_bp.route("/dashboard")
 @admin_required
 def dashboard():
-    """Stakeholder command dashboard shell (WP-04 placeholder)."""
-    # Baseline shell metrics (connected to live queries in WP-05/WP-06)
-    metrics = {
-        "total_merchants": 42,
-        "daily_active_merchants": 18,
-        "platform_gmv_ngn": 14_250_000.00,
-        "finops": {
-            "total_spend_usd": 4.12,
-            "ceiling_usd": 25.00,
-            "provider_share": {"openai": 0.88, "aiml": 0.12, "featherless": 0.0},
-            "p95_latency_ms": 1120,
-        },
-        "pending_compliance_count": 3
-    }
+    """Stakeholder command dashboard with live aggregated metrics (WP-05)."""
+    metrics = get_platform_metrics()
     return render_template("admin/dashboard.html", metrics=metrics, active_nav="dashboard")
+
+
+@admin_bp.route("/finops")
+@admin_required
+def finops():
+    """FinOps spend telemetry, provider distribution, and model inspection (WP-05)."""
+    model = request.args.get("model", "all")
+    agent = request.args.get("agent", "all")
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    page = int(request.args.get("page", 1))
+    limit = 50
+    offset = (page - 1) * limit
+
+    log_data = get_filtered_ai_logs(
+        model=model,
+        agent=agent,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        offset=offset
+    )
+    finops_metrics = get_finops_metrics()
+
+    return render_template(
+        "admin/finops.html",
+        active_nav="finops",
+        finops=finops_metrics,
+        logs=log_data["logs"],
+        available_models=log_data["available_models"],
+        available_agents=log_data["available_agents"],
+        total_count=log_data["total_count"],
+        current_page=page,
+        total_pages=max(1, (log_data["total_count"] + limit - 1) // limit),
+        selected_model=model,
+        selected_agent=agent,
+        selected_start_date=start_date,
+        selected_end_date=end_date,
+    )
+
+
+@admin_bp.route("/api/finops-metrics")
+@admin_required
+def api_finops_metrics():
+    """JSON API endpoint returning live FinOps telemetry."""
+    return jsonify(get_finops_metrics())
+
