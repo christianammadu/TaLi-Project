@@ -46,7 +46,7 @@ WP-04 (Admin Blueprint & Auth) ──► WP-05 (AI Observability) & WP-06 (Compl
 | `WP-03` | Canonical Inventory Prompt Injection & Fuzzy SQL Matcher | 1 | `[x]` | — | `G-INVENTORY-SEAM` | sonnet |
 | `WP-04` | Admin Flask Blueprint & Stakeholder Session Auth | 3 | `[x]` | `WP-02` | `G-ADMIN-AUTH` | sonnet |
 | `WP-05` | AI Fleet Observability & FinOps Spend Panel | 4 | `[x]` | `WP-04` | — | sonnet |
-| `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[ ]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
+| `WP-06` | Compliance Review Queue Web Hub & Room Resumption | 4 | `[x]` | `WP-04` | `G-COMPLIANCE-ACTION` | sonnet |
 <!-- groundwork:auto:end wp-matrix -->
 
 ## Wave plan

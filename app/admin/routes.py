@@ -10,6 +10,9 @@ from app.admin.auth import (
     is_admin_authenticated, check_lockout, record_failed_attempt, reset_failed_attempts
 )
 from app.admin.metrics import get_platform_metrics, get_filtered_ai_logs, get_finops_metrics
+from app.admin.compliance import (
+    get_pending_reviews, get_compliance_stats, resolve_review, get_review_by_id
+)
 
 
 @admin_bp.route("/")
@@ -125,4 +128,60 @@ def finops():
 def api_finops_metrics():
     """JSON API endpoint returning live FinOps telemetry."""
     return jsonify(get_finops_metrics())
+
+
+@admin_bp.route("/compliance")
+@admin_required
+def compliance():
+    """Compliance review queue for human-in-the-loop transaction governance (WP-06)."""
+    risk_filter = request.args.get("filter", "all")
+    reviews = get_pending_reviews(risk_filter=risk_filter)
+    stats = get_compliance_stats()
+
+    return render_template(
+        "admin/compliance.html",
+        active_nav="compliance",
+        reviews=reviews,
+        stats=stats,
+        current_filter=risk_filter,
+    )
+
+
+@admin_bp.route("/compliance/<review_id>/action", methods=["POST"])
+@admin_required
+def compliance_action(review_id):
+    """Execute approval or veto on a flagged review item with HTMX partial swap (WP-06)."""
+    action = request.form.get("action") or (request.json.get("action") if request.is_json else "approve")
+    reason = request.form.get("reason") or (request.json.get("reason") if request.is_json else None)
+    reviewer = request.cookies.get("admin_user") or "Admin"
+
+    outcome = resolve_review(
+        review_id=review_id,
+        action=action,
+        reviewer=reviewer,
+        reason=reason
+    )
+
+    # For HTMX or browser forms, return the updated row partial
+    if request.headers.get("HX-Request") or not request.is_json:
+        # Construct item view dictionary for template rendering
+        item = get_review_by_id(review_id) or {
+            "id": review_id,
+            "status": outcome["status"],
+            "merchant_name": outcome.get("merchant_name", "Merchant"),
+            "merchant_phone": "2348000000000",
+            "channel": "whatsapp",
+            "amount": outcome.get("amount", 0.0),
+            "currency": "NGN",
+            "intent": "record_transaction",
+            "risk_type": "high_expense",
+            "raw_text": outcome.get("raw_text", ""),
+            "created_at": outcome.get("reviewed_at", ""),
+            "confidence_score": 0.95
+        }
+        item["status"] = outcome["status"]
+        return render_template("admin/_compliance_row.html", item=item)
+
+    return jsonify(outcome)
+
 
