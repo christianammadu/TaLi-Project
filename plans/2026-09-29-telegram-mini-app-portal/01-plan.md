@@ -40,10 +40,18 @@ flowchart TD
 - **WP-04**: Responsive Viewport & Telegram Theme Adaptation — Inject Telegram WebApp JS SDK into `app/templates/portal/layout.html` and optimize mobile touch navigation.
 - **WP-05**: Mini App Authentication & Portal Test Suite — Add unit tests validating HMAC signature verification, session creation, and replay attack prevention.
 
+## UI & Visual Design Constraints
+
+When implementing Mini App layouts (WP-04) and portal touch viewports:
+- **Mandatory Skills**: `impeccable` and `huashu-design` MUST be used for Telegram theme integration, mobile touch states, and layout polish.
+- **Prohibited**:
+  - Emojis are strictly prohibited in all UI copy, buttons, headers, cards, and bottom tabs. Use clean SVG icons (Lucide / Heroicons) instead.
+  - Em dashes (`—`) are strictly prohibited in all UI text and labels. Use clean hyphens (`-`) or colons (`:`).
+- **Visual Assets**: Real photos, vector illustrations (such as unDraw at `undraw.co`), and AI-generated images are permitted.
+
 ## Critical Files
 
 - `app/channels/telegram.py`
-- `app/web/`
-- `app/data/models.py`
 - `app/portal/`
-- `tests/`
+- `app/templates/portal/`
+- `tests/test_telegram_channel.py`

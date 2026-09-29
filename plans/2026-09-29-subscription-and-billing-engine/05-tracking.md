@@ -6,7 +6,7 @@
 | ID | Status | Branch | Summary | Blockers |
 |:---|:---:|:---|:---|:---|
 | WP-01 | [x] | `feature/wp-01-billing-models` | Subscription & Billing Data Models | - |
-| WP-02 | [ ] | `wp-02` | Paystack Webhook & Verification Engine | - |
+| WP-02 | [x] | `feature/wp-02-paystack-webhook` | Paystack Webhook & Verification Engine | - |
 | WP-03 | [ ] | `wp-03` | Merchant Portal Billing & Upgrade Hub | - |
 | WP-04 | [ ] | `wp-04` | Feature Entitlement & Tier Gating Middleware | - |
 | WP-05 | [ ] | `wp-05` | Billing Lifecycle & Webhook Test Suite | - |

@@ -40,10 +40,17 @@ flowchart TD
 - **WP-04**: Public Product Changelog & Release Notes Feed — Implement dynamic changelog template showcasing weekly feature releases, improvements, and fixes.
 - **WP-05**: Marketing Navigation, SEO & Metadata Polish — Update global headers/footers with legal links, OpenGraph social preview cards, and mobile navigation.
 
+## UI & Visual Design Constraints
+
+When implementing marketing, legal, FAQ, Help Center, and Changelog pages:
+- **Mandatory Skills**: `impeccable` and `huashu-design` MUST be used for page architecture, responsive layout, and typography.
+- **Prohibited**:
+  - Emojis are strictly prohibited in all UI copy, headings, buttons, cards, and FAQs. Use clean SVG icons (Lucide / Heroicons) instead.
+  - Em dashes (`—`) are strictly prohibited in all UI text, headings, and marketing copy. Use clean hyphens (`-`) or colons (`:`).
+- **Visual Assets**: Real photography, vector illustrations (such as unDraw at `undraw.co`), and AI-generated images are permitted.
+
 ## Critical Files
 
-- `app/channels/telegram.py`
-- `app/web/`
-- `app/data/models.py`
-- `app/portal/`
-- `tests/`
+- `app/web/web_routes.py`
+- `app/templates/`
+- `tests/test_web_onboarding.py`

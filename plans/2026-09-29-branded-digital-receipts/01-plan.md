@@ -38,10 +38,18 @@ flowchart TD
 - **WP-04**: WhatsApp Digital Receipt Delivery — Send branded receipt image in WhatsApp with one-tap forward prompt upon completing a sale.
 - **WP-05**: Receipt Generation Test Coverage — Add unit tests verifying receipt rendering, currency formatting, and multi-channel message dispatch.
 
+## UI & Visual Design Constraints
+
+When designing digital receipt templates, web receipt views, and download cards:
+- **Mandatory Skills**: `impeccable` and `huashu-design` MUST be used for clean typography, crisp receipt borders, tabular alignment, and visual hierarchy.
+- **Prohibited**:
+  - Emojis are strictly prohibited in receipt copy, merchant headers, item rows, and action buttons. Use clean vector icons instead.
+  - Em dashes (`—`) are strictly prohibited in all receipt text and labels. Use clean hyphens (`-`) or colons (`:`).
+- **Visual Assets**: Real merchant logos, vector illustrations (such as unDraw at `undraw.co`), and AI-generated receipt backgrounds are permitted.
+
 ## Critical Files
 
+- `app/services/report_renderer.py`
 - `app/channels/telegram.py`
-- `app/web/`
-- `app/data/models.py`
-- `app/portal/`
+- `app/templates/`
 - `tests/`
