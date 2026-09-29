@@ -134,10 +134,17 @@
         }
       ],
       "hash": "sha256:db71597a84e7b7dfc203484098984b7888ddbd53a2dc758d97103706f1b0509b"
+    },
+    "09-orchestration.md": {
+      "hash": "a54222ac98d5b5f6785d90d8803e5fc608a1ab08081788989017f308ea9f67c4",
+      "updated_at": "2026-09-29T10:04:21.074302+00:00"
     }
   },
   "ids": {},
   "designs": {},
   "subplans": {},
-  "research": {}
+  "research": {},
+  "orchestrate": {
+    "last_run": "2026-09-29T10:04:21.074321+00:00"
+  }
 }
