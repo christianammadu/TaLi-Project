@@ -311,3 +311,62 @@ class DebtEntry(Base):
     business_id = Column(Integer)  # NULL until provisioned; see 0002 migration
     event_id = Column(String(100), unique=True)
     __table_args__ = (Index("idx_user_person", "user_id", "person_name"),)
+
+
+class SubscriptionPlan(Base):
+    __tablename__ = "subscription_plans"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slug = Column(String(50), unique=True, nullable=False)  # 'starter', 'pro', 'business'
+    name = Column(String(100), nullable=False)
+    price = Column(Numeric(15, 2), nullable=False, server_default=text("0.00"))
+    currency = Column(String(10), nullable=False, server_default=text("'NGN'"))
+    billing_interval = Column(ENUM("monthly", "yearly"), nullable=False, server_default=text("'monthly'"))
+    paystack_plan_code = Column(String(100), nullable=True)
+    features = Column(JSON, nullable=True)
+    is_active = Column(Boolean, server_default=text("1"))
+    created_at = Column(TIMESTAMP, server_default=_NOW)
+
+
+class MerchantSubscription(Base):
+    __tablename__ = "merchant_subscriptions"
+    id = Column(UUID_to_BINARY, primary_key=True)
+    user_id = Column(UUID_to_BINARY, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False)
+    status = Column(
+        ENUM("active", "trialing", "past_due", "canceled", "incomplete"),
+        nullable=False,
+        server_default=text("'trialing'")
+    )
+    paystack_customer_code = Column(String(100), nullable=True)
+    paystack_subscription_code = Column(String(100), unique=True, nullable=True)
+    paystack_email_token = Column(String(100), nullable=True)
+    current_period_start = Column(TIMESTAMP, nullable=False, server_default=_NOW)
+    current_period_end = Column(TIMESTAMP, nullable=False)
+    trial_ends_at = Column(TIMESTAMP, nullable=True)
+    grace_period_ends_at = Column(TIMESTAMP, nullable=True)
+    canceled_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=_NOW)
+    updated_at = Column(TIMESTAMP, server_default=_NOW, server_onupdate=_NOW)
+    __table_args__ = (
+        Index("idx_subscription_user", "user_id"),
+        Index("idx_subscription_status", "status"),
+    )
+
+
+class BillingInvoice(Base):
+    __tablename__ = "billing_invoices"
+    id = Column(UUID_to_BINARY, primary_key=True)
+    subscription_id = Column(UUID_to_BINARY, ForeignKey("merchant_subscriptions.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID_to_BINARY, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    paystack_reference = Column(String(100), unique=True, nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    currency = Column(String(10), nullable=False, server_default=text("'NGN'"))
+    status = Column(ENUM("paid", "pending", "failed"), nullable=False, server_default=text("'pending'"))
+    paid_at = Column(TIMESTAMP, nullable=True)
+    invoice_pdf_url = Column(String(500), nullable=True)
+    created_at = Column(TIMESTAMP, server_default=_NOW)
+    __table_args__ = (
+        Index("idx_invoice_user", "user_id"),
+        Index("idx_invoice_ref", "paystack_reference"),
+    )
+

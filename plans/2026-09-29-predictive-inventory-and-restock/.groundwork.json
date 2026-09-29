@@ -1,0 +1,143 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-09-29T09:33:39Z",
+  "updated": "2026-09-29T09:35:26Z",
+  "goal": "Calculate sales velocity and trigger proactive low-stock and supplier reorder alerts on WhatsApp and Telegram",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:e5d58bfc920bd8a7fb55b1d46f910a63d47f4d261809ebe385983fdd9dac83b5",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:184c3b60f129a0d20712bdc0b61cd73d93a164a487b39071eda237c1a6c9f00a",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:7dcf89d7afaf7cfccd4b3484c985c55087047f2bd7a90c06f0d29f3312aabc5d",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:9fd91ca2363470e253d86621b8a67bffbd753f55c9295517262ab0bf796ab996",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:024d948f0763920d08be8175eb49fcd9bef21d9f1031993867edc85de9dc07ab",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:e606dcf66074e49c2a130fa6c634ac909209dfbd921b156f49d6eace4e9db138",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:be311f75bdeff59b54923fb0a5bc936fb3cbaf1a1d018357b82c30910fd57514",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:23f23c3b31e6a83fa5b4ac423482c7ae2eb5d340c30d064ae00b45fd5363b421",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:59282ceed822b22194a5a2b9d365ac6a8b9e62a3eb72f82cb47400944b614929",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:d05e5830832a6b36d87c107a26fbb7df1f8f1dd8fd4ea9fe90deb04ee5a12943",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:231389d98bc1f20c22751c5b06a8c3541f55b0bcf8e185187ad933237cd2afcd",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:26Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:3bc54aed48b3ddfb471a33255c25d0a2edbca0b5c01074f1399badc5c031134f",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:26Z"
+        }
+      ],
+      "hash": "sha256:aeff86814a6f1d269085a91e70838d1a8a67f36ccb06d899ef78348d03887734"
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

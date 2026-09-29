@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-13T12:33:53Z",
-  "updated": "2026-06-13T16:39:46Z",
+  "updated": "2026-09-29T09:35:20Z",
   "goal": "Bridge the Band of Agents hackathon gaps: make Band the real coordination layer for 3+ agents, route models across AI/ML API + Featherless with OpenAI fallback, turn the sequential chain into a plan->execute->review loop, and surface a regulated-track audit trail.",
   "docs": {
     "00-README.md": {
@@ -134,6 +134,23 @@
         }
       ],
       "hash": "sha256:436f32511431068f9885bdec8b56e6db7f3428857129e980a9e6715a850083b2"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:3bee1e4ceeaadbcffe44b99a69651f5c8f6fc43e64aa4f9d5f2b43b9e361709e",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:20Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:3c9107d3263f0abef6d37476edc38503b567115a35b2bffd6e154dffe3f10d29",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:20Z"
+        }
+      ],
+      "hash": "sha256:1bffac20646c75cd87f44bc9122e958baba9db1f9932ee89422db0e639edb408"
     }
   },
   "ids": {

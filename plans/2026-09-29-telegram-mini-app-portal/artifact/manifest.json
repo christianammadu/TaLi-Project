@@ -1,0 +1,24 @@
+{
+  "format": "ikenga-artifact",
+  "formatVersion": "0.1",
+  "id": "2026-09-29-telegram-mini-app-portal-plan",
+  "name": "Embed the merchant self-service web portal directly inside Telegram as a native Telegram WebApp with single sign-on — plan",
+  "version": "0.1.0",
+  "description": "Living spec + tracking board for the Embed the merchant self-service web portal directly inside Telegram as a native Telegram WebApp with single sign-on plan. index.html is the multi-tab conceptual walkthrough; board.html is the operational dashboard.",
+  "license": "Apache-2.0",
+  "icon": { "lucide": "book-open-text" },
+  "dataSources": {
+    "_comment": "Optional external data sources keyed by name. The artifact loads them at runtime via the AppBridge `sources` API. When absent or unreachable (e.g. standalone in a browser), the artifact falls through to the mock-data block declared in `fallback.dataTag`. Example: `\"board\": { \"type\": \"file\", \"path\": \"./data/board.json\", \"refresh\": { \"mode\": \"manual\" } }`."
+  },
+  "fallback": {
+    "mode": "mock",
+    "dataTag": "board-mock-data",
+    "banner": "Embed the merchant self-service web portal directly inside Telegram as a native Telegram WebApp with single sign-on — running standalone"
+  },
+  "pin": {
+    "suggested": true,
+    "section": "Planning",
+    "label": "Embed the merchant self-service web portal directly inside Telegram as a native Telegram WebApp with single sign-on"
+  },
+  "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+}

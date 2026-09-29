@@ -35,6 +35,9 @@ def create_app():
     from app.portal import portal_bp
     app.register_blueprint(portal_bp)
 
+    from app.web.billing_routes import billing_bp
+    app.register_blueprint(billing_bp)
+
     # Hardened session cookie defaults (G-08)
     app.config.setdefault("SESSION_COOKIE_HTTPONLY", True)
     app.config.setdefault("SESSION_COOKIE_SAMESITE", "Lax")

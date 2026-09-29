@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-06T16:38:26Z",
-  "updated": "2026-06-06T16:49:28Z",
+  "updated": "2026-09-29T09:35:19Z",
   "goal": "Ship TaLi v2: full report suite (P&L, category, inventory valuation, debt aging) + subscription tiers (Free/Pro/Business), Paystack paywall, rate limiting, and scheduled reports \u2014 within PythonAnywhere free-tier limits.",
   "docs": {
     "00-README.md": {
@@ -145,6 +145,23 @@
         }
       ],
       "hash": "sha256:207954f01fc4126700c4b69b6bde154601b8cf31107ca991778ee3c605577206"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:7c95c0de6619515b007d33ca85c3e92369866152aad94037ac278425dde47b24",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:19Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:904ba490e3e36dacc34696f2ce7f6a2d2f91ff2b71acf718e74ef87082bbfcc6",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:19Z"
+        }
+      ],
+      "hash": "sha256:70b48ca1556e7271d4291defc6ddc3836866b86e0beb450e68cd831ee858d68b"
     }
   },
   "ids": {

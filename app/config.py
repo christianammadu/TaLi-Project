@@ -117,3 +117,8 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
+    # --- Paystack Billing & Subscriptions (Wave 1 / G-BILLING) ---
+    PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "")
+    PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "")
+    PAYSTACK_API_BASE = os.getenv("PAYSTACK_API_BASE", "https://api.paystack.co")
+
