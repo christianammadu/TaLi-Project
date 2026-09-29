@@ -39,10 +39,18 @@ flowchart TD
 - **WP-04**: Public Digital Verification Route & UI — Build `/verify/passport/<token>` endpoint displaying audited business overview and certification status.
 - **WP-05**: Credit Passport Export & Verification Test Suite — Add tests verifying scoring calculations, PDF generation, QR validity, and verification route access.
 
+## UI & Visual Design Constraints
+
+When implementing the public verification page (WP-04) and certified PDF dossier views:
+- **Mandatory Skills**: `impeccable` and `huashu-design` MUST be used for bank-grade layout polish, data density, trust badges, and audit tables.
+- **Prohibited**:
+  - Emojis are strictly prohibited in dossier titles, score cards, verification badges, and buttons. Use formal vector bank/shield icons instead.
+  - Em dashes (`—`) are strictly prohibited in all verification text and headers. Use clean hyphens (`-`) or colons (`:`).
+- **Visual Assets**: Real financial institution logos, vector trust illustrations (such as unDraw at `undraw.co`), and AI-generated security seals are permitted.
+
 ## Critical Files
 
-- `app/channels/telegram.py`
-- `app/web/`
-- `app/data/models.py`
-- `app/portal/`
+- `app/services/report_renderer.py`
+- `app/web/web_routes.py`
+- `app/templates/`
 - `tests/`
