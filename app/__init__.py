@@ -35,8 +35,13 @@ def create_app():
     from app.portal import portal_bp
     app.register_blueprint(portal_bp)
 
+    # Initialize CSRF protection for browser forms and HTMX requests
+    from app.services.csrf import init_csrf
+    init_csrf(app)
+
     # Hardened session cookie defaults (G-08)
     app.config.setdefault("SESSION_COOKIE_HTTPONLY", True)
     app.config.setdefault("SESSION_COOKIE_SAMESITE", "Lax")
+    app.config.setdefault("SESSION_COOKIE_SECURE", app.config.get("SESSION_COOKIE_SECURE", False))
 
     return app

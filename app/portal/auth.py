@@ -46,6 +46,17 @@ def normalize_phone(raw_phone: str) -> str:
     return clean
 
 
+def _is_db_lockout_active() -> bool:
+    try:
+        if not current_app:
+            return False
+        if current_app.config.get("TESTING") and not current_app.config.get("DB_LOCKOUT_TESTING"):
+            return False
+        return bool(current_app.config.get("DB_LOCKOUT_ENABLED", True))
+    except Exception:
+        return False
+
+
 def check_phone_lockout(phone: str) -> tuple[bool, int]:
     """Check if the phone is currently locked out from OTP attempts.
 
@@ -53,6 +64,25 @@ def check_phone_lockout(phone: str) -> tuple[bool, int]:
         (is_locked, remaining_seconds)
     """
     now = time.time()
+    if _is_db_lockout_active():
+        try:
+            from app.data.db import session_scope
+            from app.data.models import LoginAttempt
+            with session_scope() as s:
+                attempt = s.get(LoginAttempt, f"portal:{phone}")
+                if attempt:
+                    locked_until = float(attempt.locked_until or 0)
+                    if locked_until > now:
+                        return True, max(1, int(locked_until - now))
+                    first_failed = float(attempt.first_failed or 0)
+                    if now - first_failed > OTP_WINDOW_SECONDS:
+                        s.delete(attempt)
+                        return False, 0
+                    return False, 0
+        except Exception:
+            pass
+
+
     state = _FAILED_OTP_ATTEMPTS.get(phone)
     if not state:
         return False, 0
@@ -75,6 +105,53 @@ def record_phone_failed_attempt(phone: str) -> tuple[bool, int, int]:
         (is_now_locked, lock_seconds, remaining_attempts)
     """
     now = time.time()
+    if _is_db_lockout_active():
+        try:
+            from app.data.db import session_scope
+            from app.data.models import LoginAttempt
+            with session_scope() as s:
+                attempt = s.get(LoginAttempt, f"portal:{phone}")
+                if not attempt:
+                    attempt = LoginAttempt(
+                        attempt_key=f"portal:{phone}",
+                        attempts=1,
+                        first_failed=now,
+                        locked_until=0.0,
+                    )
+                    s.add(attempt)
+                    attempts_count = 1
+                else:
+                    first_failed = float(attempt.first_failed or now)
+                    locked_until = float(attempt.locked_until or 0.0)
+                    if now - first_failed > OTP_WINDOW_SECONDS and locked_until <= now:
+                        attempt.attempts = 1
+                        attempt.first_failed = now
+                        attempt.locked_until = 0.0
+                        attempts_count = 1
+                    else:
+                        attempt.attempts += 1
+                        attempts_count = attempt.attempts
+
+                remaining_attempts = max(0, MAX_OTP_ATTEMPTS - attempts_count)
+
+                if attempts_count >= MAX_OTP_ATTEMPTS:
+                    attempt.locked_until = now + OTP_LOCKOUT_SECONDS
+                    _FAILED_OTP_ATTEMPTS[phone] = {
+                        "attempts": attempts_count,
+                        "locked_until": now + OTP_LOCKOUT_SECONDS,
+                        "first_failed": float(attempt.first_failed),
+                    }
+                    return True, OTP_LOCKOUT_SECONDS, 0
+
+                _FAILED_OTP_ATTEMPTS[phone] = {
+                    "attempts": attempts_count,
+                    "locked_until": 0.0,
+                    "first_failed": float(attempt.first_failed),
+                }
+                return False, 0, remaining_attempts
+        except Exception:
+            pass
+
     state = _FAILED_OTP_ATTEMPTS.setdefault(
         phone, {"attempts": 0, "locked_until": 0.0, "first_failed": now}
     )
@@ -96,12 +173,33 @@ def record_phone_failed_attempt(phone: str) -> tuple[bool, int, int]:
 def reset_phone_failed_attempts(phone: str):
     """Clear failed attempts upon successful OTP verification."""
     _FAILED_OTP_ATTEMPTS.pop(phone, None)
+    if _is_db_lockout_active():
+        try:
+            from app.data.db import session_scope
+            from app.data.models import LoginAttempt
+            with session_scope() as s:
+                attempt = s.get(LoginAttempt, f"portal:{phone}")
+                if attempt:
+                    s.delete(attempt)
+        except Exception:
+            pass
 
 
 def clear_all_portal_lockouts():
     """Clear all lockout states (used for test setup/teardown)."""
     global _FAILED_OTP_ATTEMPTS
     _FAILED_OTP_ATTEMPTS.clear()
+    if _is_db_lockout_active():
+        try:
+            from app.data.db import session_scope
+            from app.data.models import LoginAttempt
+            from sqlalchemy import delete
+            with session_scope() as s:
+                s.execute(delete(LoginAttempt).where(LoginAttempt.attempt_key.like("portal:%")))
+        except Exception:
+            pass
+
+
 
 
 def find_registered_merchant(raw_phone: str) -> dict | None:

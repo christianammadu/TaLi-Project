@@ -87,6 +87,17 @@ class VerificationCode(Base):
     )
 
 
+class LoginAttempt(Base):
+    """Centralized rate limiting and brute-force lockout tracker across workers."""
+    __tablename__ = "login_attempts"
+    attempt_key = Column(String(100), primary_key=True)
+    attempts = Column(Integer, nullable=False, default=0)
+    first_failed = Column(Numeric(16, 4), nullable=False)
+    locked_until = Column(Numeric(16, 4), nullable=False, default=0.0)
+    updated_at = Column(TIMESTAMP, server_default=_NOW, server_onupdate=_NOW)
+
+
+
 class Session(Base):
     __tablename__ = "sessions"
     id = Column(UUID_to_BINARY, primary_key=True)

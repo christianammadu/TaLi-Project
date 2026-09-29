@@ -91,7 +91,9 @@
     </div>
 
     <form action="{{ url_for('portal.inventory_add') }}" method="POST" class="space-y-4 text-xs">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div>
+
         <label for="name" class="block font-semibold uppercase text-slate-400 mb-1">Product Name</label>
         <input type="text" id="name" name="name" required placeholder="e.g. 50kg Bag of Rice"
                class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand">
@@ -145,7 +147,9 @@
     </div>
 
     <form id="adjust-form" action="" method="POST" class="space-y-4 text-xs">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div>
+
         <label for="adjustment_type" class="block font-semibold uppercase text-slate-400 mb-1">Action</label>
         <select id="adjustment_type" name="adjustment_type"
                 class="w-full py-2.5 px-3 rounded-xl bg-obsidian-900 border border-obsidian-700 text-white focus:outline-none focus:ring-2 focus:ring-brand">

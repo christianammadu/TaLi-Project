@@ -112,8 +112,10 @@ class Config:
         "ADMIN_PASSWORD_HASH",
         "$2b$12$wqX7NM/IDlJPCRis5l7jhuKPvk1A7nJGoZUtnELbWASCQdBt6oGYu"
     )
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "tali-admin-secret-2026")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    SESSION_COOKIE_SECURE = (
+        os.getenv("SESSION_COOKIE_SECURE", "true" if os.getenv("FLASK_ENV") == "production" else "false").lower() == "true"
+    )
 

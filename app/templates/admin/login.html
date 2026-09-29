@@ -89,7 +89,9 @@
       {% endwith %}
 
       <form method="POST" action="{{ url_for('admin.login') }}" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ next_url or '' }}">
+
 
         <div>
           <label for="username" class="block text-xs font-mono font-medium text-slate-300 uppercase tracking-wider mb-2">
