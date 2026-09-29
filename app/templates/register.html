@@ -60,7 +60,9 @@
     </div>
 
     <form method="POST" action="{{ url_for('web.register') }}" id="phoneForm" class="phone-form is-collapsed">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="field">
+
         <label class="field-label">Phone number</label>
         <div class="phone-group">
           <select name="country_code" class="cc" aria-label="Country code">
@@ -102,7 +104,9 @@
     <div class="phone-info">Code sent to <strong>{{ phone }}</strong></div>
 
     <form method="POST" action="{{ url_for('web.verify_otp') }}" id="otpForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="phone" value="{{ phone }}">
+
       <input type="hidden" name="code" id="otpHidden" value="">
       <div class="field">
         <label class="field-label" style="text-align:center">Verification code</label>

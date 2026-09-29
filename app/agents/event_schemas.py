@@ -3,14 +3,14 @@
 
 from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 from app.services.validators import UnifiedResponseModel, TransactionModel, ReportModel
 
 
 class BaseBandEvent(BaseModel):
     event_id: UUID = Field(default_factory=uuid4)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     correlation_id: UUID = Field(default_factory=uuid4)
     session_id: Optional[str] = None
     user_id: Optional[str] = None

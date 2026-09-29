@@ -114,6 +114,16 @@ def init_db(app):
         ''')
 
         cursor.execute('''
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                attempt_key VARCHAR(100) PRIMARY KEY,
+                attempts INT NOT NULL DEFAULT 0,
+                first_failed DECIMAL(16, 4) NOT NULL,
+                locked_until DECIMAL(16, 4) NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS verification_codes (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 phone_number VARCHAR(20) NOT NULL,

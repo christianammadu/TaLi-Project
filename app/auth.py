@@ -5,7 +5,7 @@ sessions) so callers (routes, web_routes, agent_router) are unaffected.
 """
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import current_app
 from sqlalchemy import delete, func, select, update
@@ -17,6 +17,11 @@ from app.data.models import BindingToken, ChannelAccount, User, VerificationCode
 from app.services.uuid_utils import uuid7
 
 _DEFAULT_THRESHOLDS = {"low_stock_limit": 5, "high_debt_limit": 50000, "large_expense_flag": 100000}
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 
 def generate_otp():
@@ -34,7 +39,7 @@ def generate_token():
 def create_registration_otp(phone_number):
     """Create and store an OTP for phone registration. Returns the OTP or None."""
     otp = generate_otp()
-    expires_at = datetime.utcnow() + timedelta(minutes=current_app.config['OTP_EXPIRY_MINUTES'])
+    expires_at = _utcnow() + timedelta(minutes=current_app.config['OTP_EXPIRY_MINUTES'])
     try:
         with session_scope() as s:
             s.execute(
@@ -139,7 +144,7 @@ def get_user_by_sender(sender_id):
 def create_login_token(phone_number):
     """Create a login verification token. Returns the token or None."""
     token = generate_token()
-    expires_at = datetime.utcnow() + timedelta(minutes=current_app.config['TOKEN_EXPIRY_MINUTES'])
+    expires_at = _utcnow() + timedelta(minutes=current_app.config['TOKEN_EXPIRY_MINUTES'])
     try:
         with session_scope() as s:
             s.execute(
@@ -248,7 +253,7 @@ def validate_access_code(sender_id, code):
                 .where(SessionModel.sender_id == sender_id, SessionModel.is_active.is_(True))
                 .values(is_active=False, status='EXPIRED')
             )
-            expires_at = datetime.utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
+            expires_at = _utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
             session_uuid = uuid7()
             s.add(SessionModel(
                 id=session_uuid, sender_id=sender_id, user_id=user.id, expires_at=expires_at, status='ACTIVE', is_active=True
@@ -291,7 +296,7 @@ def get_active_session(sender_id):
             if row.status == 'ACTIVE':
                 return data
             if row.status == 'PENDING':
-                time_diff = datetime.utcnow() - row.created_at
+                time_diff = _utcnow() - row.created_at
                 if abs(time_diff.total_seconds()) < 60:
                     return data
             return None
@@ -324,7 +329,7 @@ def create_pending_session(sender_id, user_id):
                 .where(SessionModel.sender_id == sender_id, SessionModel.is_active.is_(True))
                 .values(is_active=False, status='EXPIRED')
             )
-            expires_at = datetime.utcnow() + timedelta(hours=1)
+            expires_at = _utcnow() + timedelta(hours=1)
             session_uuid = uuid7()
             s.add(SessionModel(
                 id=session_uuid, sender_id=sender_id, user_id=user_id, expires_at=expires_at, status='PENDING', is_active=True
@@ -509,7 +514,7 @@ def binding_token_is_expired(expires_at, now=None):
     """Pure check: True if a token's expiry has passed (or is missing)."""
     if expires_at is None:
         return True
-    return expires_at <= (now or datetime.utcnow())
+    return expires_at <= (now or _utcnow())
 
 
 def issue_binding_token(user_id, target_channel=None, ttl_minutes=None):
@@ -517,7 +522,7 @@ def issue_binding_token(user_id, target_channel=None, ttl_minutes=None):
     Returns the token string, or None."""
     token = generate_binding_token()
     minutes = ttl_minutes or int(current_app.config.get("BINDING_TOKEN_TTL_MIN", 15))
-    expires_at = datetime.utcnow() + timedelta(minutes=minutes)
+    expires_at = _utcnow() + timedelta(minutes=minutes)
     try:
         with session_scope() as s:
             s.add(BindingToken(token=token, user_id=user_id,
@@ -649,7 +654,7 @@ def open_session(sender_id, user_id):
                 .where(SessionModel.sender_id == sender_id, SessionModel.is_active.is_(True))
                 .values(is_active=False, status='EXPIRED')
             )
-            expires_at = datetime.utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
+            expires_at = _utcnow() + timedelta(hours=current_app.config['SESSION_DURATION_HOURS'])
             s.add(SessionModel(
                 id=uuid7(), sender_id=sender_id, user_id=user_id,
                 expires_at=expires_at, status='ACTIVE', is_active=True,

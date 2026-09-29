@@ -1,0 +1,143 @@
+{
+  "spine_version": "1",
+  "profile": "content",
+  "created": "2026-09-29T09:33:40Z",
+  "updated": "2026-09-29T09:35:24Z",
+  "goal": "Expand public marketing site with Privacy Policy, Terms of Service, FAQ, Help Center, and Public Changelog",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:47356162962e72708dad83d7a6586259b5c7af08159e687d244fe2da4b80e1f4",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:34e234a2098ae2da231aa55f84e3800cec599db6aff8e97e97d69a13c29ed871",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:170374d543064d8a5e62ec5539525a957110211252432865232b4227cda382f0",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:96d0498b71ca03f3c0cbfafa09827555df6d5301a63a462db59e9d243e610176",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:20bcdb638c597c33ab5ab6105e990b1c398b90567f19c19c1e9b9823c00958ce",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:34fc7d942cd7fbe99dc63c349c3fafb0044cbc479c23bd34a741dbb7e32ed015",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:c35b9e74f9e09f7a902e4cdfd65ffc434b9c0bbf79c34a75e058de9913abeb58",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:9e859d0e75a8a9a4fb8cb6e0e6a1830ce248257656313a1f3effb1e54401a365",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:b7c69930672e899bba8e174d3fe2286530581fb115a837508a60b54e232a3a2d",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:5d54c38d4ee216840b3c0f2281f85ca17310e7cc2ee31e220a0ee0b9f954ab58",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:c25fba27c8737f119820c0d87bc90e66d18a028bd1560b3e6a38f5689cb7ce62",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:acac6dc43cb83f25c79c63038cc102ddc32c4c770052e900461e275400201611",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:c22b02bb8bd4eab6a9875dd09178e2bbb6a266acb195afe66af39db9f4c276e4",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:24Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:f9ec2bccb07005d3489bd090a2f0e32a8cf90e0b220f2354b6864882d270e45d",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:24Z"
+        }
+      ],
+      "hash": "sha256:db71597a84e7b7dfc203484098984b7888ddbd53a2dc758d97103706f1b0509b"
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

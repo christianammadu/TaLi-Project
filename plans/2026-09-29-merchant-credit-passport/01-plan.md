@@ -1,0 +1,48 @@
+# Merchant Credit Passport & Loan Readiness Dossier
+
+## Goal
+
+<!-- groundwork:auto:start goal -->
+<!-- last_action: init · 2026-09-29 -->
+Generate certified bank-grade 3-page financial health dossiers with QR code verification for MSME loan readiness
+<!-- groundwork:auto:end goal -->
+
+## Context
+
+Micro and small enterprises cannot access commercial loans or fintech credit lines because they lack audited financial statements. By packaging 90-day cashflow velocity, consistency scores, and inventory turnover into a standardized, tamper-evident Credit Passport, TaLi unlocks working capital for merchants.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    TX_DB[("Transactions & Cashflow")] --> SCORING["Credit Health Scoring Algorithm"]
+    SCORING --> DOSSIER["ReportLab PDF Builder (3-Page Dossier)"]
+    DOSSIER --> QR["Digital Signature & Verification QR Code"]
+    QR --> VERIFY_WEB["Public Verification Route: /verify/passport/<id>"]
+    DOSSIER --> PORTAL["Download in Portal / Chat"]
+```
+
+### Shared State Contract
+
+| Field | Type | Writer | Readers | Description |
+|---|---|---|---|---|
+| `event_id` | `str` | Channel Webhook | Ledger / Database | Unique idempotency reference |
+| `merchant_id` | `UUID` | Auth / Channel Resolver | Handlers | Authenticated tenant context |
+| `channel_type` | `str` | Webhook Router | Dispatchers | 'whatsapp' or 'telegram' |
+
+## Phases & Work Packages
+
+### Phase 1 — Core Implementation & Multi-Channel Delivery
+- **WP-01**: Credit Health Scoring & Metrics Aggregator — Build `app/services/credit_score.py` computing revenue consistency, volatility, and profit margins.
+- **WP-02**: 3-Page Certified Dossier PDF Template — Design and implement bank-grade PDF report in `app/services/report_renderer.py` with charts and certification badges.
+- **WP-03**: Tamper-Proof Verification Token & QR Code Generator — Generate cryptographic verification tokens and embed dynamic QR codes linking to verification pages.
+- **WP-04**: Public Digital Verification Route & UI — Build `/verify/passport/<token>` endpoint displaying audited business overview and certification status.
+- **WP-05**: Credit Passport Export & Verification Test Suite — Add tests verifying scoring calculations, PDF generation, QR validity, and verification route access.
+
+## Critical Files
+
+- `app/channels/telegram.py`
+- `app/web/`
+- `app/data/models.py`
+- `app/portal/`
+- `tests/`

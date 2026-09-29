@@ -1,0 +1,143 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-09-29T09:33:25Z",
+  "updated": "2026-09-29T09:35:28Z",
+  "goal": "Ingest and process WhatsApp and Telegram voice notes in Nigerian Pidgin and local languages via Whisper and multi-agent intent mapping",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:6ee2f7319f9ab0bb1d57a24157d5d7556cacff4c001052930d30aceb89108e0c",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:184c3b60f129a0d20712bdc0b61cd73d93a164a487b39071eda237c1a6c9f00a",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:334435b3734bbe1c0cb306c499e794deb0046c9b2be6f0d667ad469e072262a7",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:3584c3e96f315849e73c13e4291e6bf27c311e03ff26b5de0860290d1145a81f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:f15420fa37d3357753f11b5d7b9c0e3e6332fe298ccf60edbe28b3dd9793f81a",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:04cbc45f0332607017f2680f00509def37816300725d395361ec31ae80560922",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:ce67645252d302867e7080e2b949e6b97033606731036867948e95facb9584c8",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:bbe0742fc49922c01a33fa073141e720390f5392ea9b3dfae04a31260aa801d9",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:59282ceed822b22194a5a2b9d365ac6a8b9e62a3eb72f82cb47400944b614929",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:60d8d8c1aeaff87f2d16876a18fce67feb57858ad41dc6b83c246b1cfad89693",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:25Z"
+        }
+      ]
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:ec52368be9f81b636bff24e8f4e4ec191000a77c77ac13083529bd1ee1be18b6",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:28Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:14067edb96db429768850c8ceee89f066745b6e8b965bdcdb7c8565406c88fa2",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:28Z"
+        }
+      ],
+      "hash": "sha256:999c597ea4406d53064a111d01fc7482cbcb936030962503a430743f6ff73aaa"
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

@@ -30,8 +30,10 @@
     {% if step == 'verify' %}
     <!-- Step 2: OTP Verification Form -->
     <form class="mt-8 space-y-6" action="{{ url_for('portal.verify_otp') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="phone" value="{{ phone }}">
       <input type="hidden" name="next" value="{{ next_url }}">
+
 
       <div>
         <label for="code" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 text-center">
@@ -62,6 +64,7 @@
 
       <!-- Resend form -->
       <form action="{{ url_for('portal.request_otp') }}" method="POST" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="phone" value="{{ phone }}">
         <input type="hidden" name="next" value="{{ next_url }}">
         <button type="submit" class="text-brand hover:text-brand-hover font-medium transition-colors">
@@ -73,7 +76,9 @@
     {% else %}
     <!-- Step 1: Phone Entry Form -->
     <form class="mt-8 space-y-6" action="{{ url_for('portal.request_otp') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ next_url }}">
+
 
       <div>
         <label for="phone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
