@@ -1,0 +1,51 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "title": "External Accounting Integrations & Public Developer API",
+  "slug": "accounting-integrations-and-public-api",
+  "created_at": "2026-09-29T10:15:36.174655+00:00",
+  "docs": {
+    "00-README.md": {
+      "hash": "auto"
+    },
+    "01-plan.md": {
+      "hash": "auto"
+    },
+    "02-research-external.md": {
+      "hash": "auto"
+    },
+    "03-research-internal.md": {
+      "hash": "auto"
+    },
+    "04-discussion.md": {
+      "hash": "auto"
+    },
+    "05-tracking.md": {
+      "hash": "auto"
+    },
+    "09-orchestration.md": {
+      "hash": "auto"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:0e72af815ba17c8c5f266e9c5a1a1a28cf03bdbcc60f87900d2e6a0bc71a5fe3",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:06Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:55f885c76d4b48e5b9188d02a6245367f1db0eb033700173a8a1ee4f0765c31e",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:06Z"
+        }
+      ],
+      "hash": "sha256:66fe63c7246b387ff9558e2ff00fdc1eef78e4c043b1461c457f3a041b8b0128"
+    }
+  },
+  "orchestrate": {
+    "last_run": "2026-09-29T10:15:36.174711+00:00"
+  },
+  "updated": "2026-09-29T10:18:06Z"
+}

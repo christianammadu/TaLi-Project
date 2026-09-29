@@ -1,0 +1,51 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "title": "Platform Admin Operations, Merchant CRM & Admin RBAC",
+  "slug": "platform-admin-ops-and-crm",
+  "created_at": "2026-09-29T10:15:36.169628+00:00",
+  "docs": {
+    "00-README.md": {
+      "hash": "auto"
+    },
+    "01-plan.md": {
+      "hash": "auto"
+    },
+    "02-research-external.md": {
+      "hash": "auto"
+    },
+    "03-research-internal.md": {
+      "hash": "auto"
+    },
+    "04-discussion.md": {
+      "hash": "auto"
+    },
+    "05-tracking.md": {
+      "hash": "auto"
+    },
+    "09-orchestration.md": {
+      "hash": "auto"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:a689b24850baafc6c3b6ae15198b90436f2f51bb30cc5519c4a86382a10a11d5",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:07Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:98ba965a33b7652b39e94deb5b6c6206c1d336f7981caa752600fc48120bb0e9",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:07Z"
+        }
+      ],
+      "hash": "sha256:662c56a37fcb81a93cb84993d6de4d7d07103807b957bd8211dcda2d754a82e0"
+    }
+  },
+  "orchestrate": {
+    "last_run": "2026-09-29T10:15:36.169647+00:00"
+  },
+  "updated": "2026-09-29T10:18:07Z"
+}

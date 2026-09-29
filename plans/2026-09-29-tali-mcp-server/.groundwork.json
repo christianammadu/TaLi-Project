@@ -1,0 +1,51 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "title": "TaLi Model Context Protocol (MCP) Server",
+  "slug": "tali-mcp-server",
+  "created_at": "2026-09-29T10:15:36.180080+00:00",
+  "docs": {
+    "00-README.md": {
+      "hash": "auto"
+    },
+    "01-plan.md": {
+      "hash": "auto"
+    },
+    "02-research-external.md": {
+      "hash": "auto"
+    },
+    "03-research-internal.md": {
+      "hash": "auto"
+    },
+    "04-discussion.md": {
+      "hash": "auto"
+    },
+    "05-tracking.md": {
+      "hash": "auto"
+    },
+    "09-orchestration.md": {
+      "hash": "auto"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:8fab1884fc1780bf6cc785ac3408b84bc071fccb87680a947e2603a9e6c8cfe8",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:07Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:0544a37614b01f066d0c62bf5f01374d922ed75eb6360c6c8117952b336c03b6",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T10:18:07Z"
+        }
+      ],
+      "hash": "sha256:94e2227332aac3c3424f6262f76f44f2be544f2519130ce8d19ff9367f8e1821"
+    }
+  },
+  "orchestrate": {
+    "last_run": "2026-09-29T10:15:36.180100+00:00"
+  },
+  "updated": "2026-09-29T10:18:07Z"
+}
