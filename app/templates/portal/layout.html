@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Merchant Portal{% endblock %} — TaLi</title>
+  <title>{% block title %}Merchant Portal{% endblock %} | TaLi</title>
 
   <!-- Google Fonts: Fraunces & Hanken Grotesk -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -95,6 +95,9 @@
             </a>
             <a href="{{ url_for('portal.statement') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.statement' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
               Statements
+            </a>
+            <a href="{{ url_for('portal.billing_hub') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {% if request.endpoint == 'portal.billing_hub' %}bg-obsidian-700 text-white border border-obsidian-600{% else %}text-slate-400 hover:text-slate-200 hover:bg-obsidian-800{% endif %}">
+              Billing & Plans
             </a>
           </nav>
           {% endif %}

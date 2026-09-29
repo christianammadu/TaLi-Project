@@ -34,6 +34,14 @@ from app.portal.statement import (
     get_merchant_business_name,
     get_statement_summary,
 )
+from app.services.billing import (
+    get_available_plans,
+    get_invoice_by_id,
+    get_merchant_billing_overview,
+    get_merchant_invoices,
+    initialize_paystack_checkout,
+    verify_paystack_transaction,
+)
 
 
 
@@ -429,3 +437,95 @@ def statement_export():
             as_attachment=True,
             download_name=filename,
         )
+
+
+@portal_bp.route("/billing", methods=["GET"])
+@merchant_required
+def billing_hub():
+    """Render the Merchant Self-Service Billing and Subscription Hub (WP-03)."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+    biz_name = session.get("merchant_name") or get_merchant_business_name(user_id)
+
+    overview = get_merchant_billing_overview(user_id)
+
+    return render_template(
+        "portal/billing.html",
+        overview=overview,
+        business_name=biz_name,
+        merchant=merchant,
+    )
+
+
+@portal_bp.route("/billing/initialize", methods=["POST"])
+@merchant_required
+def billing_initialize():
+    """Initiate Paystack checkout session for tier upgrade."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+
+    data = request.get_json(silent=True) or request.form
+    plan_slug = (data.get("plan_slug") or "").strip().lower()
+
+    if plan_slug not in ("pro", "business"):
+        return jsonify({"status": False, "message": "Invalid or unsupported plan tier selected"}), 400
+
+    phone = merchant.get("phone_number", "").replace("+", "")
+    email = session.get("merchant_email") or f"{phone or 'merchant'}@tali.africa"
+    callback_url = url_for("portal.billing_verify", _external=True)
+
+    result = initialize_paystack_checkout(
+        user_id=user_id,
+        plan_slug=plan_slug,
+        email=email,
+        callback_url=callback_url,
+    )
+
+    if result.get("status"):
+        return jsonify(result), 200
+    return jsonify(result), 400
+
+
+@portal_bp.route("/billing/verify", methods=["GET"])
+@merchant_required
+def billing_verify():
+    """Verify Paystack transaction status following inline checkout or redirect."""
+    reference = request.args.get("reference") or request.args.get("trxref")
+
+    if not reference:
+        flash("Payment reference is missing.", "error")
+        return redirect(url_for("portal.billing_hub"))
+
+    res = verify_paystack_transaction(reference)
+
+    if res.get("status") and (res.get("data") or {}).get("status") == "success":
+        flash("Payment confirmed. Your subscription tier has been upgraded.", "success")
+    else:
+        err_msg = res.get("message") or "Payment verification incomplete. Please contact support if debited."
+        flash(f"Payment status: {err_msg}", "warning")
+
+    return redirect(url_for("portal.billing_hub"))
+
+
+@portal_bp.route("/billing/invoices/<invoice_id>/receipt", methods=["GET"])
+@merchant_required
+def billing_invoice_receipt(invoice_id: str):
+    """View or download official payment receipt for a billing invoice."""
+    merchant = get_current_merchant()
+    user_id = merchant["user_id"]
+    biz_name = session.get("merchant_name") or get_merchant_business_name(user_id)
+
+    invoice = get_invoice_by_id(user_id, invoice_id)
+    if not invoice:
+        flash("Invoice not found or access unauthorized.", "error")
+        return redirect(url_for("portal.billing_hub"))
+
+    if invoice.get("invoice_pdf_url"):
+        return redirect(invoice["invoice_pdf_url"])
+
+    return render_template(
+        "portal/receipt.html",
+        invoice=invoice,
+        business_name=biz_name,
+        merchant=merchant,
+    )
