@@ -1,0 +1,143 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-09-29T09:33:39Z",
+  "updated": "2026-09-29T09:35:27Z",
+  "goal": "Build merchant subscription tiers, Paystack payment webhooks, billing portal, and feature entitlement gating for commercial launch",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:e60e635c9dbaadff086f3cbf1ac66531722ca70774182be76f814e4dc4e14ce1",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:184c3b60f129a0d20712bdc0b61cd73d93a164a487b39071eda237c1a6c9f00a",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:ba7e3de658b871db15589c8662501828a36cd6b7c97135cb4304fd1982418220",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:925a1b7e97be047aa3c2d7f16250a2cfcd8e9b55bfa40884adb198265e8de4d8",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:ddd56365362e253825e24ff252c848c6c8db107dcd7ca49cf99ed258845a98d6",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:5a8bc3653d4727fe96040e6d5e5cafbf3386622cfbdd1af094425a5351fc9812",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:6f4b69a2e378fd5f2c1aefbe6c8eb9d9ee70f2fd63fc24e4d23c075b8def542c",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:ebe1374de5b82979b36d4b1f8c666c625c71a7a398cad86c1d221cc6a23aa724",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:59282ceed822b22194a5a2b9d365ac6a8b9e62a3eb72f82cb47400944b614929",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:52d5075bbb95037b1fdc40c98af0069ec69ea958d9d4a69dd8c3898b5ee48a5d",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:40Z"
+        }
+      ]
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:fd40f4a6b277afbb94b95fd61af30af5f62ba066541ca22980436e8a543a7aff",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:27Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:3675a737b75fde9a58f9b111d6c6683460e1a692d7c94c7de906a51eeb4cb9b1",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:27Z"
+        }
+      ],
+      "hash": "sha256:1b3f4b2a2c00e61acbb1a31148cff6d4839866a9b6a9ff5b7934993943e27d1d"
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

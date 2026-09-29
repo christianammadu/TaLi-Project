@@ -1,0 +1,24 @@
+{
+  "format": "ikenga-artifact",
+  "formatVersion": "0.1",
+  "id": "2026-09-29-pos-and-receipt-vision-scanner-plan",
+  "name": "Extract and verify financial ledger transactions from photos of POS receipts and bank transfer screenshots using Vision AI — plan",
+  "version": "0.1.0",
+  "description": "Living spec + tracking board for the Extract and verify financial ledger transactions from photos of POS receipts and bank transfer screenshots using Vision AI plan. index.html is the multi-tab conceptual walkthrough; board.html is the operational dashboard.",
+  "license": "Apache-2.0",
+  "icon": { "lucide": "book-open-text" },
+  "dataSources": {
+    "_comment": "Optional external data sources keyed by name. The artifact loads them at runtime via the AppBridge `sources` API. When absent or unreachable (e.g. standalone in a browser), the artifact falls through to the mock-data block declared in `fallback.dataTag`. Example: `\"board\": { \"type\": \"file\", \"path\": \"./data/board.json\", \"refresh\": { \"mode\": \"manual\" } }`."
+  },
+  "fallback": {
+    "mode": "mock",
+    "dataTag": "board-mock-data",
+    "banner": "Extract and verify financial ledger transactions from photos of POS receipts and bank transfer screenshots using Vision AI — running standalone"
+  },
+  "pin": {
+    "suggested": true,
+    "section": "Planning",
+    "label": "Extract and verify financial ledger transactions from photos of POS receipts and bank transfer screenshots using Vision AI"
+  },
+  "requires": { "ikenga": ">=0.4", "bridge": "^1.0" }
+}

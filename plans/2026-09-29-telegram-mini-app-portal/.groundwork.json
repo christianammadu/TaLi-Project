@@ -1,0 +1,143 @@
+{
+  "spine_version": "1",
+  "profile": "software",
+  "created": "2026-09-29T09:33:39Z",
+  "updated": "2026-09-29T09:35:28Z",
+  "goal": "Embed the merchant self-service web portal directly inside Telegram as a native Telegram WebApp with single sign-on",
+  "docs": {
+    "00-README.md": {
+      "hash": "sha256:c9d2260af8404b7cde3d3ddf9e81a129ba9d9372cce51aeabafd461c5648f44b",
+      "generated_regions": [
+        {
+          "id": "spine-index",
+          "hash": "sha256:38968c4280efd6e17a61949c4493dbd86aa8fd50bbb7de5a3f24e479b75bfa57",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "status-block",
+          "hash": "sha256:184c3b60f129a0d20712bdc0b61cd73d93a164a487b39071eda237c1a6c9f00a",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "01-plan.md": {
+      "hash": "sha256:e2f878b8c8ad5da164e56c0c775b1b28a150ccec63a9855bcab7231ad38c6492",
+      "generated_regions": [
+        {
+          "id": "goal",
+          "hash": "sha256:0582094ad110ab5c77c98225ccf67b9addfe2b930df5c15ae4abea9f924d1c58",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "ids",
+          "hash": "sha256:3a536e857305714b27b38ef682bc773b0a13204223d2297d35f0bf74f9f51e5f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "02-research-external.md": {
+      "hash": "sha256:21551e340a177b14e97f9d157c33f18a09a8589cffef502e66494e2cec41b672",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:40f3413ae2652ff1882d8ba8f4d274ff63afb35960ff94fcc7a55d439c1fceaf",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "sources",
+          "hash": "sha256:a94b332a82d9eb95312d1594ed67d4b88116e2a9c3a87272616e71ac3d0ab88f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "03-research-internal.md": {
+      "hash": "sha256:8892be809f64c43156857d3090cd73df458dff8e8b4e76993fda5f0c0de237af",
+      "generated_regions": [
+        {
+          "id": "findings",
+          "hash": "sha256:5494da1179b159367bfcfad5b50c28919e9e83357f93bb735be06f4fa0ddc5e6",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "04-discussion.md": {
+      "hash": "sha256:8bc79aa34e9b1e6b8bc7bb5b4f1ca16c78376ec7c0afe4d0b621424b41a317a7",
+      "generated_regions": [
+        {
+          "id": "rounds-index",
+          "hash": "sha256:ad93974796af6e915638bd61ee57fefbed139eff21750bcd7bdff00e126c6a3f",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "05-tracking.md": {
+      "hash": "sha256:f853344cf0183224e4f391cdc955091677029068911a2940966612dbffd23535",
+      "generated_regions": [
+        {
+          "id": "round-fold",
+          "hash": "sha256:d847b3af0b86b3eee75b5b24ff7f98cffae7544a60506781db22859566afdcf2",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wp-matrix",
+          "hash": "sha256:59282ceed822b22194a5a2b9d365ac6a8b9e62a3eb72f82cb47400944b614929",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "wave-plan",
+          "hash": "sha256:50aac717e5c5e22a7e556052c7969b94cc3b51ff6e2f20e513181c5f509f5fee",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        },
+        {
+          "id": "critical-path",
+          "hash": "sha256:1d5b0e3bb00bccf5d662d4ef219d8f1ff31abc58bd190e05f334d3c8d5e5c147",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "artifact/index.html": {
+      "hash": "sha256:aec37a9aa915f16fce849faec8a4b2e984577b481e41b6c8bcd4f1562e327c09",
+      "generated_regions": [
+        {
+          "id": "spec-state",
+          "hash": "sha256:b85b94a7536d58b9b5a6ff1dd266d9689646ed8e8b0747503a807cdc1d8c89d4",
+          "last_action": "init",
+          "last_written": "2026-09-29T09:33:39Z"
+        }
+      ]
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:d4c06b805f6bc9f655ac62dfd419270c1db8b03ad515b01695b4cabddf1b5b23",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:27Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:c3f3e4feb7f552a93227b28a5dcb7241369e397a6db3dd3aa95f4090bed46fc2",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:28Z"
+        }
+      ],
+      "hash": "sha256:135a91908a8908dbb34cdfc9ab5123d31582c70f7d16a3e2b56f5ab3d1a09f09"
+    }
+  },
+  "ids": {},
+  "designs": {},
+  "subplans": {},
+  "research": {}
+}

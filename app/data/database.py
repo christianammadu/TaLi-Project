@@ -142,6 +142,65 @@ def init_db(app):
             )
         ''')
 
+        # --- SUBSCRIPTIONS & MONETIZATION ---
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS subscription_plans (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                slug VARCHAR(50) UNIQUE NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                price DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+                currency VARCHAR(10) NOT NULL DEFAULT 'NGN',
+                billing_interval ENUM('monthly', 'yearly') NOT NULL DEFAULT 'monthly',
+                paystack_plan_code VARCHAR(100) NULL,
+                features JSON NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS merchant_subscriptions (
+                id BINARY(16) PRIMARY KEY,
+                user_id BINARY(16) NOT NULL UNIQUE,
+                plan_id INT NOT NULL,
+                status ENUM('active', 'trialing', 'past_due', 'canceled', 'incomplete') NOT NULL DEFAULT 'trialing',
+                paystack_customer_code VARCHAR(100) NULL,
+                paystack_subscription_code VARCHAR(100) UNIQUE NULL,
+                paystack_email_token VARCHAR(100) NULL,
+                current_period_start TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                current_period_end TIMESTAMP NOT NULL,
+                trial_ends_at TIMESTAMP NULL,
+                grace_period_ends_at TIMESTAMP NULL,
+                canceled_at TIMESTAMP NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_subscription_user (user_id),
+                INDEX idx_subscription_status (status),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (plan_id) REFERENCES subscription_plans(id)
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS billing_invoices (
+                id BINARY(16) PRIMARY KEY,
+                subscription_id BINARY(16) NOT NULL,
+                user_id BINARY(16) NOT NULL,
+                paystack_reference VARCHAR(100) UNIQUE NOT NULL,
+                amount DECIMAL(15, 2) NOT NULL,
+                currency VARCHAR(10) NOT NULL DEFAULT 'NGN',
+                status ENUM('paid', 'pending', 'failed') NOT NULL DEFAULT 'pending',
+                paid_at TIMESTAMP NULL,
+                invoice_pdf_url VARCHAR(500) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_invoice_user (user_id),
+                INDEX idx_invoice_ref (paystack_reference),
+                FOREIGN KEY (subscription_id) REFERENCES merchant_subscriptions(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ''')
+
         # --- BOOKKEEPING ---
 
         cursor.execute('''

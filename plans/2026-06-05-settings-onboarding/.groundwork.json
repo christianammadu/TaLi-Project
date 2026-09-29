@@ -2,7 +2,7 @@
   "spine_version": "1",
   "profile": "software",
   "created": "2026-06-05T07:59:44Z",
-  "updated": "2026-06-05T11:56:35Z",
+  "updated": "2026-09-29T09:35:18Z",
   "goal": "Add a settings mechanism plus onboarding that captures display name and usage type (business/personal) so welcomes are personalized and business users can record business info; decide whether settings live on an authenticated web page or via WhatsApp commands.",
   "docs": {
     "00-README.md": {
@@ -128,6 +128,23 @@
         }
       ],
       "hash": "sha256:f206fd7011ad8fe47e237c6d64a724318df9c8b546337d8b147b60505f76ae6a"
+    },
+    "artifact/explorer.html": {
+      "generated_regions": [
+        {
+          "id": "explorer-data",
+          "hash": "sha256:64049f645f9cfa6bb3d96cd2b509365516658946708c1e234d31afba5e232feb",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:18Z"
+        },
+        {
+          "id": "explorer-meta",
+          "hash": "sha256:b2c71a5c56bc3107e57f2e508f1e3abf6cc4388ddb008471fb9c219e67dbe773",
+          "last_action": "explorer",
+          "last_written": "2026-09-29T09:35:18Z"
+        }
+      ],
+      "hash": "sha256:8cc6ab1c4718dfb4f0fbf8d1209c7dec72cbcc28bc996708d02b13893b188f6e"
     }
   },
   "ids": {
