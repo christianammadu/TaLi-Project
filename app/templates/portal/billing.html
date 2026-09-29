@@ -1,0 +1,327 @@
+{% extends "portal/layout.html" %}
+
+{% block title %}Subscription & Billing{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+
+  <!-- Hub Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-obsidian-700/80 pb-6">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 border border-brand/25 rounded-md">
+          Monetization Hub
+        </span>
+        <span class="text-slate-500 text-xs">WP-03</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight mt-2">
+        Subscription & Billing
+      </h1>
+      <p class="text-sm text-slate-400 mt-1 max-w-2xl">
+        Manage your merchant account tier, inspect transaction usage thresholds, and view official tax receipts.
+      </p>
+    </div>
+
+    <!-- Quick Help & Documentation Action -->
+    <div class="flex items-center gap-3">
+      <a href="https://wa.me/{{ config.get('WHATSAPP_PUBLIC_NUMBER', '') }}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-300 bg-obsidian-800 hover:bg-obsidian-750 border border-obsidian-700 rounded-xl transition-colors">
+        <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
+        <span>Billing Concierge</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Subscription Overview Card -->
+  <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl p-6 sm:p-8 shadow-xl">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-center">
+      
+      <!-- Current Status -->
+      <div class="space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Status</p>
+        <div class="flex items-center gap-3">
+          <h2 class="text-2xl font-serif font-bold text-white">
+            {{ overview.subscription.plan_name if overview.subscription else 'Free Starter' }}
+          </h2>
+          {% if overview.subscription and overview.subscription.is_active %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Active
+            </span>
+          {% elif overview.subscription and overview.subscription.status == 'past_due' %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Past Due (Grace Period)
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-400 bg-obsidian-750 border border-obsidian-700 rounded-full">
+              Standard
+            </span>
+          {% endif %}
+        </div>
+
+        <p class="text-xs text-slate-400 flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          {% if overview.subscription and overview.subscription.current_period_end %}
+            <span>Current cycle ends: {{ overview.subscription.current_period_end.strftime('%b %d, %Y') }}</span>
+          {% else %}
+            <span>Renewal: Ongoing monthly ledger cycle</span>
+          {% endif %}
+        </p>
+
+        {% if overview.subscription and overview.subscription.grace_period_ends_at %}
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+              <p class="font-medium">Renewal payment outstanding</p>
+              <p class="text-amber-400/80 mt-0.5">
+                Grace period expires on {{ overview.subscription.grace_period_ends_at.strftime('%b %d, %Y') }}. Please renew to prevent feature lock.
+              </p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Transaction Volume & Usage Gauge -->
+      <div class="space-y-3 lg:border-l lg:border-obsidian-700/80 lg:pl-8">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Ledger Usage</p>
+        
+        {% if overview.usage.is_unlimited %}
+          <div class="flex items-center gap-3">
+            <span class="text-2xl font-serif font-bold text-white">Unlimited</span>
+            <span class="px-2 py-0.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded">
+              High Capacity
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            {{ overview.usage.monthly_transactions }} transactions recorded this month with no cap.
+          </p>
+          <div class="w-full bg-obsidian-750 h-2.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full w-full"></div>
+          </div>
+        {% else %}
+          <div class="flex items-center justify-between">
+            <span class="text-2xl font-serif font-bold text-white">
+              {{ overview.usage.monthly_transactions }} <span class="text-sm font-sans font-normal text-slate-400">/ {{ overview.usage.starter_limit }}</span>
+            </span>
+            <span class="text-xs font-mono text-slate-400">{{ overview.usage.percentage }}% utilized</span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Free tier allows up to 50 transactions per calendar month.
+          </p>
+          <div class="w-full bg-obsidian-750 h-2.5 rounded-full overflow-hidden">
+            <div class="{% if overview.usage.percentage > 85 %}bg-rose-500{% elif overview.usage.percentage > 60 %}bg-amber-500{% else %}bg-brand{% endif %} h-full rounded-full transition-all duration-300" style="width: {{ overview.usage.percentage }}%;"></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Entitlements Summary -->
+      <div class="space-y-3 lg:border-l lg:border-obsidian-700/80 lg:pl-8">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Entitled Services</p>
+        <div class="flex flex-wrap gap-1.5">
+          {% for feature in overview.subscription.features if overview.subscription %}
+            <span class="px-2.5 py-1 text-xs font-mono text-slate-300 bg-obsidian-800 border border-obsidian-700 rounded-md">
+              {{ feature.replace('_', ' ') }}
+            </span>
+          {% else %}
+            <span class="px-2.5 py-1 text-xs font-mono text-slate-400 bg-obsidian-800 border border-obsidian-700 rounded-md">
+              text bookkeeping
+            </span>
+            <span class="px-2.5 py-1 text-xs font-mono text-slate-400 bg-obsidian-800 border border-obsidian-700 rounded-md">
+              basic statements
+            </span>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Subscription Plan Selection Grid -->
+  <div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+          Select Subscription Plan
+        </h2>
+        <p class="text-sm text-slate-400 mt-1">
+          Instant activation via Paystack secure card, USSD, or direct bank transfer.
+        </p>
+      </div>
+      <div class="text-xs text-slate-500 font-mono">
+        All plans billed in Nigerian Naira (NGN)
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+      {% for plan in overview.plans %}
+        {% include "portal/_plan_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Invoices & Billing History Section -->
+  <div class="space-y-6">
+    <div>
+      <h2 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+        Billing Records & Tax Invoices
+      </h2>
+      <p class="text-sm text-slate-400 mt-1">
+        Official payment receipts generated from verified Paystack subscription transactions.
+      </p>
+    </div>
+
+    <div class="bg-obsidian-850 border border-obsidian-700/80 rounded-2xl overflow-hidden shadow-xl">
+      {% if overview.invoices and overview.invoices|length > 0 %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-obsidian-800 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-obsidian-700">
+              <tr>
+                <th scope="col" class="py-3.5 px-4 sm:px-6">Date</th>
+                <th scope="col" class="py-3.5 px-4 sm:px-6">Reference</th>
+                <th scope="col" class="py-3.5 px-4 sm:px-6">Amount</th>
+                <th scope="col" class="py-3.5 px-4 sm:px-6">Status</th>
+                <th scope="col" class="py-3.5 px-4 sm:px-6 text-right">Receipt</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-obsidian-750">
+              {% for inv in overview.invoices %}
+              <tr class="hover:bg-obsidian-800/50 transition-colors">
+                <td class="py-4 px-4 sm:px-6 font-mono text-xs text-slate-400">
+                  {{ inv.paid_at or inv.created_at or 'Recent' }}
+                </td>
+                <td class="py-4 px-4 sm:px-6 font-mono text-xs text-slate-300">
+                  {{ inv.reference }}
+                </td>
+                <td class="py-4 px-4 sm:px-6 font-semibold text-white font-mono">
+                  {{ inv.amount_formatted }}
+                </td>
+                <td class="py-4 px-4 sm:px-6">
+                  {% if inv.status == 'paid' %}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                      Paid
+                    </span>
+                  {% elif inv.status == 'pending' %}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                      Pending
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-full">
+                      Failed
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="py-4 px-4 sm:px-6 text-right">
+                  <a href="{{ url_for('portal.billing_invoice_receipt', invoice_id=inv.id) }}" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-brand hover:text-brand-hover bg-brand/10 hover:bg-brand/20 border border-brand/25 rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span>View Receipt</span>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <!-- Clean Empty State -->
+        <div class="py-16 px-6 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-obsidian-800 border border-obsidian-700 flex items-center justify-center mx-auto text-slate-500 shadow-inner">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-serif font-bold text-white mt-4">No Invoices on Record</h3>
+          <p class="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
+            Your billing receipts will appear here after upgrading to Merchant Pro or Business Fleet.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Paystack Inline Popup JS -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+  /**
+   * Initiate Paystack inline checkout modal for plan upgrade.
+   */
+  async function initiateCheckout(planSlug, planName) {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    
+    // Set loading state
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Connecting...
+    `;
+
+    try {
+      const response = await fetch("{{ url_for('portal.billing_initialize') }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ plan_slug: planSlug })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.status) {
+        alert(result.message || "Failed to initialize payment session. Please try again.");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+      }
+
+      const checkoutData = result.data || {};
+      const reference = checkoutData.reference;
+      const authUrl = checkoutData.authorization_url;
+      const publicKey = "{{ overview.paystack_public_key }}";
+
+      // If PaystackPop is available and public key configured, open inline modal
+      if (typeof PaystackPop !== "undefined" && publicKey && !publicKey.startsWith("mock_")) {
+        const handler = PaystackPop.setup({
+          key: publicKey,
+          email: "{{ session.get('merchant_email') or 'merchant@tali.africa' }}",
+          reference: reference,
+          callback: function(response) {
+            window.location.href = "{{ url_for('portal.billing_verify') }}?reference=" + encodeURIComponent(response.reference);
+          },
+          onClose: function() {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        });
+        handler.openIframe();
+      } else if (authUrl) {
+        // Fallback or mock environment: redirect to authorization URL
+        window.location.href = authUrl;
+      } else {
+        // Direct verify for local mock
+        window.location.href = "{{ url_for('portal.billing_verify') }}?reference=" + encodeURIComponent(reference);
+      }
+    } catch (err) {
+      console.error("Payment initialization error:", err);
+      alert("A network error occurred while communicating with the billing gateway.");
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+</script>
+{% endblock %}

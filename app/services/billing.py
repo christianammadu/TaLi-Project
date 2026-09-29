@@ -1,4 +1,4 @@
-"""Subscription & Billing Service — Core monetization and entitlement logic.
+"""Subscription & Billing Service: Core monetization and entitlement logic.
 
 Handles plan definitions, subscription status checks, grace periods, feature entitlements,
 and Paystack webhook / verification engine integration.
@@ -6,14 +6,14 @@ and Paystack webhook / verification engine integration.
 
 import hashlib
 import hmac
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 import requests
 from flask import current_app
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 
 from app.data.db import session_scope
-from app.data.models import SubscriptionPlan, MerchantSubscription, BillingInvoice, User
+from app.data.models import SubscriptionPlan, MerchantSubscription, BillingInvoice, Transaction, User
 from app.services.uuid_utils import uuid7, uuid_to_bin, bin_to_uuid
 
 # Default Plans & Pricing Strategy
@@ -545,3 +545,167 @@ def verify_paystack_transaction(reference: str) -> Dict[str, Any]:
         return res
     except Exception as e:
         return {"status": False, "message": str(e)}
+
+
+def get_available_plans() -> List[Dict[str, Any]]:
+    """Return all active subscription plans with display metadata."""
+    try:
+        with session_scope() as s:
+            plans = seed_default_plans(s)
+            out = []
+            for p in plans:
+                price_flt = float(p.price)
+                price_kobo = int(price_flt * 100)
+                out.append({
+                    "id": str(bin_to_uuid(p.id) or p.id),
+                    "slug": p.slug,
+                    "name": p.name,
+                    "price": price_flt,
+                    "price_formatted": f"₦{price_flt:,.2f}" if price_flt > 0 else "Free",
+                    "price_kobo": price_kobo,
+                    "currency": p.currency,
+                    "billing_interval": p.billing_interval,
+                    "features": p.features or [],
+                    "is_popular": p.slug == "pro",
+                })
+            # Order: starter, pro, business
+            order = {"starter": 0, "pro": 1, "business": 2}
+            out.sort(key=lambda x: order.get(x["slug"], 99))
+            return out
+    except Exception as e:
+        print(f"[Billing] Error fetching available plans: {e}")
+        # Return fallback default plans
+        return [
+            {
+                "id": p["slug"],
+                "slug": p["slug"],
+                "name": p["name"],
+                "price": p["price"],
+                "price_formatted": f"₦{p['price']:,.2f}" if p["price"] > 0 else "Free",
+                "price_kobo": int(p["price"] * 100),
+                "currency": p["currency"],
+                "billing_interval": p["billing_interval"],
+                "features": p["features"],
+                "is_popular": p["slug"] == "pro",
+            }
+            for p in DEFAULT_PLANS
+        ]
+
+
+def get_merchant_invoices(user_id, limit: int = 20) -> List[Dict[str, Any]]:
+    """Retrieve billing invoices for a merchant sorted by creation date."""
+    try:
+        with session_scope() as s:
+            stmt = (
+                select(BillingInvoice)
+                .where(BillingInvoice.user_id == user_id)
+                .order_by(BillingInvoice.created_at.desc())
+                .limit(limit)
+            )
+            invoices = s.execute(stmt).scalars().all()
+            out = []
+            for inv in invoices:
+                amt = float(inv.amount)
+                out.append({
+                    "id": str(bin_to_uuid(inv.id) or inv.id),
+                    "reference": inv.paystack_reference,
+                    "amount": amt,
+                    "amount_formatted": f"₦{amt:,.2f}",
+                    "currency": inv.currency,
+                    "status": inv.status,
+                    "paid_at": inv.paid_at.strftime("%b %d, %Y") if inv.paid_at else None,
+                    "created_at": inv.created_at.strftime("%b %d, %Y") if inv.created_at else None,
+                    "invoice_pdf_url": inv.invoice_pdf_url,
+                })
+            return out
+    except Exception as e:
+        print(f"[Billing] Error fetching invoices for {user_id}: {e}")
+        return []
+
+
+def get_merchant_usage(user_id) -> Dict[str, Any]:
+    """Calculate merchant monthly transaction usage against plan thresholds."""
+    today = date.today()
+    month_start = today.replace(day=1)
+    
+    count = 0
+    try:
+        with session_scope() as s:
+            stmt = select(func.count(Transaction.id)).where(
+                Transaction.user_id == user_id,
+                Transaction.transaction_date >= month_start,
+            )
+            count = s.execute(stmt).scalar() or 0
+    except Exception as e:
+        print(f"[Billing] Error fetching usage for {user_id}: {e}")
+
+    return {
+        "monthly_transactions": count,
+        "starter_limit": 50,
+        "is_unlimited": False,
+    }
+
+
+def get_merchant_billing_overview(user_id) -> Dict[str, Any]:
+    """Aggregate full billing context for the merchant portal."""
+    sub = get_merchant_subscription(user_id)
+    plans = get_available_plans()
+    invoices = get_merchant_invoices(user_id)
+    usage = get_merchant_usage(user_id)
+
+    current_slug = sub.get("plan_slug", "starter") if sub else "starter"
+    usage["is_unlimited"] = current_slug in ("pro", "business")
+    if usage["is_unlimited"]:
+        usage["percentage"] = 0
+    else:
+        limit = usage["starter_limit"]
+        usage["percentage"] = min(100, int((usage["monthly_transactions"] / max(1, limit)) * 100))
+
+    # Mark is_current for each plan
+    for p in plans:
+        p["is_current"] = (p["slug"] == current_slug)
+
+    pub_key = current_app.config.get("PAYSTACK_PUBLIC_KEY", "")
+
+    return {
+        "subscription": sub,
+        "plans": plans,
+        "invoices": invoices,
+        "usage": usage,
+        "paystack_public_key": pub_key,
+    }
+
+
+def get_invoice_by_id(user_id, invoice_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve a single invoice ensuring merchant isolation."""
+    try:
+        with session_scope() as s:
+            stmt = select(BillingInvoice).where(
+                BillingInvoice.user_id == user_id,
+                BillingInvoice.id == invoice_id,
+            )
+            inv = s.execute(stmt).scalar_one_or_none()
+            if not inv:
+                # Also try matching paystack_reference
+                stmt_ref = select(BillingInvoice).where(
+                    BillingInvoice.user_id == user_id,
+                    BillingInvoice.paystack_reference == invoice_id,
+                )
+                inv = s.execute(stmt_ref).scalar_one_or_none()
+            if not inv:
+                return None
+            amt = float(inv.amount)
+            return {
+                "id": str(bin_to_uuid(inv.id) or inv.id),
+                "reference": inv.paystack_reference,
+                "amount": amt,
+                "amount_formatted": f"₦{amt:,.2f}",
+                "currency": inv.currency,
+                "status": inv.status,
+                "paid_at": inv.paid_at.strftime("%b %d, %Y") if inv.paid_at else None,
+                "created_at": inv.created_at.strftime("%b %d, %Y") if inv.created_at else None,
+                "invoice_pdf_url": inv.invoice_pdf_url,
+            }
+    except Exception as e:
+        print(f"[Billing] Error fetching invoice {invoice_id}: {e}")
+        return None
